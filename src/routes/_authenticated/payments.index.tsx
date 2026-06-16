@@ -45,8 +45,8 @@ function PaymentsList() {
         )
         .order("due_date", { ascending: true })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
-      if (statuses.length) q = q.in("status", statuses);
-      if (method !== "all") q = q.eq("method", method);
+      if (statuses.length) q = q.in("status", statuses as any);
+      if (method !== "all") q = q.eq("method", method as any);
       if (from) q = q.gte("due_date", from);
       if (to) q = q.lte("due_date", to);
       if (programId) q = q.eq("policies.program_id", programId);
