@@ -21,11 +21,13 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedPoliciesIndexRouteImport } from './routes/_authenticated/policies.index'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments.index'
+import { Route as AuthenticatedIncidentsIndexRouteImport } from './routes/_authenticated/incidents.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
 import { Route as AuthenticatedPoliciesNewRouteImport } from './routes/_authenticated/policies.new'
 import { Route as AuthenticatedPoliciesPolicyIdRouteImport } from './routes/_authenticated/policies.$policyId'
 import { Route as AuthenticatedPaymentsDashboardRouteImport } from './routes/_authenticated/payments.dashboard'
 import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
+import { Route as AuthenticatedIncidentsNewRouteImport } from './routes/_authenticated/incidents.new'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
 import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
 import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
@@ -91,6 +93,12 @@ const AuthenticatedPaymentsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedPaymentsRoute,
   } as any)
+const AuthenticatedIncidentsIndexRoute =
+  AuthenticatedIncidentsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedIncidentsRoute,
+  } as any)
 const AuthenticatedClientsIndexRoute =
   AuthenticatedClientsIndexRouteImport.update({
     id: '/',
@@ -121,6 +129,12 @@ const AuthenticatedPaymentsPaymentIdRoute =
     path: '/$paymentId',
     getParentRoute: () => AuthenticatedPaymentsRoute,
   } as any)
+const AuthenticatedIncidentsNewRoute =
+  AuthenticatedIncidentsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedIncidentsRoute,
+  } as any)
 const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -144,17 +158,19 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/clients': typeof AuthenticatedClientsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/incidents': typeof AuthenticatedIncidentsRoute
+  '/incidents': typeof AuthenticatedIncidentsRouteWithChildren
   '/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/incidents/new': typeof AuthenticatedIncidentsNewRoute
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
+  '/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
@@ -164,15 +180,16 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/incidents': typeof AuthenticatedIncidentsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/incidents/new': typeof AuthenticatedIncidentsNewRoute
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
+  '/incidents': typeof AuthenticatedIncidentsIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
@@ -185,17 +202,19 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/incidents': typeof AuthenticatedIncidentsRoute
+  '/_authenticated/incidents': typeof AuthenticatedIncidentsRouteWithChildren
   '/_authenticated/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/_authenticated/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
+  '/_authenticated/incidents/new': typeof AuthenticatedIncidentsNewRoute
   '/_authenticated/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/_authenticated/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/_authenticated/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/_authenticated/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
+  '/_authenticated/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
@@ -214,11 +233,13 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/clients/new'
+    | '/incidents/new'
     | '/payments/$paymentId'
     | '/payments/dashboard'
     | '/policies/$policyId'
     | '/policies/new'
     | '/clients/'
+    | '/incidents/'
     | '/payments/'
     | '/policies/'
     | '/api/public/hooks/pass-expiration'
@@ -228,15 +249,16 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
-    | '/incidents'
     | '/reports'
     | '/settings'
     | '/clients/new'
+    | '/incidents/new'
     | '/payments/$paymentId'
     | '/payments/dashboard'
     | '/policies/$policyId'
     | '/policies/new'
     | '/clients'
+    | '/incidents'
     | '/payments'
     | '/policies'
     | '/api/public/hooks/pass-expiration'
@@ -254,11 +276,13 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/clients/new'
+    | '/_authenticated/incidents/new'
     | '/_authenticated/payments/$paymentId'
     | '/_authenticated/payments/dashboard'
     | '/_authenticated/policies/$policyId'
     | '/_authenticated/policies/new'
     | '/_authenticated/clients/'
+    | '/_authenticated/incidents/'
     | '/_authenticated/payments/'
     | '/_authenticated/policies/'
     | '/api/public/hooks/pass-expiration'
@@ -359,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPaymentsIndexRouteImport
       parentRoute: typeof AuthenticatedPaymentsRoute
     }
+    '/_authenticated/incidents/': {
+      id: '/_authenticated/incidents/'
+      path: '/'
+      fullPath: '/incidents/'
+      preLoaderRoute: typeof AuthenticatedIncidentsIndexRouteImport
+      parentRoute: typeof AuthenticatedIncidentsRoute
+    }
     '/_authenticated/clients/': {
       id: '/_authenticated/clients/'
       path: '/'
@@ -393,6 +424,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/payments/$paymentId'
       preLoaderRoute: typeof AuthenticatedPaymentsPaymentIdRouteImport
       parentRoute: typeof AuthenticatedPaymentsRoute
+    }
+    '/_authenticated/incidents/new': {
+      id: '/_authenticated/incidents/new'
+      path: '/new'
+      fullPath: '/incidents/new'
+      preLoaderRoute: typeof AuthenticatedIncidentsNewRouteImport
+      parentRoute: typeof AuthenticatedIncidentsRoute
     }
     '/_authenticated/clients/new': {
       id: '/_authenticated/clients/new'
@@ -431,6 +469,22 @@ const AuthenticatedClientsRouteChildren: AuthenticatedClientsRouteChildren = {
 const AuthenticatedClientsRouteWithChildren =
   AuthenticatedClientsRoute._addFileChildren(AuthenticatedClientsRouteChildren)
 
+interface AuthenticatedIncidentsRouteChildren {
+  AuthenticatedIncidentsNewRoute: typeof AuthenticatedIncidentsNewRoute
+  AuthenticatedIncidentsIndexRoute: typeof AuthenticatedIncidentsIndexRoute
+}
+
+const AuthenticatedIncidentsRouteChildren: AuthenticatedIncidentsRouteChildren =
+  {
+    AuthenticatedIncidentsNewRoute: AuthenticatedIncidentsNewRoute,
+    AuthenticatedIncidentsIndexRoute: AuthenticatedIncidentsIndexRoute,
+  }
+
+const AuthenticatedIncidentsRouteWithChildren =
+  AuthenticatedIncidentsRoute._addFileChildren(
+    AuthenticatedIncidentsRouteChildren,
+  )
+
 interface AuthenticatedPaymentsRouteChildren {
   AuthenticatedPaymentsPaymentIdRoute: typeof AuthenticatedPaymentsPaymentIdRoute
   AuthenticatedPaymentsDashboardRoute: typeof AuthenticatedPaymentsDashboardRoute
@@ -468,7 +522,7 @@ const AuthenticatedPoliciesRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedIncidentsRoute: typeof AuthenticatedIncidentsRoute
+  AuthenticatedIncidentsRoute: typeof AuthenticatedIncidentsRouteWithChildren
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRouteWithChildren
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -478,7 +532,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientsRoute: AuthenticatedClientsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedIncidentsRoute: AuthenticatedIncidentsRoute,
+  AuthenticatedIncidentsRoute: AuthenticatedIncidentsRouteWithChildren,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRouteWithChildren,
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
