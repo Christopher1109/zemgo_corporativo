@@ -57,7 +57,7 @@ function NewClient() {
 
     setBusy(false);
     toast.success(action === "create" ? "Cliente creado" : "Cliente afiliado al programa");
-    navigate({ to: "/clients/$clientId", params: { clientId } });
+    navigate({ to: "/clients" });
   }
 
   async function onSubmit(e: React.FormEvent) {
