@@ -146,6 +146,13 @@ export const changePolicyStatus = createServerFn({ method: "POST" })
       diff: { from: pol.status, to: data.next_status, reason: data.reason ?? null },
     });
 
+    if (data.next_status === "active") {
+      const { error: schedErr } = await supabase.rpc("create_payment_schedule_for_policy", {
+        _policy_id: data.policy_id,
+      });
+      if (schedErr) throw schedErr;
+    }
+
     return { ok: true };
   });
 
