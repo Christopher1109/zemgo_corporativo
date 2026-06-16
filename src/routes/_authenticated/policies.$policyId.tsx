@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { changePolicyStatus, generateCertificatePdf } from "@/lib/policies.functions";
+import { PolicyPaymentsTab } from "@/components/payments/policy-payments-tab";
 
 export const Route = createFileRoute("/_authenticated/policies/$policyId")({
   head: () => ({ meta: [{ title: "Detalle de póliza — HOPE Consulting" }] }),
