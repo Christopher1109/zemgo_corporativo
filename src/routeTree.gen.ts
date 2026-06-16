@@ -28,6 +28,8 @@ import { Route as AuthenticatedPoliciesPolicyIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedPaymentsDashboardRouteImport } from './routes/_authenticated/payments.dashboard'
 import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
 import { Route as AuthenticatedIncidentsNewRouteImport } from './routes/_authenticated/incidents.new'
+import { Route as AuthenticatedIncidentsDashboardRouteImport } from './routes/_authenticated/incidents.dashboard'
+import { Route as AuthenticatedIncidentsIncidentIdRouteImport } from './routes/_authenticated/incidents.$incidentId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
 import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
 import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
@@ -135,6 +137,18 @@ const AuthenticatedIncidentsNewRoute =
     path: '/new',
     getParentRoute: () => AuthenticatedIncidentsRoute,
   } as any)
+const AuthenticatedIncidentsDashboardRoute =
+  AuthenticatedIncidentsDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedIncidentsRoute,
+  } as any)
+const AuthenticatedIncidentsIncidentIdRoute =
+  AuthenticatedIncidentsIncidentIdRouteImport.update({
+    id: '/$incidentId',
+    path: '/$incidentId',
+    getParentRoute: () => AuthenticatedIncidentsRoute,
+  } as any)
 const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -164,6 +178,8 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
+  '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/incidents/new': typeof AuthenticatedIncidentsNewRoute
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
@@ -183,6 +199,8 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
+  '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/incidents/new': typeof AuthenticatedIncidentsNewRoute
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
@@ -208,6 +226,8 @@ export interface FileRoutesById {
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
+  '/_authenticated/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
+  '/_authenticated/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/_authenticated/incidents/new': typeof AuthenticatedIncidentsNewRoute
   '/_authenticated/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/_authenticated/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
@@ -233,6 +253,8 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/clients/new'
+    | '/incidents/$incidentId'
+    | '/incidents/dashboard'
     | '/incidents/new'
     | '/payments/$paymentId'
     | '/payments/dashboard'
@@ -252,6 +274,8 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/clients/new'
+    | '/incidents/$incidentId'
+    | '/incidents/dashboard'
     | '/incidents/new'
     | '/payments/$paymentId'
     | '/payments/dashboard'
@@ -276,6 +300,8 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/clients/new'
+    | '/_authenticated/incidents/$incidentId'
+    | '/_authenticated/incidents/dashboard'
     | '/_authenticated/incidents/new'
     | '/_authenticated/payments/$paymentId'
     | '/_authenticated/payments/dashboard'
@@ -432,6 +458,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIncidentsNewRouteImport
       parentRoute: typeof AuthenticatedIncidentsRoute
     }
+    '/_authenticated/incidents/dashboard': {
+      id: '/_authenticated/incidents/dashboard'
+      path: '/dashboard'
+      fullPath: '/incidents/dashboard'
+      preLoaderRoute: typeof AuthenticatedIncidentsDashboardRouteImport
+      parentRoute: typeof AuthenticatedIncidentsRoute
+    }
+    '/_authenticated/incidents/$incidentId': {
+      id: '/_authenticated/incidents/$incidentId'
+      path: '/$incidentId'
+      fullPath: '/incidents/$incidentId'
+      preLoaderRoute: typeof AuthenticatedIncidentsIncidentIdRouteImport
+      parentRoute: typeof AuthenticatedIncidentsRoute
+    }
     '/_authenticated/clients/new': {
       id: '/_authenticated/clients/new'
       path: '/new'
@@ -470,12 +510,17 @@ const AuthenticatedClientsRouteWithChildren =
   AuthenticatedClientsRoute._addFileChildren(AuthenticatedClientsRouteChildren)
 
 interface AuthenticatedIncidentsRouteChildren {
+  AuthenticatedIncidentsIncidentIdRoute: typeof AuthenticatedIncidentsIncidentIdRoute
+  AuthenticatedIncidentsDashboardRoute: typeof AuthenticatedIncidentsDashboardRoute
   AuthenticatedIncidentsNewRoute: typeof AuthenticatedIncidentsNewRoute
   AuthenticatedIncidentsIndexRoute: typeof AuthenticatedIncidentsIndexRoute
 }
 
 const AuthenticatedIncidentsRouteChildren: AuthenticatedIncidentsRouteChildren =
   {
+    AuthenticatedIncidentsIncidentIdRoute:
+      AuthenticatedIncidentsIncidentIdRoute,
+    AuthenticatedIncidentsDashboardRoute: AuthenticatedIncidentsDashboardRoute,
     AuthenticatedIncidentsNewRoute: AuthenticatedIncidentsNewRoute,
     AuthenticatedIncidentsIndexRoute: AuthenticatedIncidentsIndexRoute,
   }

@@ -20,7 +20,7 @@ const NAV = [
   { to: "/clients", label: "Clientes", icon: Users, enabled: true },
   { to: "/policies", label: "Pólizas", icon: FileText, enabled: true },
   { to: "/payments", label: "Pagos", icon: CreditCard, enabled: true },
-  { to: "/incidents", label: "Siniestros", icon: AlertTriangle, enabled: false },
+  { to: "/incidents", label: "Siniestros", icon: AlertTriangle, enabled: true },
   { to: "/reports", label: "Reportes", icon: BarChart3, enabled: false },
   { to: "/settings", label: "Configuración", icon: Settings, enabled: false },
 ] as const;
