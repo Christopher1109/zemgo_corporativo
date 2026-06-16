@@ -33,34 +33,73 @@ function NewClient() {
   const set = (k: keyof typeof empty) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  async function enrollAndGo(clientId: string, action: "create" | "enroll") {
+    const { data: existingCp } = await supabase
+      .from("client_programs")
+      .select("id")
+      .eq("client_id", clientId)
+      .eq("program_id", programId)
+      .maybeSingle();
+
+    if (!existingCp) {
+      const { error: cpErr } = await supabase.from("client_programs").insert({
+        client_id: clientId, program_id: programId, status: "prospect",
+      });
+      if (cpErr) { setBusy(false); return toast.error(cpErr.message); }
+    }
+
+    await supabase.from("audit_log").insert({
+      user_id: user?.id, program_id: programId,
+      entity_type: "client", entity_id: clientId,
+      action: action === "create" ? "create" : "enroll_program",
+      diff: { program_id: programId },
+    });
+
+    setBusy(false);
+    toast.success(action === "create" ? "Cliente creado" : "Cliente afiliado al programa");
+    navigate({ to: "/clients" });
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!programId) return toast.error("Selecciona un programa");
     setBusy(true);
+    const curp = form.curp.trim().toUpperCase();
     const payload: any = {
       ...form,
+      curp,
+      rfc: form.rfc ? form.rfc.trim().toUpperCase() : null,
       date_of_birth: form.date_of_birth || null,
       created_by: user?.id,
       sales_rep_id: user?.id,
     };
     Object.keys(payload).forEach((k) => payload[k] === "" && (payload[k] = null));
-    const { data: client, error } = await supabase.from("clients").insert(payload).select("id").single();
-    if (error) { setBusy(false); return toast.error(error.message); }
 
-    const { error: cpErr } = await supabase.from("client_programs").insert({
-      client_id: client.id, program_id: programId, status: "prospect",
-    });
-    if (cpErr) { setBusy(false); return toast.error(cpErr.message); }
+    const { data: client, error } = await supabase
+      .from("clients").insert(payload).select("id").single();
 
-    await supabase.from("audit_log").insert({
-      user_id: user?.id, program_id: programId,
-      entity_type: "client", entity_id: client.id,
-      action: "create", diff: payload,
-    });
+    if (error) {
+      // Duplicate CURP → look up existing client and offer to enroll
+      if ((error as any).code === "23505" || error.message.includes("clients_curp_key")) {
+        const { data: existing } = await supabase
+          .from("clients")
+          .select("id, first_name, last_name")
+          .eq("curp", curp)
+          .maybeSingle();
+        if (existing) {
+          toast.info(
+            `Ya existe un cliente con ese CURP: ${existing.first_name} ${existing.last_name}. Lo afiliaré al programa seleccionado.`,
+          );
+          return enrollAndGo(existing.id, "enroll");
+        }
+        setBusy(false);
+        return toast.error("Ya existe un cliente con ese CURP.");
+      }
+      setBusy(false);
+      return toast.error(error.message);
+    }
 
-    setBusy(false);
-    toast.success("Cliente creado");
-    navigate({ to: "/clients" });
+    return enrollAndGo(client.id, "create");
   }
 
   return (
