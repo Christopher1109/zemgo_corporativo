@@ -286,6 +286,8 @@ export type Database = {
       }
       incidents: {
         Row: {
+          accident_date: string | null
+          accident_time: string | null
           approved_at: string | null
           approved_by: string | null
           client_id: string
@@ -297,10 +299,16 @@ export type Database = {
           location_description: string | null
           occurred_at: string
           policy_id: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          reported_at: string
           status: Database["public"]["Enums"]["incident_status"]
           updated_at: string
         }
         Insert: {
+          accident_date?: string | null
+          accident_time?: string | null
           approved_at?: string | null
           approved_by?: string | null
           client_id: string
@@ -312,10 +320,16 @@ export type Database = {
           location_description?: string | null
           occurred_at: string
           policy_id: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          reported_at?: string
           status?: Database["public"]["Enums"]["incident_status"]
           updated_at?: string
         }
         Update: {
+          accident_date?: string | null
+          accident_time?: string | null
           approved_at?: string | null
           approved_by?: string | null
           client_id?: string
@@ -327,6 +341,10 @@ export type Database = {
           location_description?: string | null
           occurred_at?: string
           policy_id?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          reported_at?: string
           status?: Database["public"]["Enums"]["incident_status"]
           updated_at?: string
         }
@@ -351,11 +369,17 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          director_id: string | null
+          director_name: string | null
           director_signature_url: string | null
           id: string
           incident_id: string
+          issued_by: string | null
           pdf_url: string | null
           policy_id: string
+          revocation_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
           snapshot: Json
           valid_from: string
           valid_until: string
@@ -363,11 +387,17 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          director_id?: string | null
+          director_name?: string | null
           director_signature_url?: string | null
           id?: string
           incident_id: string
+          issued_by?: string | null
           pdf_url?: string | null
           policy_id: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
           snapshot: Json
           valid_from?: string
           valid_until: string
@@ -375,11 +405,17 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          director_id?: string | null
+          director_name?: string | null
           director_signature_url?: string | null
           id?: string
           incident_id?: string
+          issued_by?: string | null
           pdf_url?: string | null
           policy_id?: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
           snapshot?: Json
           valid_from?: string
           valid_until?: string
@@ -703,6 +739,7 @@ export type Database = {
           id: string
           is_active: boolean
           phone: string | null
+          signature_url: string | null
           updated_at: string
         }
         Insert: {
@@ -711,6 +748,7 @@ export type Database = {
           id: string
           is_active?: boolean
           phone?: string | null
+          signature_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -719,6 +757,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           phone?: string | null
+          signature_url?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -901,6 +940,10 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      issue_medical_pass: {
+        Args: { _director_id: string; _hospital: string; _incident_id: string }
+        Returns: string
+      }
       mark_payment_paid: {
         Args: {
           _amount_change_reason: string
@@ -918,7 +961,31 @@ export type Database = {
         Args: { _payment_id: string; _reason: string }
         Returns: undefined
       }
+      reject_incident: {
+        Args: { _incident_id: string; _reason: string }
+        Returns: undefined
+      }
+      report_incident: {
+        Args: {
+          _accident_date: string
+          _accident_time: string
+          _description: string
+          _hospital: string
+          _location: string
+          _policy_id: string
+        }
+        Returns: string
+      }
+      revoke_medical_pass: {
+        Args: { _pass_id: string; _reason: string }
+        Returns: undefined
+      }
+      run_pass_expiration_check: { Args: never; Returns: Json }
       run_payment_housekeeping: { Args: never; Returns: Json }
+      set_medical_pass_pdf_url: {
+        Args: { _pass_id: string; _pdf_url: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "manager" | "operator" | "claims" | "sales" | "viewer"
@@ -931,6 +998,7 @@ export type Database = {
         | "in_treatment"
         | "closed"
         | "rejected"
+        | "pass_expired"
       notification_channel: "email" | "whatsapp" | "sms" | "in_app"
       payment_frequency: "monthly" | "yearly" | "one_time"
       payment_method:
@@ -1092,6 +1160,7 @@ export const Constants = {
         "in_treatment",
         "closed",
         "rejected",
+        "pass_expired",
       ],
       notification_channel: ["email", "whatsapp", "sms", "in_app"],
       payment_frequency: ["monthly", "yearly", "one_time"],
