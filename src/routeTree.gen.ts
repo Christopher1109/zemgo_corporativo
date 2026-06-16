@@ -20,10 +20,14 @@ import { Route as AuthenticatedIncidentsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedPoliciesIndexRouteImport } from './routes/_authenticated/policies.index'
+import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
 import { Route as AuthenticatedPoliciesNewRouteImport } from './routes/_authenticated/policies.new'
 import { Route as AuthenticatedPoliciesPolicyIdRouteImport } from './routes/_authenticated/policies.$policyId'
+import { Route as AuthenticatedPaymentsDashboardRouteImport } from './routes/_authenticated/payments.dashboard'
+import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
+import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -80,6 +84,12 @@ const AuthenticatedPoliciesIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedPoliciesRoute,
   } as any)
+const AuthenticatedPaymentsIndexRoute =
+  AuthenticatedPaymentsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPaymentsRoute,
+  } as any)
 const AuthenticatedClientsIndexRoute =
   AuthenticatedClientsIndexRouteImport.update({
     id: '/',
@@ -98,11 +108,29 @@ const AuthenticatedPoliciesPolicyIdRoute =
     path: '/$policyId',
     getParentRoute: () => AuthenticatedPoliciesRoute,
   } as any)
+const AuthenticatedPaymentsDashboardRoute =
+  AuthenticatedPaymentsDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedPaymentsRoute,
+  } as any)
+const AuthenticatedPaymentsPaymentIdRoute =
+  AuthenticatedPaymentsPaymentIdRouteImport.update({
+    id: '/$paymentId',
+    path: '/$paymentId',
+    getParentRoute: () => AuthenticatedPaymentsRoute,
+  } as any)
 const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   id: '/new',
   path: '/new',
   getParentRoute: () => AuthenticatedClientsRoute,
 } as any)
+const ApiPublicHooksPaymentHousekeepingRoute =
+  ApiPublicHooksPaymentHousekeepingRouteImport.update({
+    id: '/api/public/hooks/payment-housekeeping',
+    path: '/api/public/hooks/payment-housekeeping',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,29 +138,36 @@ export interface FileRoutesByFullPath {
   '/clients': typeof AuthenticatedClientsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/incidents': typeof AuthenticatedIncidentsRoute
-  '/payments': typeof AuthenticatedPaymentsRoute
+  '/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
+  '/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
+  '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
+  '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/incidents': typeof AuthenticatedIncidentsRoute
-  '/payments': typeof AuthenticatedPaymentsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
+  '/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
+  '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
+  '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -142,15 +177,19 @@ export interface FileRoutesById {
   '/_authenticated/clients': typeof AuthenticatedClientsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/incidents': typeof AuthenticatedIncidentsRoute
-  '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
+  '/_authenticated/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/_authenticated/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
+  '/_authenticated/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
+  '/_authenticated/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/_authenticated/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/_authenticated/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
+  '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
+  '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -165,24 +204,31 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/clients/new'
+    | '/payments/$paymentId'
+    | '/payments/dashboard'
     | '/policies/$policyId'
     | '/policies/new'
     | '/clients/'
+    | '/payments/'
     | '/policies/'
+    | '/api/public/hooks/payment-housekeeping'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/dashboard'
     | '/incidents'
-    | '/payments'
     | '/reports'
     | '/settings'
     | '/clients/new'
+    | '/payments/$paymentId'
+    | '/payments/dashboard'
     | '/policies/$policyId'
     | '/policies/new'
     | '/clients'
+    | '/payments'
     | '/policies'
+    | '/api/public/hooks/payment-housekeeping'
   id:
     | '__root__'
     | '/'
@@ -196,16 +242,21 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/clients/new'
+    | '/_authenticated/payments/$paymentId'
+    | '/_authenticated/payments/dashboard'
     | '/_authenticated/policies/$policyId'
     | '/_authenticated/policies/new'
     | '/_authenticated/clients/'
+    | '/_authenticated/payments/'
     | '/_authenticated/policies/'
+    | '/api/public/hooks/payment-housekeeping'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksPaymentHousekeepingRoute: typeof ApiPublicHooksPaymentHousekeepingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -287,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPoliciesIndexRouteImport
       parentRoute: typeof AuthenticatedPoliciesRoute
     }
+    '/_authenticated/payments/': {
+      id: '/_authenticated/payments/'
+      path: '/'
+      fullPath: '/payments/'
+      preLoaderRoute: typeof AuthenticatedPaymentsIndexRouteImport
+      parentRoute: typeof AuthenticatedPaymentsRoute
+    }
     '/_authenticated/clients/': {
       id: '/_authenticated/clients/'
       path: '/'
@@ -308,12 +366,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPoliciesPolicyIdRouteImport
       parentRoute: typeof AuthenticatedPoliciesRoute
     }
+    '/_authenticated/payments/dashboard': {
+      id: '/_authenticated/payments/dashboard'
+      path: '/dashboard'
+      fullPath: '/payments/dashboard'
+      preLoaderRoute: typeof AuthenticatedPaymentsDashboardRouteImport
+      parentRoute: typeof AuthenticatedPaymentsRoute
+    }
+    '/_authenticated/payments/$paymentId': {
+      id: '/_authenticated/payments/$paymentId'
+      path: '/$paymentId'
+      fullPath: '/payments/$paymentId'
+      preLoaderRoute: typeof AuthenticatedPaymentsPaymentIdRouteImport
+      parentRoute: typeof AuthenticatedPaymentsRoute
+    }
     '/_authenticated/clients/new': {
       id: '/_authenticated/clients/new'
       path: '/new'
       fullPath: '/clients/new'
       preLoaderRoute: typeof AuthenticatedClientsNewRouteImport
       parentRoute: typeof AuthenticatedClientsRoute
+    }
+    '/api/public/hooks/payment-housekeeping': {
+      id: '/api/public/hooks/payment-housekeeping'
+      path: '/api/public/hooks/payment-housekeeping'
+      fullPath: '/api/public/hooks/payment-housekeeping'
+      preLoaderRoute: typeof ApiPublicHooksPaymentHousekeepingRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -330,6 +409,23 @@ const AuthenticatedClientsRouteChildren: AuthenticatedClientsRouteChildren = {
 
 const AuthenticatedClientsRouteWithChildren =
   AuthenticatedClientsRoute._addFileChildren(AuthenticatedClientsRouteChildren)
+
+interface AuthenticatedPaymentsRouteChildren {
+  AuthenticatedPaymentsPaymentIdRoute: typeof AuthenticatedPaymentsPaymentIdRoute
+  AuthenticatedPaymentsDashboardRoute: typeof AuthenticatedPaymentsDashboardRoute
+  AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
+}
+
+const AuthenticatedPaymentsRouteChildren: AuthenticatedPaymentsRouteChildren = {
+  AuthenticatedPaymentsPaymentIdRoute: AuthenticatedPaymentsPaymentIdRoute,
+  AuthenticatedPaymentsDashboardRoute: AuthenticatedPaymentsDashboardRoute,
+  AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
+}
+
+const AuthenticatedPaymentsRouteWithChildren =
+  AuthenticatedPaymentsRoute._addFileChildren(
+    AuthenticatedPaymentsRouteChildren,
+  )
 
 interface AuthenticatedPoliciesRouteChildren {
   AuthenticatedPoliciesPolicyIdRoute: typeof AuthenticatedPoliciesPolicyIdRoute
@@ -352,7 +448,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIncidentsRoute: typeof AuthenticatedIncidentsRoute
-  AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
+  AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRouteWithChildren
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -362,7 +458,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientsRoute: AuthenticatedClientsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIncidentsRoute: AuthenticatedIncidentsRoute,
-  AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
+  AuthenticatedPaymentsRoute: AuthenticatedPaymentsRouteWithChildren,
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
@@ -375,6 +471,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksPaymentHousekeepingRoute:
+    ApiPublicHooksPaymentHousekeepingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

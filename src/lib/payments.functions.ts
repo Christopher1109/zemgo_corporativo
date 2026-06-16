@@ -19,7 +19,7 @@ export const markPaymentPaid = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const { data: res, error } = await supabase.rpc("mark_payment_paid", {
+    const { data: res, error } = await (supabase.rpc as any)("mark_payment_paid", {
       _payment_id: data.payment_id,
       _method: data.method,
       _paid_at: data.paid_at,
