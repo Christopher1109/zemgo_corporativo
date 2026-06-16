@@ -22,6 +22,7 @@ import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPoliciesIndexRouteImport } from './routes/_authenticated/policies.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
 import { Route as AuthenticatedPoliciesNewRouteImport } from './routes/_authenticated/policies.new'
+import { Route as AuthenticatedPoliciesPolicyIdRouteImport } from './routes/_authenticated/policies.$policyId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
 
 const AuthRoute = AuthRouteImport.update({
@@ -91,6 +92,12 @@ const AuthenticatedPoliciesNewRoute =
     path: '/new',
     getParentRoute: () => AuthenticatedPoliciesRoute,
   } as any)
+const AuthenticatedPoliciesPolicyIdRoute =
+  AuthenticatedPoliciesPolicyIdRouteImport.update({
+    id: '/$policyId',
+    path: '/$policyId',
+    getParentRoute: () => AuthenticatedPoliciesRoute,
+  } as any)
 const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -108,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
@@ -121,6 +129,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
@@ -138,6 +147,7 @@ export interface FileRoutesById {
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
+  '/_authenticated/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/_authenticated/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/clients/new'
+    | '/policies/$policyId'
     | '/policies/new'
     | '/clients/'
     | '/policies/'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/clients/new'
+    | '/policies/$policyId'
     | '/policies/new'
     | '/clients'
     | '/policies'
@@ -184,6 +196,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/clients/new'
+    | '/_authenticated/policies/$policyId'
     | '/_authenticated/policies/new'
     | '/_authenticated/clients/'
     | '/_authenticated/policies/'
@@ -288,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPoliciesNewRouteImport
       parentRoute: typeof AuthenticatedPoliciesRoute
     }
+    '/_authenticated/policies/$policyId': {
+      id: '/_authenticated/policies/$policyId'
+      path: '/$policyId'
+      fullPath: '/policies/$policyId'
+      preLoaderRoute: typeof AuthenticatedPoliciesPolicyIdRouteImport
+      parentRoute: typeof AuthenticatedPoliciesRoute
+    }
     '/_authenticated/clients/new': {
       id: '/_authenticated/clients/new'
       path: '/new'
@@ -312,11 +332,13 @@ const AuthenticatedClientsRouteWithChildren =
   AuthenticatedClientsRoute._addFileChildren(AuthenticatedClientsRouteChildren)
 
 interface AuthenticatedPoliciesRouteChildren {
+  AuthenticatedPoliciesPolicyIdRoute: typeof AuthenticatedPoliciesPolicyIdRoute
   AuthenticatedPoliciesNewRoute: typeof AuthenticatedPoliciesNewRoute
   AuthenticatedPoliciesIndexRoute: typeof AuthenticatedPoliciesIndexRoute
 }
 
 const AuthenticatedPoliciesRouteChildren: AuthenticatedPoliciesRouteChildren = {
+  AuthenticatedPoliciesPolicyIdRoute: AuthenticatedPoliciesPolicyIdRoute,
   AuthenticatedPoliciesNewRoute: AuthenticatedPoliciesNewRoute,
   AuthenticatedPoliciesIndexRoute: AuthenticatedPoliciesIndexRoute,
 }
