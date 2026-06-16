@@ -236,23 +236,7 @@ function PolicyDetail() {
         </TabsContent>
 
         <TabsContent value="payments">
-          <Card>
-            <Table>
-              <TableHeader><TableRow><TableHead>Vencimiento</TableHead><TableHead>Monto</TableHead><TableHead>Estado</TableHead><TableHead>Método</TableHead><TableHead>Pagado</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {payments.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">Sin pagos asociados.</TableCell></TableRow>}
-                {payments.map((p: any) => (
-                  <TableRow key={p.id}>
-                    <TableCell>{p.due_date ?? "—"}</TableCell>
-                    <TableCell>${Number(p.amount).toLocaleString("es-MX")}</TableCell>
-                    <TableCell><Badge variant={p.status === "paid" ? "default" : "secondary"}>{p.status}</Badge></TableCell>
-                    <TableCell>{p.method ?? "—"}</TableCell>
-                    <TableCell>{p.paid_at ?? "—"}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
+          <PolicyPaymentsTab policyId={policyId} policyStatus={policy.status} />
         </TabsContent>
 
         <TabsContent value="incidents">
