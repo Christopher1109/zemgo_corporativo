@@ -642,6 +642,35 @@ export type Database = {
           },
         ]
       }
+      policy_folio_counters: {
+        Row: {
+          last_number: number
+          program_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          last_number?: number
+          program_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          last_number?: number
+          program_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_folio_counters_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: true
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -838,6 +867,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      next_policy_folio: { Args: { _program_id: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "manager" | "operator" | "claims" | "sales" | "viewer"
