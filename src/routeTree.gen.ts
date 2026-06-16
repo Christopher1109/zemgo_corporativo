@@ -28,6 +28,7 @@ import { Route as AuthenticatedPaymentsDashboardRouteImport } from './routes/_au
 import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
 import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
+import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -131,6 +132,12 @@ const ApiPublicHooksPaymentHousekeepingRoute =
     path: '/api/public/hooks/payment-housekeeping',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksPassExpirationRoute =
+  ApiPublicHooksPassExpirationRouteImport.update({
+    id: '/api/public/hooks/pass-expiration',
+    path: '/api/public/hooks/pass-expiration',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
+  '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
 }
 export interface FileRoutesByTo {
@@ -167,6 +175,7 @@ export interface FileRoutesByTo {
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
+  '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
 }
 export interface FileRoutesById {
@@ -189,6 +198,7 @@ export interface FileRoutesById {
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
+  '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
 }
 export interface FileRouteTypes {
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/clients/'
     | '/payments/'
     | '/policies/'
+    | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/payments'
     | '/policies'
+    | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
   id:
     | '__root__'
@@ -249,6 +261,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clients/'
     | '/_authenticated/payments/'
     | '/_authenticated/policies/'
+    | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
   fileRoutesById: FileRoutesById
 }
@@ -256,6 +269,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksPassExpirationRoute: typeof ApiPublicHooksPassExpirationRoute
   ApiPublicHooksPaymentHousekeepingRoute: typeof ApiPublicHooksPaymentHousekeepingRoute
 }
 
@@ -394,6 +408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksPaymentHousekeepingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/pass-expiration': {
+      id: '/api/public/hooks/pass-expiration'
+      path: '/api/public/hooks/pass-expiration'
+      fullPath: '/api/public/hooks/pass-expiration'
+      preLoaderRoute: typeof ApiPublicHooksPassExpirationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -471,6 +492,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksPassExpirationRoute: ApiPublicHooksPassExpirationRoute,
   ApiPublicHooksPaymentHousekeepingRoute:
     ApiPublicHooksPaymentHousekeepingRoute,
 }
