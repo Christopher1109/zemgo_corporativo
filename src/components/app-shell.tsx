@@ -19,7 +19,7 @@ const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, enabled: true },
   { to: "/clients", label: "Clientes", icon: Users, enabled: true },
   { to: "/policies", label: "Pólizas", icon: FileText, enabled: true },
-  { to: "/payments", label: "Pagos", icon: CreditCard, enabled: false },
+  { to: "/payments", label: "Pagos", icon: CreditCard, enabled: true },
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, enabled: false },
   { to: "/reports", label: "Reportes", icon: BarChart3, enabled: false },
   { to: "/settings", label: "Configuración", icon: Settings, enabled: false },

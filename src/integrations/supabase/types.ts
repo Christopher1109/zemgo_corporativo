@@ -509,52 +509,77 @@ export type Database = {
         Row: {
           amount: number
           bank_reference: string | null
+          bank_reference_expires_at: string | null
+          cancellation_reason: string | null
           created_at: string
           created_by: string | null
           due_date: string | null
           failure_reason: string | null
           id: string
           method: Database["public"]["Enums"]["payment_method"] | null
+          notes: string | null
+          paid_amount: number | null
           paid_at: string | null
+          payment_schedule_id: string | null
           policy_id: string
           provider: string | null
           provider_transaction_id: string | null
           reconciled: boolean
           status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
         }
         Insert: {
           amount: number
           bank_reference?: string | null
+          bank_reference_expires_at?: string | null
+          cancellation_reason?: string | null
           created_at?: string
           created_by?: string | null
           due_date?: string | null
           failure_reason?: string | null
           id?: string
           method?: Database["public"]["Enums"]["payment_method"] | null
+          notes?: string | null
+          paid_amount?: number | null
           paid_at?: string | null
+          payment_schedule_id?: string | null
           policy_id: string
           provider?: string | null
           provider_transaction_id?: string | null
           reconciled?: boolean
           status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
         }
         Update: {
           amount?: number
           bank_reference?: string | null
+          bank_reference_expires_at?: string | null
+          cancellation_reason?: string | null
           created_at?: string
           created_by?: string | null
           due_date?: string | null
           failure_reason?: string | null
           id?: string
           method?: Database["public"]["Enums"]["payment_method"] | null
+          notes?: string | null
+          paid_amount?: number | null
           paid_at?: string | null
+          payment_schedule_id?: string | null
           policy_id?: string
           provider?: string | null
           provider_transaction_id?: string | null
           reconciled?: boolean
           status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_payment_schedule_id_fkey"
+            columns: ["payment_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "payment_schedules"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_policy_id_fkey"
             columns: ["policy_id"]
@@ -854,6 +879,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_payment: {
+        Args: { _payment_id: string; _reason: string }
+        Returns: undefined
+      }
+      create_payment_schedule_for_policy: {
+        Args: { _policy_id: string }
+        Returns: string
+      }
+      generate_bank_reference: { Args: { _payment_id: string }; Returns: Json }
       has_program_access: {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
@@ -867,7 +901,24 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      mark_payment_paid: {
+        Args: {
+          _amount_change_reason: string
+          _method: Database["public"]["Enums"]["payment_method"]
+          _notes: string
+          _paid_amount: number
+          _paid_at: string
+          _payment_id: string
+          _reference: string
+        }
+        Returns: Json
+      }
       next_policy_folio: { Args: { _program_id: string }; Returns: string }
+      refund_payment: {
+        Args: { _payment_id: string; _reason: string }
+        Returns: undefined
+      }
+      run_payment_housekeeping: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "manager" | "operator" | "claims" | "sales" | "viewer"
