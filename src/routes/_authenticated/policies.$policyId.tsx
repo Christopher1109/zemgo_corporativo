@@ -242,16 +242,23 @@ function PolicyDetail() {
 
         <TabsContent value="incidents">
           <Card>
+            <div className="flex items-center justify-between p-3 border-b">
+              <div className="text-sm text-muted-foreground">{incidents.length} siniestro(s) asociado(s)</div>
+              <Button asChild size="sm">
+                <Link to="/incidents/new" search={{ policy: policyId }}>+ Reportar siniestro</Link>
+              </Button>
+            </div>
             <Table>
-              <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Estado</TableHead><TableHead>Hospital</TableHead><TableHead>Descripción</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Estado</TableHead><TableHead>Hospital</TableHead><TableHead>Descripción</TableHead><TableHead></TableHead></TableRow></TableHeader>
               <TableBody>
-                {incidents.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-6 text-muted-foreground">Sin siniestros asociados.</TableCell></TableRow>}
+                {incidents.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">Sin siniestros asociados.</TableCell></TableRow>}
                 {incidents.map((i: any) => (
                   <TableRow key={i.id}>
-                    <TableCell>{new Date(i.occurred_at).toLocaleDateString("es-MX")}</TableCell>
-                    <TableCell><Badge>{i.status}</Badge></TableCell>
+                    <TableCell>{i.accident_date ?? new Date(i.occurred_at).toLocaleDateString("es-MX")}</TableCell>
+                    <TableCell><Badge variant="outline">{i.status}</Badge></TableCell>
                     <TableCell>{i.hospital ?? "—"}</TableCell>
                     <TableCell className="max-w-xs truncate">{i.description ?? "—"}</TableCell>
+                    <TableCell><Button asChild size="sm" variant="ghost"><Link to="/incidents/$incidentId" params={{ incidentId: i.id }}>Abrir</Link></Button></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
