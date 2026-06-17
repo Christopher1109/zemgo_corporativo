@@ -10,7 +10,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { renderPdfToBytes } from "./render";
-import { SmokeTestDoc } from "./templates/SmokeTest";
+import { MedicalPassHIR } from "./templates/MedicalPassHIR";
 
 export interface MedicalPassData {
   pass_id: string;
@@ -22,8 +22,16 @@ export interface MedicalPassData {
 }
 
 function buildMedicalPassDoc(data: MedicalPassData) {
-  // TODO: replace with MedicalPassHIR template once the HTML lands.
-  return <SmokeTestDoc label={`HIR pass ${data.pass_id}`} />;
+  return (
+    <MedicalPassHIR
+      pass_id={data.pass_id}
+      valid_from={data.valid_from}
+      valid_until={data.valid_until}
+      director_name={data.director_name}
+      director_signature_url={data.director_signature_url}
+      snapshot={data.snapshot as any}
+    />
+  );
 }
 
 export const generateMedicalPass = createServerFn({ method: "POST" })
