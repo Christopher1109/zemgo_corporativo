@@ -142,3 +142,11 @@
     color: var(--color-foreground);
   }
 }
+
+@media print {
+  aside, header, .print\:hidden { display: none !important; }
+  main { padding: 0 !important; overflow: visible !important; }
+  body, html { background: white !important; }
+  .recharts-wrapper { page-break-inside: avoid; }
+  * { box-shadow: none !important; }
+}
