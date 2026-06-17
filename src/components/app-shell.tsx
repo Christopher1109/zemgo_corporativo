@@ -1,5 +1,8 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { checkIsSuperAdmin } from "@/lib/users.functions";
+import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Shield } from "lucide-react";
 import { useProgram } from "@/lib/program-context";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -30,6 +33,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAdminFn = useServerFn(checkIsSuperAdmin);
+  const isAdminQ = useQuery({
+    queryKey: ["is-super-admin"], queryFn: () => isAdminFn(), staleTime: 60_000,
+  });
 
   async function handleSignOut() {
     await signOut();
