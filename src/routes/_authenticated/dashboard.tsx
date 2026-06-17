@@ -1,78 +1,210 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileText, CreditCard, AlertTriangle } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
+} from "recharts";
+import { Users, FileText, CreditCard, AlertTriangle, RefreshCw, TrendingUp } from "lucide-react";
 import { useProgram } from "@/lib/program-context";
-import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { KpiCard } from "@/components/dashboard/KpiCard";
+import { ChartCard } from "@/components/dashboard/ChartCard";
+import { ActionItemsPanel } from "@/components/dashboard/ActionItems";
+import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import {
+  fetchKpis, fetchPolicyDistribution, fetchTopDebtors,
+  fetchMonthlyCollection, fetchMonthlyNewClients, fetchActionItems, fetchRecentActivity,
+} from "@/lib/dashboard-queries";
+import { format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — HOPE Consulting" }] }),
   component: Dashboard,
 });
 
-function Metric({ icon: Icon, label, value, hint }: { icon: any; label: string; value: string | number; hint?: string }) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-        <Icon className="h-4 w-4" style={{ color: "var(--program-primary)" }} />
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-bold">{value}</div>
-        {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
-      </CardContent>
-    </Card>
-  );
-}
+const fmtMoney = (n: number) => `$${(n ?? 0).toLocaleString("es-MX", { maximumFractionDigits: 0 })}`;
 
 function Dashboard() {
-  const { activeProgram } = useProgram();
-  const programId = activeProgram?.id;
+  const { activeProgram, programs } = useProgram();
+  const [scopeMode, setScopeMode] = useState<"current" | "all">("current");
+  const scope = scopeMode === "all" ? null : activeProgram?.id ?? null;
+  const scopeKey = scope ?? "all";
 
-  const { data: stats } = useQuery({
-    queryKey: ["dashboard", programId],
-    enabled: !!programId,
-    queryFn: async () => {
-      const [clients, policies, payments, incidents] = await Promise.all([
-        supabase.from("client_programs").select("id", { count: "exact", head: true }).eq("program_id", programId!).eq("status", "active"),
-        supabase.from("policies").select("id", { count: "exact", head: true }).eq("program_id", programId!).eq("status", "active"),
-        supabase.from("payments").select("amount").gte("paid_at", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
-        supabase.from("incidents").select("id", { count: "exact", head: true }).in("status", ["reported", "pending_review", "in_treatment"]),
-      ]);
-      const monthTotal = (payments.data ?? []).reduce((s, p: any) => s + Number(p.amount ?? 0), 0);
-      return {
-        clients: clients.count ?? 0,
-        policies: policies.count ?? 0,
-        payments: monthTotal,
-        incidents: incidents.count ?? 0,
-      };
-    },
-  });
+  const opts = { staleTime: 5 * 60_000 };
+  const kpiQ = useQuery({ queryKey: ["dash-kpi", scopeKey], queryFn: () => fetchKpis(scope), ...opts });
+  const distQ = useQuery({ queryKey: ["dash-dist"], queryFn: fetchPolicyDistribution, ...opts });
+  const debtQ = useQuery({ queryKey: ["dash-debt", scopeKey], queryFn: () => fetchTopDebtors(scope), ...opts });
+  const colQ  = useQuery({ queryKey: ["dash-col", scopeKey],  queryFn: () => fetchMonthlyCollection(scope), ...opts });
+  const newQ  = useQuery({ queryKey: ["dash-new", scopeKey],  queryFn: () => fetchMonthlyNewClients(scope), ...opts });
+  const actQ  = useQuery({ queryKey: ["dash-act", scopeKey],  queryFn: () => fetchActionItems(scope), ...opts });
+  const feedQ = useQuery({ queryKey: ["dash-feed", scopeKey], queryFn: () => fetchRecentActivity(scope), staleTime: 0 });
+
+  const kpi = kpiQ.data;
+  const collectionDelta = useMemo(() => {
+    if (!kpi) return null;
+    const prev = Number(kpi.prev_month_collected ?? 0);
+    if (prev === 0) return null;
+    return (Number(kpi.mtd_collected) - prev) / prev;
+  }, [kpi]);
+  const collectionRate = useMemo(() => {
+    if (!kpi) return 0;
+    const paid = Number(kpi.paid_count_mtd ?? 0);
+    const overdue = Number(kpi.overdue_count ?? 0);
+    const total = paid + overdue;
+    return total === 0 ? 0 : paid / total;
+  }, [kpi]);
+
+  // Build pivot for time-series (one series per program)
+  const programById = useMemo(() => Object.fromEntries(programs.map((p) => [p.id, p])), [programs]);
+  function pivot(rows?: { program_id: string; month: string; total: number }[]) {
+    if (!rows || rows.length === 0) return [];
+    const months = Array.from(new Set(rows.map((r) => r.month))).sort();
+    return months.map((m) => {
+      const out: any = { month: format(parseISO(m), "MMM yy", { locale: es }) };
+      rows.filter((r) => r.month === m).forEach((r) => {
+        const p = programById[r.program_id];
+        out[p?.code ?? "?"] = r.total;
+      });
+      return out;
+    });
+  }
+  const colSeries = useMemo(() => pivot(colQ.data), [colQ.data, programById]);
+  const newSeries = useMemo(() => pivot(newQ.data), [newQ.data, programById]);
+  const seriesPrograms = useMemo(() => {
+    if (scope) {
+      const p = programs.find((x) => x.id === scope);
+      return p ? [p] : [];
+    }
+    return programs;
+  }, [scope, programs]);
+
+  function refreshAll() {
+    kpiQ.refetch(); distQ.refetch(); debtQ.refetch();
+    colQ.refetch(); newQ.refetch(); actQ.refetch(); feedQ.refetch();
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          Resumen del programa <strong>{activeProgram?.name}</strong>
-        </p>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Metric icon={Users} label="Clientes activos" value={stats?.clients ?? 0} />
-        <Metric icon={FileText} label="Pólizas vigentes" value={stats?.policies ?? 0} />
-        <Metric icon={CreditCard} label="Pagos del mes" value={`$${(stats?.payments ?? 0).toLocaleString("es-MX")}`} hint="MXN" />
-        <Metric icon={AlertTriangle} label="Siniestros abiertos" value={stats?.incidents ?? 0} />
+    <div className="space-y-6 print:space-y-3">
+      {/* Header */}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight truncate">Dashboard ejecutivo</h1>
+          <p className="text-sm text-muted-foreground truncate">
+            {scope ? `Programa ${activeProgram?.name}` : `Vista consolidada de los ${programs.length} programas`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 print:hidden">
+          <Tabs value={scopeMode} onValueChange={(v) => setScopeMode(v as any)}>
+            <TabsList>
+              <TabsTrigger value="current" disabled={!activeProgram}>Programa actual</TabsTrigger>
+              <TabsTrigger value="all">Todos</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button variant="outline" size="sm" onClick={refreshAll}>
+            <RefreshCw className="h-4 w-4 mr-2" /> Refrescar
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Bienvenido</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>Esta es la fase inicial de la plataforma. Las secciones de Dashboard y Clientes están operativas.</p>
-          <p>Cambia de programa con el selector del sidebar para ver cómo la interfaz se adapta a los colores corporativos de cada uno.</p>
-        </CardContent>
-      </Card>
+      {/* KPIs */}
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 print:grid-cols-3">
+        <KpiCard loading={kpiQ.isLoading} label="Clientes activos" icon={Users}
+          value={kpi?.active_clients ?? 0} />
+        <KpiCard loading={kpiQ.isLoading} label="Pólizas vigentes" icon={FileText}
+          value={kpi?.active_policies ?? 0} />
+        <KpiCard loading={kpiQ.isLoading} label="Cobrado este mes" icon={CreditCard}
+          value={fmtMoney(Number(kpi?.mtd_collected ?? 0))}
+          delta={collectionDelta}
+          hint="vs mes anterior" />
+        <KpiCard loading={kpiQ.isLoading} label="Siniestros abiertos" icon={AlertTriangle}
+          value={kpi?.open_incidents ?? 0}
+          flag={(kpi?.urgent_incidents ?? 0) > 0 ? "danger" : null}
+          hint={(kpi?.urgent_incidents ?? 0) > 0 ? `${kpi?.urgent_incidents} >48hrs` : undefined} />
+        <KpiCard loading={kpiQ.isLoading} label="Renovaciones 30d" icon={RefreshCw}
+          value={kpi?.renewals_30d ?? 0} />
+        <KpiCard loading={kpiQ.isLoading} label="Tasa de cobranza" icon={TrendingUp}
+          value={`${(collectionRate * 100).toFixed(1)}%`}
+          hint={`${kpi?.paid_count_mtd ?? 0} pagados / ${kpi?.overdue_count ?? 0} vencidos`} />
+      </div>
+
+      {/* Charts grid */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        <ChartCard title="Cobranza por mes" subtitle="Últimos 12 meses"
+          loading={colQ.isLoading}
+          empty={colSeries.length === 0 ? "Sin cobranza registrada aún." : null}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={colSeries} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" fontSize={11} />
+              <YAxis fontSize={11} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+              <Tooltip formatter={(v: any) => fmtMoney(Number(v))} />
+              <Legend />
+              {seriesPrograms.map((p) => (
+                <Line key={p.id} type="monotone" dataKey={p.code} stroke={p.color_primary} strokeWidth={2} dot={{ r: 3 }} />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Nuevos clientes por mes" subtitle="Últimos 12 meses"
+          loading={newQ.isLoading}
+          empty={newSeries.length === 0 ? "Sin altas en este periodo." : null}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={newSeries} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" fontSize={11} />
+              <YAxis fontSize={11} allowDecimals={false} />
+              <Tooltip />
+              <Legend />
+              {seriesPrograms.map((p) => (
+                <Bar key={p.id} dataKey={p.code} stackId="a" fill={p.color_primary} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Distribución de pólizas activas" subtitle="Por programa"
+          loading={distQ.isLoading}
+          empty={(distQ.data ?? []).every((d) => d.count === 0) ? "Aún no hay pólizas activas." : null}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={distQ.data ?? []} dataKey="count" nameKey="name" cx="50%" cy="50%"
+                   innerRadius={50} outerRadius={90} paddingAngle={2}>
+                {(distQ.data ?? []).map((d) => <Cell key={d.program_id} fill={d.color} />)}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Top 10 deudores" subtitle="Mayor adeudo vencido"
+          loading={debtQ.isLoading}
+          empty={(debtQ.data ?? []).length === 0 ? "No hay pagos vencidos. 🎉" : null}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={debtQ.data ?? []} layout="vertical" margin={{ top: 8, right: 24, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" fontSize={11} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+              <YAxis type="category" dataKey="full_name" width={140} fontSize={11} />
+              <Tooltip formatter={(v: any) => fmtMoney(Number(v))} />
+              <Bar dataKey="total_overdue" fill="var(--program-primary)" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+
+      {/* Action items + Activity */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ActionItemsPanel data={actQ.data} loading={actQ.isLoading} />
+        </div>
+        <div>
+          <ActivityFeed rows={feedQ.data} loading={feedQ.isLoading} />
+        </div>
+      </div>
     </div>
   );
 }
