@@ -918,6 +918,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_invite_access_matrix: {
+        Args: { _access: Json; _phone: string; _user_id: string }
+        Returns: Json
+      }
       cancel_payment: {
         Args: { _payment_id: string; _reason: string }
         Returns: undefined
@@ -925,6 +929,10 @@ export type Database = {
       create_payment_schedule_for_policy: {
         Args: { _policy_id: string }
         Returns: string
+      }
+      deactivate_user: {
+        Args: { _reason: string; _user_id: string }
+        Returns: undefined
       }
       generate_bank_reference: { Args: { _payment_id: string }; Returns: Json }
       has_program_access: {
@@ -937,6 +945,10 @@ export type Database = {
           _roles: Database["public"]["Enums"]["app_role"][]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_last_admin_in_program: {
+        Args: { _program_id: string; _user_id: string }
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
@@ -957,6 +969,7 @@ export type Database = {
         Returns: Json
       }
       next_policy_folio: { Args: { _program_id: string }; Returns: string }
+      reactivate_user: { Args: { _user_id: string }; Returns: undefined }
       refund_payment: {
         Args: { _payment_id: string; _reason: string }
         Returns: undefined
@@ -985,6 +998,10 @@ export type Database = {
       set_medical_pass_pdf_url: {
         Args: { _pass_id: string; _pdf_url: string }
         Returns: undefined
+      }
+      update_user_program_access: {
+        Args: { _program_id: string; _role_text: string; _user_id: string }
+        Returns: Json
       }
     }
     Enums: {
