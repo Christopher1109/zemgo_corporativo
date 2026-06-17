@@ -308,13 +308,9 @@ export function MedicalPassHIR(props: MedicalPassHIRProps) {
         </Text>
 
         {/* FOOTER */}
-        <View style={s.footer}>
-          <Text style={s.footerItem}>✉ www.hirseguros.mx</Text>
-          <Text style={s.footerCenter}>☎ 5262 1780 | 800 7348 447</Text>
-          <Text style={s.footerRight}>
-            ⌖ Hermes 28, Col. Crédito Constructor,{"\n"}Alc. Benito Juárez, CDMX, C.P. 3940
-          </Text>
-        </View>
+        <Text style={s.footer}>
+          www.hirseguros.mx  |  5262 1780  |  800 7348 447  |  Hermes 28, Col. Crédito Constructor, Alc. Benito Juárez, CDMX, C.P. 3940
+        </Text>
 
         {/* Footer decorative circles (bottom-left bleed) */}
         <Svg width={120} height={120} style={s.footerSvg}>
