@@ -125,15 +125,12 @@ const s = StyleSheet.create({
   },
   privacyTitle: { fontFamily: "Helvetica-Bold", color: "#1a1a1a" },
 
-  // Footer
+  // Footer (single-line plain text, no glyph icons)
   footer: {
     marginTop: 18, paddingTop: 10, paddingHorizontal: 40, paddingBottom: 30,
     borderTopWidth: 1, borderTopColor: "#e0e0e0",
-    flexDirection: "row", fontSize: 8, color: "#555",
+    fontSize: 8, color: "#555", textAlign: "center",
   },
-  footerItem: { flex: 1 },
-  footerCenter: { flex: 1, textAlign: "center" },
-  footerRight: { flex: 1, textAlign: "right" },
 
   // Footer decorative circles (SVG, bottom-left bleed)
   footerSvg: { position: "absolute", bottom: 0, left: 0 },
