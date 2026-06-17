@@ -1,8 +1,8 @@
-import { renderPdfToBytes } from "./src/lib/pdf/render";
-import { CertificateABC } from "./src/lib/pdf/templates/CertificateABC";
-import { CertificateFutCare } from "./src/lib/pdf/templates/CertificateFutCare";
-import { CertificateMCV } from "./src/lib/pdf/templates/CertificateMCV";
-import { MedicalPassHIR } from "./src/lib/pdf/templates/MedicalPassHIR";
+import { renderPdfToBytes } from "../src/lib/pdf/render";
+import { CertificateABC } from "../src/lib/pdf/templates/CertificateABC";
+import { CertificateFutCare } from "../src/lib/pdf/templates/CertificateFutCare";
+import { CertificateMCV } from "../src/lib/pdf/templates/CertificateMCV";
+import { MedicalPassHIR } from "../src/lib/pdf/templates/MedicalPassHIR";
 import { writeFileSync } from "node:fs";
 
 const client = { first_name:"Juan", middle_name:"Carlos", last_name:"Pérez", second_last_name:"Gómez",
