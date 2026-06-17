@@ -6,7 +6,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { renderPdfToBytes } from "@/lib/pdf/render";
 import { SmokeTestDoc } from "@/lib/pdf/templates/SmokeTest";
 
-export const Route = createFileRoute("/api/public/__pdf-smoke")({
+export const Route = createFileRoute("/api/public/pdf-smoke")({
   server: {
     handlers: {
       GET: async () => {
