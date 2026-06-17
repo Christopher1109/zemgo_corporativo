@@ -32,8 +32,11 @@ import { Route as AuthenticatedIncidentsNewRouteImport } from './routes/_authent
 import { Route as AuthenticatedIncidentsDashboardRouteImport } from './routes/_authenticated/incidents.dashboard'
 import { Route as AuthenticatedIncidentsIncidentIdRouteImport } from './routes/_authenticated/incidents.$incidentId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
+import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin.users.index'
 import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
 import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
+import { Route as AuthenticatedAdminUsersUserIdRouteImport } from './routes/_authenticated/admin.users.$userId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -160,6 +163,17 @@ const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AuthenticatedClientsRoute,
 } as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminUsersIndexRoute =
+  AuthenticatedAdminUsersIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminUsersRoute,
+  } as any)
 const ApiPublicHooksPaymentHousekeepingRoute =
   ApiPublicHooksPaymentHousekeepingRouteImport.update({
     id: '/api/public/hooks/payment-housekeeping',
@@ -172,6 +186,12 @@ const ApiPublicHooksPassExpirationRoute =
     path: '/api/public/hooks/pass-expiration',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedAdminUsersUserIdRoute =
+  AuthenticatedAdminUsersUserIdRouteImport.update({
+    id: '/$userId',
+    path: '/$userId',
+    getParentRoute: () => AuthenticatedAdminUsersRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -183,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/clients/new': typeof AuthenticatedClientsNewRoute
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
@@ -196,8 +217,10 @@ export interface FileRoutesByFullPath {
   '/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
+  '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
+  '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -218,8 +241,10 @@ export interface FileRoutesByTo {
   '/incidents': typeof AuthenticatedIncidentsIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
+  '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
+  '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -233,6 +258,7 @@ export interface FileRoutesById {
   '/_authenticated/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
   '/_authenticated/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/_authenticated/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
@@ -246,8 +272,10 @@ export interface FileRoutesById {
   '/_authenticated/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
+  '/_authenticated/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
+  '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -261,6 +289,7 @@ export interface FileRouteTypes {
     | '/policies'
     | '/reports'
     | '/settings'
+    | '/admin/users'
     | '/clients/new'
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
@@ -274,8 +303,10 @@ export interface FileRouteTypes {
     | '/incidents/'
     | '/payments/'
     | '/policies/'
+    | '/admin/users/$userId'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
+    | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -296,8 +327,10 @@ export interface FileRouteTypes {
     | '/incidents'
     | '/payments'
     | '/policies'
+    | '/admin/users/$userId'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
+    | '/admin/users'
   id:
     | '__root__'
     | '/'
@@ -310,6 +343,7 @@ export interface FileRouteTypes {
     | '/_authenticated/policies'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/_authenticated/admin/users'
     | '/_authenticated/clients/new'
     | '/_authenticated/incidents/$incidentId'
     | '/_authenticated/incidents/dashboard'
@@ -323,8 +357,10 @@ export interface FileRouteTypes {
     | '/_authenticated/incidents/'
     | '/_authenticated/payments/'
     | '/_authenticated/policies/'
+    | '/_authenticated/admin/users/$userId'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
+    | '/_authenticated/admin/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -499,6 +535,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsNewRouteImport
       parentRoute: typeof AuthenticatedClientsRoute
     }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/users/': {
+      id: '/_authenticated/admin/users/'
+      path: '/'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AuthenticatedAdminUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminUsersRoute
+    }
     '/api/public/hooks/payment-housekeeping': {
       id: '/api/public/hooks/payment-housekeeping'
       path: '/api/public/hooks/payment-housekeeping'
@@ -512,6 +562,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/hooks/pass-expiration'
       preLoaderRoute: typeof ApiPublicHooksPassExpirationRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/users/$userId': {
+      id: '/_authenticated/admin/users/$userId'
+      path: '/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof AuthenticatedAdminUsersUserIdRouteImport
+      parentRoute: typeof AuthenticatedAdminUsersRoute
     }
   }
 }
@@ -584,6 +641,22 @@ const AuthenticatedPoliciesRouteWithChildren =
     AuthenticatedPoliciesRouteChildren,
   )
 
+interface AuthenticatedAdminUsersRouteChildren {
+  AuthenticatedAdminUsersUserIdRoute: typeof AuthenticatedAdminUsersUserIdRoute
+  AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
+}
+
+const AuthenticatedAdminUsersRouteChildren: AuthenticatedAdminUsersRouteChildren =
+  {
+    AuthenticatedAdminUsersUserIdRoute: AuthenticatedAdminUsersUserIdRoute,
+    AuthenticatedAdminUsersIndexRoute: AuthenticatedAdminUsersIndexRoute,
+  }
+
+const AuthenticatedAdminUsersRouteWithChildren =
+  AuthenticatedAdminUsersRoute._addFileChildren(
+    AuthenticatedAdminUsersRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -592,6 +665,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -602,6 +676,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
