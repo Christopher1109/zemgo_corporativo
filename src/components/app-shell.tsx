@@ -24,7 +24,7 @@ const NAV = [
   { to: "/policies", label: "Pólizas", icon: FileText, enabled: true },
   { to: "/payments", label: "Pagos", icon: CreditCard, enabled: true },
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, enabled: true },
-  { to: "/reports", label: "Reportes", icon: BarChart3, enabled: false },
+  { to: "/reports", label: "Reportes", icon: BarChart3, enabled: true },
   { to: "/settings", label: "Configuración", icon: Settings, enabled: false },
 ] as const;
 
