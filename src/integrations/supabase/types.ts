@@ -842,6 +842,42 @@ export type Database = {
         }
         Relationships: []
       }
+      report_templates: {
+        Row: {
+          accessible_to_roles: Database["public"]["Enums"]["app_role"][] | null
+          admin_only: boolean
+          code: string
+          created_at: string
+          default_filters: Json | null
+          description: string | null
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          accessible_to_roles?: Database["public"]["Enums"]["app_role"][] | null
+          admin_only?: boolean
+          code: string
+          created_at?: string
+          default_filters?: Json | null
+          description?: string | null
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          accessible_to_roles?: Database["public"]["Enums"]["app_role"][] | null
+          admin_only?: boolean
+          code?: string
+          created_at?: string
+          default_filters?: Json | null
+          description?: string | null
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       roles: {
         Row: {
           code: Database["public"]["Enums"]["app_role"]
@@ -859,6 +895,44 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      saved_report_filters: {
+        Row: {
+          created_at: string
+          filters_json: Json
+          id: string
+          name: string
+          report_code: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters_json?: Json
+          id?: string
+          name: string
+          report_code: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters_json?: Json
+          id?: string
+          name?: string
+          report_code?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_report_filters_report_code_fkey"
+            columns: ["report_code"]
+            isOneToOne: false
+            referencedRelation: "report_templates"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       system_config: {
         Row: {
@@ -915,7 +989,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mv_monthly_collection: {
+        Row: {
+          month: string | null
+          payment_count: number | null
+          program_id: string | null
+          total: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policies_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mv_monthly_new_clients: {
+        Row: {
+          count: number | null
+          month: string | null
+          program_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_programs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       apply_invite_access_matrix: {
@@ -935,6 +1041,42 @@ export type Database = {
         Returns: undefined
       }
       generate_bank_reference: { Args: { _payment_id: string }; Returns: Json }
+      get_action_items: { Args: { _program_id: string }; Returns: Json }
+      get_dashboard_kpis: { Args: { _program_id: string }; Returns: Json }
+      get_policy_distribution: {
+        Args: never
+        Returns: {
+          code: string
+          color: string
+          count: number
+          name: string
+          program_id: string
+        }[]
+      }
+      get_recent_activity: {
+        Args: { _limit?: number; _program_id: string }
+        Returns: {
+          action: string
+          created_at: string
+          diff: Json
+          entity_id: string
+          entity_type: string
+          id: string
+          program_code: string
+          program_id: string
+          user_name: string
+        }[]
+      }
+      get_top_debtors: {
+        Args: { _limit?: number; _program_id: string }
+        Returns: {
+          client_id: string
+          full_name: string
+          oldest_due: string
+          program_code: string
+          total_overdue: number
+        }[]
+      }
       has_program_access: {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
@@ -970,6 +1112,7 @@ export type Database = {
       }
       next_policy_folio: { Args: { _program_id: string }; Returns: string }
       reactivate_user: { Args: { _user_id: string }; Returns: undefined }
+      refresh_dashboard_mvs: { Args: never; Returns: Json }
       refund_payment: {
         Args: { _payment_id: string; _reason: string }
         Returns: undefined
