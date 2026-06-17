@@ -11,6 +11,7 @@ import { renderPdfToBytes } from "./render";
 import { SmokeTestDoc } from "./templates/SmokeTest";
 import { CertificateABC } from "./templates/CertificateABC";
 import { CertificateFutCare } from "./templates/CertificateFutCare";
+import { CertificateMCV } from "./templates/CertificateMCV";
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 365; // 1 year
 
@@ -45,7 +46,20 @@ function dispatchTemplate(programCode: string, data: any) {
           insured_signature_url={data.client?.signature_url ?? null}
         />
       );
-    // TODO: case "MCV" once template lands.
+    case "MCV":
+    case "MANOSCONVALOR":
+      return (
+        <CertificateMCV
+          folio={data.policy.folio}
+          issue_date={data.policy.issue_date}
+          client={data.client}
+          beneficiaries={data.beneficiaries}
+          validity_from={data.policy.start_date}
+          validity_to={data.policy.end_date}
+          contractor_signature_url={data.client?.contractor_signature_url ?? null}
+          insured_signature_url={data.client?.signature_url ?? null}
+        />
+      );
     default:
       return <SmokeTestDoc label={`${code} — ${data.policy.folio}`} />;
   }
