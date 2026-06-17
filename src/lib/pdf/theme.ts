@@ -24,12 +24,12 @@ export const PDF_THEME: {
       sectionText: "#1B5E20",
     },
     FUTCARE: {
-      primary: "#0F4C9C",
-      primaryDark: "#082E5E",
-      accent: "#E6EEF8",
+      primary: "#1565C0",
+      primaryDark: "#0D47A1",
+      accent: "#E3F2FD",
       textOnPrimary: "#FFFFFF",
-      sectionBg: "#BBD4EE",
-      sectionText: "#082E5E",
+      sectionBg: "#BBDEFB",
+      sectionText: "#0D47A1",
     },
     MCV: {
       primary: "#6E1424",
