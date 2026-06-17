@@ -32,12 +32,12 @@ export const PDF_THEME: {
       sectionText: "#0D47A1",
     },
     MCV: {
-      primary: "#6E1424",
-      primaryDark: "#3F0B16",
+      primary: "#722F37",
+      primaryDark: "#4A1F26",
       accent: "#F6E7EA",
       textOnPrimary: "#FFFFFF",
-      sectionBg: "#E8C8CE",
-      sectionText: "#3F0B16",
+      sectionBg: "#E5D4D7",
+      sectionText: "#4A1F26",
     },
   },
   hir: {
