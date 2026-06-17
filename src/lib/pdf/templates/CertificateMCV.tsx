@@ -171,7 +171,6 @@ export function CertificateMCV(props: CertificateMCVProps) {
         {/* HEADER */}
         <View style={s.header}>
           <View style={s.hLogo}>
-            <Text style={s.logoIcon}>🤲</Text>
             <Text style={s.brandMain}>MANOS{"\n"}CON VALOR</Text>
           </View>
           <View style={s.hTitle}><Text style={s.hTitleText}>CERTIFICADO DE COBERTURA</Text></View>
