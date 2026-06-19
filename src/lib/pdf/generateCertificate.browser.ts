@@ -51,6 +51,7 @@ async function blobToBase64(blob: Blob): Promise<string> {
 
 export async function generateCertificateClient(policyId: string): Promise<{ url: string }> {
   const { programCode, payload } = await getCertificatePayload({ data: { policy_id: policyId } });
+  const { pdf } = await import("@react-pdf/renderer");
   const blob = await pdf(buildDoc(programCode, payload) as any).toBlob();
   const pdf_base64 = await blobToBase64(blob);
   const res = await saveCertificatePdf({
