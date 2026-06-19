@@ -24,6 +24,7 @@ import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedIncidentsIndexRouteImport } from './routes/_authenticated/incidents.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
 import { Route as ApiPublicPdfSmokeRouteImport } from './routes/api/public/pdf-smoke'
+import { Route as AuthenticatedReportsMapRouteImport } from './routes/_authenticated/reports.map'
 import { Route as AuthenticatedPoliciesNewRouteImport } from './routes/_authenticated/policies.new'
 import { Route as AuthenticatedPoliciesPolicyIdRouteImport } from './routes/_authenticated/policies.$policyId'
 import { Route as AuthenticatedPaymentsDashboardRouteImport } from './routes/_authenticated/payments.dashboard'
@@ -117,6 +118,11 @@ const ApiPublicPdfSmokeRoute = ApiPublicPdfSmokeRouteImport.update({
   id: '/api/public/pdf-smoke',
   path: '/api/public/pdf-smoke',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedReportsMapRoute = AuthenticatedReportsMapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => AuthenticatedReportsRoute,
 } as any)
 const AuthenticatedPoliciesNewRoute =
   AuthenticatedPoliciesNewRouteImport.update({
@@ -215,7 +221,7 @@ export interface FileRoutesByFullPath {
   '/incidents': typeof AuthenticatedIncidentsRouteWithChildren
   '/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/policies': typeof AuthenticatedPoliciesRouteWithChildren
-  '/reports': typeof AuthenticatedReportsRoute
+  '/reports': typeof AuthenticatedReportsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/admin/seed-demo': typeof AuthenticatedAdminSeedDemoRoute
   '/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
+  '/reports/map': typeof AuthenticatedReportsMapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/incidents/': typeof AuthenticatedIncidentsIndexRoute
@@ -242,7 +249,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/reports': typeof AuthenticatedReportsRoute
+  '/reports': typeof AuthenticatedReportsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/admin/seed-demo': typeof AuthenticatedAdminSeedDemoRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
@@ -253,6 +260,7 @@ export interface FileRoutesByTo {
   '/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
+  '/reports/map': typeof AuthenticatedReportsMapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/incidents': typeof AuthenticatedIncidentsIndexRoute
@@ -274,7 +282,7 @@ export interface FileRoutesById {
   '/_authenticated/incidents': typeof AuthenticatedIncidentsRouteWithChildren
   '/_authenticated/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/_authenticated/policies': typeof AuthenticatedPoliciesRouteWithChildren
-  '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/admin/seed-demo': typeof AuthenticatedAdminSeedDemoRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
@@ -286,6 +294,7 @@ export interface FileRoutesById {
   '/_authenticated/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/_authenticated/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/_authenticated/policies/new': typeof AuthenticatedPoliciesNewRoute
+  '/_authenticated/reports/map': typeof AuthenticatedReportsMapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/incidents/': typeof AuthenticatedIncidentsIndexRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/payments/dashboard'
     | '/policies/$policyId'
     | '/policies/new'
+    | '/reports/map'
     | '/api/public/pdf-smoke'
     | '/clients/'
     | '/incidents/'
@@ -345,6 +355,7 @@ export interface FileRouteTypes {
     | '/payments/dashboard'
     | '/policies/$policyId'
     | '/policies/new'
+    | '/reports/map'
     | '/api/public/pdf-smoke'
     | '/clients'
     | '/incidents'
@@ -377,6 +388,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payments/dashboard'
     | '/_authenticated/policies/$policyId'
     | '/_authenticated/policies/new'
+    | '/_authenticated/reports/map'
     | '/api/public/pdf-smoke'
     | '/_authenticated/clients/'
     | '/_authenticated/incidents/'
@@ -505,6 +517,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/pdf-smoke'
       preLoaderRoute: typeof ApiPublicPdfSmokeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/reports/map': {
+      id: '/_authenticated/reports/map'
+      path: '/map'
+      fullPath: '/reports/map'
+      preLoaderRoute: typeof AuthenticatedReportsMapRouteImport
+      parentRoute: typeof AuthenticatedReportsRoute
     }
     '/_authenticated/policies/new': {
       id: '/_authenticated/policies/new'
@@ -682,6 +701,17 @@ const AuthenticatedPoliciesRouteWithChildren =
     AuthenticatedPoliciesRouteChildren,
   )
 
+interface AuthenticatedReportsRouteChildren {
+  AuthenticatedReportsMapRoute: typeof AuthenticatedReportsMapRoute
+}
+
+const AuthenticatedReportsRouteChildren: AuthenticatedReportsRouteChildren = {
+  AuthenticatedReportsMapRoute: AuthenticatedReportsMapRoute,
+}
+
+const AuthenticatedReportsRouteWithChildren =
+  AuthenticatedReportsRoute._addFileChildren(AuthenticatedReportsRouteChildren)
+
 interface AuthenticatedAdminUsersRouteChildren {
   AuthenticatedAdminUsersUserIdRoute: typeof AuthenticatedAdminUsersUserIdRoute
   AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
@@ -704,7 +734,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIncidentsRoute: typeof AuthenticatedIncidentsRouteWithChildren
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRouteWithChildren
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
-  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAdminSeedDemoRoute: typeof AuthenticatedAdminSeedDemoRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRouteWithChildren
@@ -716,7 +746,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIncidentsRoute: AuthenticatedIncidentsRouteWithChildren,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRouteWithChildren,
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
-  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAdminSeedDemoRoute: AuthenticatedAdminSeedDemoRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRouteWithChildren,

@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Users, CreditCard, AlertTriangle, RefreshCw, TrendingUp, Activity, Lock } from "lucide-react";
+import { BarChart3, Users, CreditCard, AlertTriangle, RefreshCw, TrendingUp, Activity, Lock, MapIcon } from "lucide-react";
 import { listReportTemplates } from "@/lib/reports.functions";
 import { REPORT_SPECS } from "@/lib/reports/types";
 import { ReportModal } from "@/components/reports/ReportModal";
@@ -36,6 +36,21 @@ function ReportsPage() {
           Exporta cartera, cobranza, siniestralidad y más en Excel, PDF o CSV.
         </p>
       </div>
+
+      <Card className="border-dashed bg-gradient-to-r from-transparent to-muted/30">
+        <CardContent className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg grid place-items-center" style={{ backgroundColor: "var(--program-secondary)" }}>
+              <MapIcon className="h-5 w-5" style={{ color: "var(--program-primary)" }} />
+            </div>
+            <div>
+              <div className="font-semibold text-sm">Mapa de pólizas — México</div>
+              <div className="text-xs text-muted-foreground">Distribución geográfica por estado con pines interactivos.</div>
+            </div>
+          </div>
+          <Button asChild size="sm"><Link to="/reports/map">Abrir mapa →</Link></Button>
+        </CardContent>
+      </Card>
 
       {q.isLoading ? (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
