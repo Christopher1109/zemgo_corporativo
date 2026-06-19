@@ -1,106 +1,73 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { BarChart3, Users, CreditCard, AlertTriangle, RefreshCw, TrendingUp, Activity, Lock, MapIcon } from "lucide-react";
-import { listReportTemplates } from "@/lib/reports.functions";
-import { REPORT_SPECS } from "@/lib/reports/types";
-import { ReportModal } from "@/components/reports/ReportModal";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { BarChart3, Users, CreditCard, AlertTriangle, RefreshCw, TrendingUp, Activity, Map as MapIcon } from "lucide-react";
+import { ReportPanel } from "@/components/reports/ReportPanel";
+import { GeoReport } from "@/components/reports/GeoReport";
+
+const tabSchema = z.object({
+  tab: z.enum(["cartera", "cobranza", "siniestralidad", "renovaciones", "ventas", "actividad", "geo"]).optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({ meta: [{ title: "Reportes — HOPE Consulting" }] }),
+  validateSearch: tabSchema,
   component: ReportsPage,
 });
 
-const ICONS: Record<string, any> = {
-  cartera: Users, cobranza: CreditCard, siniestralidad: AlertTriangle,
-  renovaciones: RefreshCw, ventas: TrendingUp, actividad: Activity,
-};
+const TABS = [
+  { value: "cartera", label: "Cartera", icon: Users },
+  { value: "cobranza", label: "Cobranza", icon: CreditCard },
+  { value: "siniestralidad", label: "Siniestralidad", icon: AlertTriangle },
+  { value: "renovaciones", label: "Renovaciones", icon: RefreshCw },
+  { value: "ventas", label: "Ventas", icon: TrendingUp },
+  { value: "actividad", label: "Actividad", icon: Activity },
+  { value: "geo", label: "Análisis geográfico", icon: MapIcon },
+] as const;
 
 function ReportsPage() {
-  const listFn = useServerFn(listReportTemplates);
-  const q = useQuery({ queryKey: ["report-templates"], queryFn: () => listFn(), staleTime: 60_000 });
-  const [openCode, setOpenCode] = useState<string | null>(null);
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const tab = search.tab ?? "cartera";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
           <BarChart3 className="h-6 w-6" style={{ color: "var(--program-primary)" }} />
           Reportes
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Exporta cartera, cobranza, siniestralidad y más en Excel, PDF o CSV.
+          Selecciona un reporte para previsualizar y exportar en Excel, PDF o CSV.
         </p>
       </div>
 
-      <Card className="border-dashed bg-gradient-to-r from-transparent to-muted/30">
-        <CardContent className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg grid place-items-center" style={{ backgroundColor: "var(--program-secondary)" }}>
-              <MapIcon className="h-5 w-5" style={{ color: "var(--program-primary)" }} />
-            </div>
-            <div>
-              <div className="font-semibold text-sm">Mapa de pólizas — México</div>
-              <div className="text-xs text-muted-foreground">Distribución geográfica por estado con pines interactivos.</div>
-            </div>
-          </div>
-          <Button asChild size="sm"><Link to="/reports/map">Abrir mapa →</Link></Button>
-        </CardContent>
-      </Card>
-
-      {q.isLoading ? (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => <div key={i} className="h-44 rounded-lg bg-muted/40 animate-pulse" />)}
-        </div>
-      ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {(q.data ?? []).map((t: any) => {
-            const spec = REPORT_SPECS[t.code];
-            const Icon = ICONS[t.code] ?? BarChart3;
-            const implemented = spec?.implemented ?? false;
+      <Tabs
+        value={tab}
+        onValueChange={(v) => navigate({ search: { tab: v as any } })}
+        className="w-full"
+      >
+        <TabsList className="flex flex-wrap h-auto w-full justify-start gap-1 bg-muted/40 p-1">
+          {TABS.map((t) => {
+            const Icon = t.icon;
             return (
-              <Card
-                key={t.code}
-                className="cursor-pointer hover:border-primary/50 transition group"
-                onClick={() => setOpenCode(t.code)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div
-                      className="h-10 w-10 rounded-lg grid place-items-center"
-                      style={{ backgroundColor: "var(--program-secondary)" }}
-                    >
-                      <Icon className="h-5 w-5" style={{ color: "var(--program-primary)" }} />
-                    </div>
-                    <div className="flex gap-1">
-                      {t.admin_only && <Badge variant="outline" className="text-[10px]"><Lock className="h-3 w-3 mr-1" /> Admin</Badge>}
-                      {!implemented && <Badge variant="secondary" className="text-[10px]">Próx.</Badge>}
-                      {spec?.has_kpis && <Badge variant="outline" className="text-[10px]">KPIs</Badge>}
-                    </div>
-                  </div>
-                  <CardTitle className="text-base mt-3">{t.name}</CardTitle>
-                  <CardDescription className="text-xs line-clamp-2">{t.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Button variant="ghost" size="sm" className="px-0 group-hover:translate-x-1 transition">
-                    Generar →
-                  </Button>
-                </CardContent>
-              </Card>
+              <TabsTrigger key={t.value} value={t.value} className="data-[state=active]:bg-background">
+                <Icon className="h-4 w-4 mr-1.5" />
+                {t.label}
+              </TabsTrigger>
             );
           })}
-        </div>
-      )}
+        </TabsList>
 
-      <ReportModal
-        reportCode={openCode}
-        open={!!openCode}
-        onOpenChange={(o) => !o && setOpenCode(null)}
-      />
+        {TABS.filter((t) => t.value !== "geo").map((t) => (
+          <TabsContent key={t.value} value={t.value} className="mt-5">
+            <ReportPanel reportCode={t.value} />
+          </TabsContent>
+        ))}
+        <TabsContent value="geo" className="mt-5">
+          <GeoReport />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
