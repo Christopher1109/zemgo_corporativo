@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { changePolicyStatus } from "@/lib/policies.functions";
-import { generateCertificateClient } from "@/lib/pdf/generateCertificate.client";
+import { generateCertificateClient } from "@/lib/pdf/generateCertificate.browser";
 import { listPolicyRevisions } from "@/lib/policies-edit.functions";
 import { PolicyPaymentsTab } from "@/components/payments/policy-payments-tab";
 import { EditPolicyDialog } from "@/components/policies/EditPolicyDialog";

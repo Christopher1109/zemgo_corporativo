@@ -4,7 +4,6 @@
 // of Cloudflare Workers), then uploads the resulting bytes through a server
 // function which writes to Storage and updates the policy record.
 
-import { pdf } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { getCertificatePayload, saveCertificatePdf } from "@/lib/certificate.functions";
 import { CertificateABC } from "./templates/CertificateABC";
@@ -52,6 +51,7 @@ async function blobToBase64(blob: Blob): Promise<string> {
 
 export async function generateCertificateClient(policyId: string): Promise<{ url: string }> {
   const { programCode, payload } = await getCertificatePayload({ data: { policy_id: policyId } });
+  const { pdf } = await import("@react-pdf/renderer");
   const blob = await pdf(buildDoc(programCode, payload) as any).toBlob();
   const pdf_base64 = await blobToBase64(blob);
   const res = await saveCertificatePdf({
