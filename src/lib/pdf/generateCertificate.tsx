@@ -80,7 +80,7 @@ export const generateCertificate = createServerFn({ method: "POST" })
           "programs(name, code), " +
           "clients(*), " +
           "beneficiaries(full_name, relationship, percentage), " +
-          "dependents(full_name, relationship, date_of_birth, gender)",
+          "dependents(full_name, relationship, date_of_birth)",
       )
       .eq("id", data.policy_id)
       .single();
