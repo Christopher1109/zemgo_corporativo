@@ -113,7 +113,8 @@ function IncidentDetail() {
         .from("profiles")
         .select("id, full_name, signature_url")
         .in("id", ids);
-      return (profs ?? []).filter((p: any) => p.signature_url) as any[];
+      // Show every admin/manager — director firma con su nombre aunque no haya imagen de firma.
+      return (profs ?? []) as any[];
     },
   });
 
