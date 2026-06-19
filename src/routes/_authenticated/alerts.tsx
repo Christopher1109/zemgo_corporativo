@@ -2,14 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bell, RefreshCw, AlertOctagon, Calendar, CreditCard, ExternalLink, Phone, Mail, MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Bell, RefreshCw, AlertOctagon, Calendar, CreditCard, ExternalLink, Phone, Mail, MapPin, Search } from "lucide-react";
 import { useProgram } from "@/lib/program-context";
 import { getAlertsOverview } from "@/lib/alerts.functions";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
   head: () => ({ meta: [{ title: "Alertas y renovaciones — HOPE Consulting" }] }),
@@ -18,13 +20,42 @@ export const Route = createFileRoute("/_authenticated/alerts")({
 
 function fmtMx(n: number) { return n.toLocaleString("es-MX", { maximumFractionDigits: 0 }); }
 function daysFrom(d: string) {
-  const t = Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
-  return t;
+  return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
+}
+
+type Bucket = "all" | "overdue" | "7" | "15" | "30" | "later";
+const BUCKET_OPTS: { value: Bucket; label: string }[] = [
+  { value: "all", label: "Todos" },
+  { value: "overdue", label: "Vencidos" },
+  { value: "7", label: "≤ 7 días" },
+  { value: "15", label: "≤ 15 días" },
+  { value: "30", label: "≤ 30 días" },
+  { value: "later", label: "> 30 días" },
+];
+
+function matchBucket(days: number, isOverdue: boolean, bucket: Bucket): boolean {
+  if (bucket === "all") return true;
+  if (bucket === "overdue") return isOverdue;
+  if (isOverdue) return false;
+  if (bucket === "7") return days <= 7;
+  if (bucket === "15") return days <= 15;
+  if (bucket === "30") return days <= 30;
+  if (bucket === "later") return days > 30;
+  return true;
+}
+
+/** Colored card per semáforo: vencido=rojo, ≤7d=naranja, resto=sin color */
+function semaforo(days: number, isOverdue: boolean): string {
+  if (isOverdue) return "bg-destructive/10 border-l-4 border-l-destructive";
+  if (days <= 7) return "bg-orange-500/10 border-l-4 border-l-orange-500";
+  return "";
 }
 
 function AlertsPage() {
   const { activeProgram } = useProgram();
   const [scope, setScope] = useState<"active" | "all">("active");
+  const [bucket, setBucket] = useState<Bucket>("all");
+  const [search, setSearch] = useState("");
   const programId = scope === "active" ? (activeProgram?.id ?? null) : null;
   const fn = useServerFn(getAlertsOverview);
   const q = useQuery({
@@ -50,6 +81,26 @@ function AlertsPage() {
     return { reminders7, reminders30, overdue, renewals30, suspended: (data.suspended as any[]).length, overdueAmount, upcomingAmount };
   }, [data]);
 
+  const s = search.trim().toLowerCase();
+  function matchSearch(c?: any, folio?: string) {
+    if (!s) return true;
+    return (`${c?.first_name ?? ""} ${c?.last_name ?? ""}`.toLowerCase().includes(s) ||
+            (folio ?? "").toLowerCase().includes(s));
+  }
+
+  const remFiltered = (data?.upcoming ?? []).filter((r: any) => {
+    const d = daysFrom(r.due_date);
+    const ov = r.status === "overdue";
+    return matchBucket(d, ov, bucket) && matchSearch(r.policies?.clients, r.policies?.folio);
+  });
+  const renFiltered = (data?.renewals ?? []).filter((r: any) => {
+    const d = daysFrom(r.end_date);
+    return matchBucket(d, false, bucket) && matchSearch(r.clients, r.folio);
+  });
+  const suspFiltered = (data?.suspended ?? []).filter((r: any) =>
+    matchSearch(r.clients, r.folio)
+  );
+
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -74,33 +125,55 @@ function AlertsPage() {
       {/* KPIs */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
         <KpiCard label="Pagos vencidos" value={counts.overdue} sub={`$${fmtMx(counts.overdueAmount)} MXN`} color="#dc2626" icon={AlertOctagon} />
-        <KpiCard label="Por vencer ≤ 7 días" value={counts.reminders7} sub="Recordatorio urgente" color="#ea580c" icon={Calendar} />
-        <KpiCard label="Por vencer 8–30 días" value={counts.reminders30} sub="Recordatorio próximo" icon={Bell} />
+        <KpiCard label="Por vencer ≤ 7 días" value={counts.reminders7} sub="Urgente" color="#ea580c" icon={Calendar} />
+        <KpiCard label="Por vencer 8–30 días" value={counts.reminders30} sub="Próximo" icon={Bell} />
         <KpiCard label="Renovaciones ≤ 30 días" value={counts.renewals30} sub="Contacto comercial" color="var(--program-primary)" icon={RefreshCw} />
         <KpiCard label="Pólizas suspendidas" value={counts.suspended} sub="Cobranza activa" color="#7c3aed" icon={AlertOctagon} />
       </div>
 
+      {/* Filtros */}
+      <Card className="p-3">
+        <div className="grid md:grid-cols-[1fr_220px] gap-3 items-end">
+          <div>
+            <label className="text-xs font-medium uppercase text-muted-foreground">Buscar</label>
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input className="pl-8" placeholder="Cliente o folio…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium uppercase text-muted-foreground">Vencimiento</label>
+            <Select value={bucket} onValueChange={(v) => setBucket(v as Bucket)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {BUCKET_OPTS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
+
       <Tabs defaultValue="reminders" className="w-full">
         <TabsList className="grid w-full grid-cols-3 max-w-2xl">
           <TabsTrigger value="reminders">
-            <Bell className="h-4 w-4 mr-2" /> Recordatorios ({(data?.upcoming.length ?? 0)})
+            <Bell className="h-4 w-4 mr-2" /> Recordatorios ({remFiltered.length})
           </TabsTrigger>
           <TabsTrigger value="renewals">
-            <RefreshCw className="h-4 w-4 mr-2" /> Renovaciones ({(data?.renewals.length ?? 0)})
+            <RefreshCw className="h-4 w-4 mr-2" /> Renovaciones ({renFiltered.length})
           </TabsTrigger>
           <TabsTrigger value="suspended">
-            <AlertOctagon className="h-4 w-4 mr-2" /> Suspendidas ({(data?.suspended.length ?? 0)})
+            <AlertOctagon className="h-4 w-4 mr-2" /> Suspendidas ({suspFiltered.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="reminders" className="mt-4">
-          {q.isLoading ? <Skeleton /> : <RemindersList rows={data?.upcoming ?? []} />}
+          {q.isLoading ? <Skeleton /> : <RemindersList rows={remFiltered} />}
         </TabsContent>
         <TabsContent value="renewals" className="mt-4">
-          {q.isLoading ? <Skeleton /> : <RenewalsList rows={data?.renewals ?? []} />}
+          {q.isLoading ? <Skeleton /> : <RenewalsList rows={renFiltered} />}
         </TabsContent>
         <TabsContent value="suspended" className="mt-4">
-          {q.isLoading ? <Skeleton /> : <SuspendedList rows={data?.suspended ?? []} />}
+          {q.isLoading ? <Skeleton /> : <SuspendedList rows={suspFiltered} />}
         </TabsContent>
       </Tabs>
     </div>
@@ -147,7 +220,7 @@ function ContactBits({ c }: { c: any }) {
 }
 
 function RemindersList({ rows }: { rows: any[] }) {
-  if (rows.length === 0) return <EmptyState text="Sin recordatorios pendientes." />;
+  if (rows.length === 0) return <EmptyState text="Sin recordatorios para este filtro." />;
   return (
     <div className="grid gap-2">
       {rows.map((r) => {
@@ -155,7 +228,7 @@ function RemindersList({ rows }: { rows: any[] }) {
         const isOverdue = r.status === "overdue";
         const c = r.policies?.clients;
         return (
-          <Card key={r.id}>
+          <Card key={r.id} className={cn(semaforo(d, isOverdue))}>
             <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -194,24 +267,25 @@ function RemindersList({ rows }: { rows: any[] }) {
 }
 
 function RenewalsList({ rows }: { rows: any[] }) {
-  if (rows.length === 0) return <EmptyState text="No hay renovaciones próximas." />;
+  if (rows.length === 0) return <EmptyState text="No hay renovaciones para este filtro." />;
   return (
     <div className="grid gap-2">
       {rows.map((r) => {
         const d = daysFrom(r.end_date);
+        const isOverdue = d < 0;
         const c = r.clients;
         return (
-          <Card key={r.id}>
+          <Card key={r.id} className={cn(semaforo(d, isOverdue))}>
             <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-sm">{c?.first_name} {c?.last_name}</span>
                   <ProgramChip p={r.programs} />
                   <Badge variant="outline" className="font-mono text-[10px]">{r.folio}</Badge>
-                  {d <= 15
-                    ? <Badge className="bg-red-500 text-white text-[10px]">Vence en {d}d</Badge>
-                    : d <= 30
-                      ? <Badge className="bg-orange-500 text-white text-[10px]">{d}d</Badge>
+                  {isOverdue
+                    ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Venció hace {Math.abs(d)}d</Badge>
+                    : d <= 7
+                      ? <Badge className="bg-orange-500 text-white text-[10px]">Vence en {d}d</Badge>
                       : <Badge variant="secondary" className="text-[10px]">{d}d</Badge>
                   }
                 </div>
@@ -241,7 +315,7 @@ function SuspendedList({ rows }: { rows: any[] }) {
       {rows.map((r) => {
         const c = r.clients;
         return (
-          <Card key={r.id} className="border-l-4" style={{ borderLeftColor: "#7c3aed" }}>
+          <Card key={r.id} className="bg-destructive/10 border-l-4 border-l-destructive">
             <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
