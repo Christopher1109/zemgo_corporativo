@@ -95,6 +95,16 @@ export const generateCertificate = createServerFn({ method: "POST" })
       .select("*")
       .eq("program_id", pol.program_id);
 
+    // Fallback for ABC certificates: if no structured dependents rows exist
+    // but the client stored a free-text list (clients.metadata.dependents_text),
+    // surface it as a single synthetic row so the certificate renders correctly.
+    const structuredDeps = (pol.dependents ?? []) as Array<{ full_name?: string | null; relationship?: string | null }>;
+    const clientMeta = (pol.clients?.metadata ?? {}) as { dependents_text?: string };
+    const depsForPdf =
+      structuredDeps.length === 0 && clientMeta.dependents_text
+        ? [{ full_name: clientMeta.dependents_text, relationship: null }]
+        : structuredDeps;
+
     const payload = {
       policy: {
         id: pol.id as string,
@@ -113,7 +123,7 @@ export const generateCertificate = createServerFn({ method: "POST" })
       program,
       client: pol.clients ?? {},
       beneficiaries: pol.beneficiaries ?? [],
-      dependents: pol.dependents ?? [],
+      dependents: depsForPdf,
       coverages: coverages ?? [],
     };
 
