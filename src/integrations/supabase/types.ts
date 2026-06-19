@@ -638,9 +638,11 @@ export type Database = {
           folio: string
           id: string
           issue_date: string | null
+          metadata: Json
           policy_number: string | null
           premium: number | null
           program_id: string
+          renewed_from_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["policy_status"]
           sum_insured: number | null
@@ -658,9 +660,11 @@ export type Database = {
           folio: string
           id?: string
           issue_date?: string | null
+          metadata?: Json
           policy_number?: string | null
           premium?: number | null
           program_id: string
+          renewed_from_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["policy_status"]
           sum_insured?: number | null
@@ -678,9 +682,11 @@ export type Database = {
           folio?: string
           id?: string
           issue_date?: string | null
+          metadata?: Json
           policy_number?: string | null
           premium?: number | null
           program_id?: string
+          renewed_from_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["policy_status"]
           sum_insured?: number | null
@@ -699,6 +705,13 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policies_renewed_from_id_fkey"
+            columns: ["renewed_from_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
             referencedColumns: ["id"]
           },
         ]
@@ -728,6 +741,47 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: true
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_revisions: {
+        Row: {
+          created_at: string
+          edited_at: string
+          edited_by: string | null
+          fields_changed: Json
+          id: string
+          new_values: Json
+          policy_id: string
+          previous_values: Json
+        }
+        Insert: {
+          created_at?: string
+          edited_at?: string
+          edited_by?: string | null
+          fields_changed?: Json
+          id?: string
+          new_values?: Json
+          policy_id: string
+          previous_values?: Json
+        }
+        Update: {
+          created_at?: string
+          edited_at?: string
+          edited_by?: string | null
+          fields_changed?: Json
+          id?: string
+          new_values?: Json
+          policy_id?: string
+          previous_values?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_revisions_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
             referencedColumns: ["id"]
           },
         ]
@@ -842,6 +896,44 @@ export type Database = {
         }
         Relationships: []
       }
+      renewal_contacts: {
+        Row: {
+          contacted_at: string
+          contacted_by: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          notes: string | null
+          policy_id: string
+        }
+        Insert: {
+          contacted_at?: string
+          contacted_by: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          policy_id: string
+        }
+        Update: {
+          contacted_at?: string
+          contacted_by?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          policy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "renewal_contacts_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_templates: {
         Row: {
           accessible_to_roles: Database["public"]["Enums"]["app_role"][] | null
@@ -893,6 +985,36 @@ export type Database = {
           code?: Database["public"]["Enums"]["app_role"]
           description?: string | null
           name?: string
+        }
+        Relationships: []
+      }
+      sales_reps: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          is_active: boolean
+          metadata: Json | null
+          referral_source: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          referral_source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          referral_source?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1098,6 +1220,10 @@ export type Database = {
         Args: { _director_id: string; _hospital: string; _incident_id: string }
         Returns: string
       }
+      log_renewal_contact: {
+        Args: { _notes: string; _policy_id: string }
+        Returns: string
+      }
       mark_payment_paid: {
         Args: {
           _amount_change_reason: string
@@ -1121,6 +1247,10 @@ export type Database = {
         Args: { _incident_id: string; _reason: string }
         Returns: undefined
       }
+      renew_policy: {
+        Args: { _overrides?: Json; _source_id: string }
+        Returns: Json
+      }
       report_incident: {
         Args: {
           _accident_date: string
@@ -1141,6 +1271,10 @@ export type Database = {
       set_medical_pass_pdf_url: {
         Args: { _pass_id: string; _pdf_url: string }
         Returns: undefined
+      }
+      update_policy: {
+        Args: { _changes: Json; _policy_id: string }
+        Returns: Json
       }
       update_user_program_access: {
         Args: { _program_id: string; _role_text: string; _user_id: string }
