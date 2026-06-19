@@ -1,29 +1,28 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProgram } from "@/lib/program-context";
 import { useState, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Wallet } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid,
   BarChart, Bar, PieChart, Pie, Cell,
 } from "recharts";
 
-export const Route = createFileRoute("/_authenticated/payments/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard de cobranza — HOPE Consulting" }] }),
-  component: PaymentsDashboard,
+export const Route = createFileRoute("/_authenticated/finance")({
+  head: () => ({ meta: [{ title: "Finanzas — HOPE Consulting" }] }),
+  component: FinancePage,
 });
 
-function PaymentsDashboard() {
+function FinancePage() {
   const { activeProgram, programs } = useProgram();
   const [scope, setScope] = useState<"active" | "all">("active");
   const programId = scope === "active" ? activeProgram?.id : null;
 
   const { data: payments = [] } = useQuery({
-    queryKey: ["payments-dashboard", programId],
+    queryKey: ["finance-payments", programId],
     queryFn: async () => {
       let q = supabase
         .from("payments")
@@ -40,7 +39,8 @@ function PaymentsDashboard() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   const kpis = useMemo(() => {
-    let collected = 0, pending = 0, overdue = 0, paidThisMonth = 0, paidCount = 0, failedCount = 0, paidOnlyThisMonth = 0, overdueThisMonth = 0;
+    let collected = 0, pending = 0, overdue = 0, paidThisMonth = 0, paidCount = 0, failedCount = 0, paidOnlyThisMonth = 0, overdueThisMonth = 0, upcoming30 = 0;
+    const horizon30 = new Date(now.getTime() + 30 * 86400000);
     for (const p of payments) {
       const amt = Number(p.paid_amount ?? p.amount);
       if (p.status === "paid" && p.paid_at && new Date(p.paid_at) >= monthStart) {
@@ -50,14 +50,16 @@ function PaymentsDashboard() {
       if (p.status === "overdue") { overdue += Number(p.amount); overdueThisMonth += Number(p.amount); }
       if (p.status === "failed") failedCount++;
       if (p.status === "paid") collected += amt;
+      if (p.status === "pending" && p.due_date && new Date(p.due_date) <= horizon30 && new Date(p.due_date) >= now) {
+        upcoming30 += Number(p.amount);
+      }
     }
     const rate = (paidOnlyThisMonth + overdueThisMonth) > 0
       ? (paidOnlyThisMonth / (paidOnlyThisMonth + overdueThisMonth)) * 100
       : 0;
-    return { collected: paidThisMonth, pending, overdue, rate, paidCount, failedCount };
+    return { collected: paidThisMonth, pending, overdue, rate, paidCount, failedCount, upcoming30 };
   }, [payments, monthStart]);
 
-  // Monthly series per program (12m)
   const monthly = useMemo(() => {
     const months: string[] = [];
     for (let i = 11; i >= 0; i--) {
@@ -104,10 +106,13 @@ function PaymentsDashboard() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" asChild><Link to="/payments"><ArrowLeft className="h-4 w-4 mr-1" />Cobranza</Link></Button>
-          <h1 className="text-2xl font-semibold">Dashboard de cobranza</h1>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Wallet className="h-6 w-6" style={{ color: "var(--program-primary)" }} />
+            Finanzas
+          </h1>
+          <p className="text-sm text-muted-foreground">Cobranza, deudores, métodos y estimaciones del periodo.</p>
         </div>
         <Select value={scope} onValueChange={(v) => setScope(v as any)}>
           <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
@@ -118,25 +123,26 @@ function PaymentsDashboard() {
         </Select>
       </div>
 
-      <div className="grid md:grid-cols-5 gap-3">
-        <KPI label="Cobrado este mes" value={`$${kpis.collected.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`} color={primary} />
-        <KPI label="Pendiente de cobro" value={`$${kpis.pending.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`} />
-        <KPI label="Vencido" value={`$${kpis.overdue.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`} color="#dc2626" />
+      <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <KPI label="Cobrado este mes" value={fmt(kpis.collected)} color={primary} />
+        <KPI label="Pendiente de cobro" value={fmt(kpis.pending)} />
+        <KPI label="Vencido" value={fmt(kpis.overdue)} color="#dc2626" />
+        <KPI label="Próximos 30 días" value={fmt(kpis.upcoming30)} color="#ea580c" />
         <KPI label="Tasa de cobranza" value={`${kpis.rate.toFixed(1)}%`} color={primary} />
-        <KPI label="Pagos exitosos / fallidos" value={`${kpis.paidCount} / ${kpis.failedCount}`} />
+        <KPI label="Exitosos / fallidos" value={`${kpis.paidCount} / ${kpis.failedCount}`} />
       </div>
 
       <Card className="p-4">
         <div className="font-medium mb-3">Cobranza mensual (últimos 12 meses)</div>
-        <div style={{ width: "100%", height: 280 }}>
+        <div style={{ width: "100%", height: 260 }}>
           <ResponsiveContainer>
             <LineChart data={monthly}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
+              <XAxis dataKey="month" fontSize={11} />
+              <YAxis fontSize={11} />
               <Tooltip />
               <Legend />
-              {programs.map((p, i) => (
+              {programs.map((p) => (
                 <Line key={p.code} type="monotone" dataKey={p.code} stroke={p.color_primary} strokeWidth={2} />
               ))}
             </LineChart>
@@ -151,8 +157,8 @@ function PaymentsDashboard() {
             <ResponsiveContainer>
               <BarChart data={topDebtors} layout="vertical" margin={{ left: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis type="category" dataKey="name" width={140} />
+                <XAxis type="number" fontSize={11} />
+                <YAxis type="category" dataKey="name" width={140} fontSize={11} />
                 <Tooltip />
                 <Bar dataKey="amount" fill={primary} />
               </BarChart>
@@ -177,6 +183,8 @@ function PaymentsDashboard() {
     </div>
   );
 }
+
+function fmt(n: number) { return `$${(n ?? 0).toLocaleString("es-MX", { maximumFractionDigits: 0 })}`; }
 
 function KPI({ label, value, color }: { label: string; value: string; color?: string }) {
   return (

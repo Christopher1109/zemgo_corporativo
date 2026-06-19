@@ -1,8 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { checkIsSuperAdmin } from "@/lib/users.functions";
-import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Shield, Bell, Map as MapIcon } from "lucide-react";
+import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet } from "lucide-react";
 import { useProgram } from "@/lib/program-context";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -23,10 +20,10 @@ const NAV = [
   { to: "/clients", label: "Clientes", icon: Users, enabled: true },
   { to: "/policies", label: "Pólizas", icon: FileText, enabled: true },
   { to: "/payments", label: "Pagos", icon: CreditCard, enabled: true },
+  { to: "/finance", label: "Finanzas", icon: Wallet, enabled: true },
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, enabled: true },
   { to: "/alerts", label: "Alertas y renovaciones", icon: Bell, enabled: true },
   { to: "/reports", label: "Reportes", icon: BarChart3, enabled: true },
-  { to: "/reports/map", label: "Mapa México", icon: MapIcon, enabled: true },
   { to: "/settings", label: "Configuración", icon: Settings, enabled: true },
 ] as const;
 
@@ -35,10 +32,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isAdminFn = useServerFn(checkIsSuperAdmin);
-  const isAdminQ = useQuery({
-    queryKey: ["is-super-admin"], queryFn: () => isAdminFn(), staleTime: 60_000,
-  });
+
+
 
   async function handleSignOut() {
     await signOut();
@@ -119,17 +114,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        {isAdminQ.data?.isAdmin && (
-          <div className="px-2 pb-2 space-y-1 border-t border-white/10 pt-2">
-            <div className="text-[10px] uppercase tracking-wider opacity-60 px-3 pt-1 pb-1">Administración</div>
-            <Link to="/admin/users" className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition", pathname.startsWith("/admin/users") ? "bg-white/20 font-medium" : "hover:bg-white/10")}>
-              <Shield className="h-4 w-4" /><span>Usuarios</span>
-            </Link>
-            <Link to="/admin/seed-demo" className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition", pathname.startsWith("/admin/seed-demo") ? "bg-white/20 font-medium" : "hover:bg-white/10")}>
-              <Shield className="h-4 w-4" /><span>Seed demo</span>
-            </Link>
-          </div>
-        )}
+
+
 
         <div className="p-3 border-t border-white/10 text-xs opacity-80 truncate">{user?.email}</div>
       </aside>

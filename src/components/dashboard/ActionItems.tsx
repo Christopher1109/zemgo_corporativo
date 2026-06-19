@@ -103,7 +103,7 @@ export function ActionItemsPanel({ data, loading }: { data?: Data; loading: bool
                 title={`Usuario inactivo — ${u.full_name ?? "sin nombre"}`}
                 meta={u.last_action ? `Última acción ${formatDistanceToNow(parseISO(u.last_action), { locale: es, addSuffix: true })}` : "Nunca ha iniciado actividad"}
                 badge={{ label: "Revisar", tone: "blue" }}
-                to={{ to: "/admin/users/$userId", params: { userId: u.id } }}
+                to={{ to: "/settings" }}
               />
             ))}
           </div>

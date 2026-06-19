@@ -1,4 +1,3 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useMemo } from "react";
@@ -9,17 +8,10 @@ import { matchState } from "@/lib/mx-states";
 import { useProgram } from "@/lib/program-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MapIcon, ArrowLeft } from "lucide-react";
-
-export const Route = createFileRoute("/_authenticated/reports/map")({
-  head: () => ({ meta: [{ title: "Mapa de pólizas — HOPE Consulting" }] }),
-  component: MapPage,
-});
 
 type Row = { state: string; total: number; active: number; suspended: number; expired: number };
 
-function MapPage() {
+export function GeoReport() {
   const { activeProgram } = useProgram();
   const fn = useServerFn(getPoliciesByState);
   const q = useQuery({
@@ -38,19 +30,11 @@ function MapPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <MapIcon className="h-6 w-6" style={{ color: "var(--program-primary)" }} />
-            Mapa de pólizas — México
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Distribución geográfica · Programa: <strong>{activeProgram?.name ?? "Todos"}</strong> · Total: <strong>{totalAll}</strong>
-          </p>
-        </div>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/reports"><ArrowLeft className="h-4 w-4 mr-2" />Volver a Reportes</Link>
-        </Button>
+      <div>
+        <h2 className="text-lg font-semibold">Análisis geográfico</h2>
+        <p className="text-sm text-muted-foreground">
+          Distribución de pólizas por estado · <strong>{activeProgram?.name ?? "Todos"}</strong> · Total: <strong>{totalAll}</strong>
+        </p>
       </div>
 
       <Card className="overflow-hidden">
@@ -148,7 +132,7 @@ function MapView({ items, loading }: { items: { row: Row; match: any }[]; loadin
   }, [items]);
 
   return (
-    <div className="relative w-full" style={{ height: 520 }}>
+    <div className="relative w-full" style={{ height: 480 }}>
       <div ref={ref} className="absolute inset-0" />
       {loading && (
         <div className="absolute inset-0 grid place-items-center bg-background/60 backdrop-blur-sm text-sm">
