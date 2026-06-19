@@ -26,6 +26,7 @@ import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedIncidentsIndexRouteImport } from './routes/_authenticated/incidents.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
 import { Route as ApiPublicPdfSmokeRouteImport } from './routes/api/public/pdf-smoke'
+import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
 import { Route as AuthenticatedPoliciesNewRouteImport } from './routes/_authenticated/policies.new'
 import { Route as AuthenticatedPoliciesPolicyIdRouteImport } from './routes/_authenticated/policies.$policyId'
 import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
@@ -125,6 +126,11 @@ const ApiPublicPdfSmokeRoute = ApiPublicPdfSmokeRouteImport.update({
   path: '/api/public/pdf-smoke',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBootstrapRoute = ApiPublicBootstrapRouteImport.update({
+  id: '/api/public/bootstrap',
+  path: '/api/public/bootstrap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPoliciesNewRoute =
   AuthenticatedPoliciesNewRouteImport.update({
     id: '/new',
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
+  '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/incidents/': typeof AuthenticatedIncidentsIndexRoute
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
+  '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/incidents': typeof AuthenticatedIncidentsIndexRoute
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/_authenticated/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/_authenticated/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/_authenticated/policies/new': typeof AuthenticatedPoliciesNewRoute
+  '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/incidents/': typeof AuthenticatedIncidentsIndexRoute
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/payments/$paymentId'
     | '/policies/$policyId'
     | '/policies/new'
+    | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/clients/'
     | '/incidents/'
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/payments/$paymentId'
     | '/policies/$policyId'
     | '/policies/new'
+    | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/clients'
     | '/incidents'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payments/$paymentId'
     | '/_authenticated/policies/$policyId'
     | '/_authenticated/policies/new'
+    | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/_authenticated/clients/'
     | '/_authenticated/incidents/'
@@ -355,6 +367,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicBootstrapRoute: typeof ApiPublicBootstrapRoute
   ApiPublicPdfSmokeRoute: typeof ApiPublicPdfSmokeRoute
   ApiPublicHooksBankReconciliationRoute: typeof ApiPublicHooksBankReconciliationRoute
   ApiPublicHooksPassExpirationRoute: typeof ApiPublicHooksPassExpirationRoute
@@ -480,6 +493,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/pdf-smoke'
       fullPath: '/api/public/pdf-smoke'
       preLoaderRoute: typeof ApiPublicPdfSmokeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/bootstrap': {
+      id: '/api/public/bootstrap'
+      path: '/api/public/bootstrap'
+      fullPath: '/api/public/bootstrap'
+      preLoaderRoute: typeof ApiPublicBootstrapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/policies/new': {
@@ -652,6 +672,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicBootstrapRoute: ApiPublicBootstrapRoute,
   ApiPublicPdfSmokeRoute: ApiPublicPdfSmokeRoute,
   ApiPublicHooksBankReconciliationRoute: ApiPublicHooksBankReconciliationRoute,
   ApiPublicHooksPassExpirationRoute: ApiPublicHooksPassExpirationRoute,
