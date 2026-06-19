@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { changePolicyStatus } from "@/lib/policies.functions";
-import { generateCertificate } from "@/lib/pdf/generateCertificate";
+import { generateCertificateClient } from "@/lib/pdf/generateCertificate.client";
 import { listPolicyRevisions } from "@/lib/policies-edit.functions";
 import { PolicyPaymentsTab } from "@/components/payments/policy-payments-tab";
 import { EditPolicyDialog } from "@/components/policies/EditPolicyDialog";
@@ -45,7 +45,6 @@ function PolicyDetail() {
   const { policyId } = Route.useParams();
   const qc = useQueryClient();
   const changeFn = useServerFn(changePolicyStatus);
-  const pdfFn = useServerFn(generateCertificate);
   const revisionsFn = useServerFn(listPolicyRevisions);
 
   const [statusDialog, setStatusDialog] = useState(false);
@@ -144,7 +143,7 @@ function PolicyDetail() {
   });
 
   const pdfMutation = useMutation({
-    mutationFn: () => pdfFn({ data: { policy_id: policyId } }),
+    mutationFn: () => generateCertificateClient(policyId),
     onSuccess: (res) => {
       toast.success("Certificado generado");
       window.open(res.url, "_blank");
