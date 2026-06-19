@@ -57,6 +57,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
       { key: "status", label: "Estado", width: 12 },
     ],
     implemented: true,
+    supports_preview: true,
   },
   cobranza: {
     code: "cobranza",
