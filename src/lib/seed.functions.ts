@@ -38,7 +38,8 @@ export const getSeedDemoCounts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = _admin as any;
     const out: Record<string, number> = {};
     for (const t of SEED_TABLES) {
       const { count } = await supabaseAdmin
@@ -57,7 +58,8 @@ export const clearSeedDemo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = _admin as any;
     const deleted: Record<string, number> = {};
     for (const t of SEED_TABLES) {
       const { data, error } = await supabaseAdmin
@@ -142,7 +144,8 @@ export const runSeedDemo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = _admin as any;
 
     // 1. Clear any previous demo data first (idempotent).
     for (const t of SEED_TABLES) {
