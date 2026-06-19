@@ -124,6 +124,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
     totals: ["sum_insured"],
     has_kpis: true,
     implemented: true,
+    supports_preview: true,
   },
   renovaciones: {
     code: "renovaciones",
