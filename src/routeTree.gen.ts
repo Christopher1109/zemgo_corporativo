@@ -37,6 +37,7 @@ import { Route as AuthenticatedAdminSeedDemoRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin.users.index'
 import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
 import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
+import { Route as ApiPublicHooksBankReconciliationRouteImport } from './routes/api/public/hooks/bank-reconciliation'
 import { Route as AuthenticatedAdminUsersUserIdRouteImport } from './routes/_authenticated/admin.users.$userId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -193,6 +194,12 @@ const ApiPublicHooksPassExpirationRoute =
     path: '/api/public/hooks/pass-expiration',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksBankReconciliationRoute =
+  ApiPublicHooksBankReconciliationRouteImport.update({
+    id: '/api/public/hooks/bank-reconciliation',
+    path: '/api/public/hooks/bank-reconciliation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminUsersUserIdRoute =
   AuthenticatedAdminUsersUserIdRouteImport.update({
     id: '/$userId',
@@ -226,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
   '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
+  '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
   '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
@@ -251,6 +259,7 @@ export interface FileRoutesByTo {
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
   '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
+  '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
   '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
@@ -283,6 +292,7 @@ export interface FileRoutesById {
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
   '/_authenticated/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
+  '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
   '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
@@ -315,6 +325,7 @@ export interface FileRouteTypes {
     | '/payments/'
     | '/policies/'
     | '/admin/users/$userId'
+    | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
     | '/admin/users/'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/payments'
     | '/policies'
     | '/admin/users/$userId'
+    | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
     | '/admin/users'
@@ -371,6 +383,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payments/'
     | '/_authenticated/policies/'
     | '/_authenticated/admin/users/$userId'
+    | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
     | '/_authenticated/admin/users/'
@@ -381,6 +394,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicPdfSmokeRoute: typeof ApiPublicPdfSmokeRoute
+  ApiPublicHooksBankReconciliationRoute: typeof ApiPublicHooksBankReconciliationRoute
   ApiPublicHooksPassExpirationRoute: typeof ApiPublicHooksPassExpirationRoute
   ApiPublicHooksPaymentHousekeepingRoute: typeof ApiPublicHooksPaymentHousekeepingRoute
 }
@@ -583,6 +597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksPassExpirationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/bank-reconciliation': {
+      id: '/api/public/hooks/bank-reconciliation'
+      path: '/api/public/hooks/bank-reconciliation'
+      fullPath: '/api/public/hooks/bank-reconciliation'
+      preLoaderRoute: typeof ApiPublicHooksBankReconciliationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/users/$userId': {
       id: '/_authenticated/admin/users/$userId'
       path: '/$userId'
@@ -709,6 +730,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicPdfSmokeRoute: ApiPublicPdfSmokeRoute,
+  ApiPublicHooksBankReconciliationRoute: ApiPublicHooksBankReconciliationRoute,
   ApiPublicHooksPassExpirationRoute: ApiPublicHooksPassExpirationRoute,
   ApiPublicHooksPaymentHousekeepingRoute:
     ApiPublicHooksPaymentHousekeepingRoute,

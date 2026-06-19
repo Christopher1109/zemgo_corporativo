@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,6 +21,8 @@ const empty = {
   date_of_birth: "", gender: "", marital_status: "",
   email: "", phone: "",
   street: "", number: "", colonia: "", city: "", state: "", zip: "",
+  // ABC-only free-text list of cónyuge/hijos shown on the certificate.
+  dependents_text: "",
 };
 
 function NewClient() {
@@ -30,7 +33,11 @@ function NewClient() {
   const [programId, setProgramId] = useState<string>(activeProgram?.id ?? "");
   const [busy, setBusy] = useState(false);
 
-  const set = (k: keyof typeof empty) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const selectedProgram = programs.find((p) => p.id === programId);
+  const programCode = (selectedProgram?.code ?? "").toUpperCase();
+  const isABC = programCode === "ABC";
+
+  const set = (k: keyof typeof empty) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
   async function enrollAndGo(clientId: string, action: "create" | "enroll") {
@@ -65,13 +72,19 @@ function NewClient() {
     if (!programId) return toast.error("Selecciona un programa");
     setBusy(true);
     const curp = form.curp.trim().toUpperCase();
+    const { dependents_text, ...rest } = form;
     const payload: any = {
-      ...form,
+      ...rest,
       curp,
-      rfc: form.rfc ? form.rfc.trim().toUpperCase() : null,
-      date_of_birth: form.date_of_birth || null,
+      // Non-ABC programs don't capture marital_status — clear it to keep data tidy.
+      marital_status: isABC ? rest.marital_status : null,
+      rfc: rest.rfc ? rest.rfc.trim().toUpperCase() : null,
+      date_of_birth: rest.date_of_birth || null,
       created_by: user?.id,
       sales_rep_id: user?.id,
+      metadata: isABC && dependents_text.trim()
+        ? { dependents_text: dependents_text.trim() }
+        : {},
     };
     Object.keys(payload).forEach((k) => payload[k] === "" && (payload[k] = null));
 
@@ -148,20 +161,40 @@ function NewClient() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Estado civil">
-              <Select value={form.marital_status} onValueChange={(v) => setForm((f) => ({ ...f, marital_status: v }))}>
-                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="soltero">Soltero(a)</SelectItem>
-                  <SelectItem value="casado">Casado(a)</SelectItem>
-                  <SelectItem value="union_libre">Unión libre</SelectItem>
-                  <SelectItem value="divorciado">Divorciado(a)</SelectItem>
-                  <SelectItem value="viudo">Viudo(a)</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
+            {isABC && (
+              <Field label="Estado civil">
+                <Select value={form.marital_status} onValueChange={(v) => setForm((f) => ({ ...f, marital_status: v }))}>
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="soltero">Soltero(a)</SelectItem>
+                    <SelectItem value="casado">Casado(a)</SelectItem>
+                    <SelectItem value="union_libre">Unión libre</SelectItem>
+                    <SelectItem value="divorciado">Divorciado(a)</SelectItem>
+                    <SelectItem value="viudo">Viudo(a)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
           </CardContent>
         </Card>
+
+        {isABC && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Dependientes (cónyuge e hijos)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Field label="Nombres separados por coma — aparecerán en el certificado ABC">
+                <Textarea
+                  rows={3}
+                  value={form.dependents_text}
+                  onChange={set("dependents_text")}
+                  placeholder="Ej. María López (cónyuge), Juan Pérez (hijo), Ana Pérez (hija)"
+                />
+              </Field>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader><CardTitle className="text-base">Contacto</CardTitle></CardHeader>
