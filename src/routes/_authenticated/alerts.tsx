@@ -256,7 +256,7 @@ function RemindersList({ rows }: { rows: any[] }) {
                   <Badge variant="outline" className="font-mono text-[10px]">{r.policies?.folio}</Badge>
                   {isOverdue
                     ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vencido hace {Math.abs(d)}d</Badge>
-                    : d <= 7
+                    : d <= 15
                       ? <Badge className="bg-orange-500 text-white text-[10px]">Vence en {d}d</Badge>
                       : <Badge variant="secondary" className="text-[10px]">{d}d</Badge>
                   }
@@ -303,7 +303,7 @@ function RenewalsList({ rows }: { rows: any[] }) {
                   <Badge variant="outline" className="font-mono text-[10px]">{r.folio}</Badge>
                   {isOverdue
                     ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Venció hace {Math.abs(d)}d</Badge>
-                    : d <= 7
+                    : d <= 15
                       ? <Badge className="bg-orange-500 text-white text-[10px]">Vence en {d}d</Badge>
                       : <Badge variant="secondary" className="text-[10px]">{d}d</Badge>
                   }
