@@ -20,6 +20,8 @@ const empty = {
   date_of_birth: "", gender: "", marital_status: "",
   email: "", phone: "",
   street: "", number: "", colonia: "", city: "", state: "", zip: "",
+  // ABC-only free-text list of cónyuge/hijos shown on the certificate.
+  dependents_text: "",
 };
 
 function NewClient() {
@@ -30,7 +32,11 @@ function NewClient() {
   const [programId, setProgramId] = useState<string>(activeProgram?.id ?? "");
   const [busy, setBusy] = useState(false);
 
-  const set = (k: keyof typeof empty) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const selectedProgram = programs.find((p) => p.id === programId);
+  const programCode = (selectedProgram?.code ?? "").toUpperCase();
+  const isABC = programCode === "ABC";
+
+  const set = (k: keyof typeof empty) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
   async function enrollAndGo(clientId: string, action: "create" | "enroll") {
@@ -65,13 +71,19 @@ function NewClient() {
     if (!programId) return toast.error("Selecciona un programa");
     setBusy(true);
     const curp = form.curp.trim().toUpperCase();
+    const { dependents_text, ...rest } = form;
     const payload: any = {
-      ...form,
+      ...rest,
       curp,
-      rfc: form.rfc ? form.rfc.trim().toUpperCase() : null,
-      date_of_birth: form.date_of_birth || null,
+      // Non-ABC programs don't capture marital_status — clear it to keep data tidy.
+      marital_status: isABC ? rest.marital_status : null,
+      rfc: rest.rfc ? rest.rfc.trim().toUpperCase() : null,
+      date_of_birth: rest.date_of_birth || null,
       created_by: user?.id,
       sales_rep_id: user?.id,
+      metadata: isABC && dependents_text.trim()
+        ? { dependents_text: dependents_text.trim() }
+        : {},
     };
     Object.keys(payload).forEach((k) => payload[k] === "" && (payload[k] = null));
 
