@@ -296,44 +296,47 @@ export function ReportPanel({ reportCode }: { reportCode: string }) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Cliente</TableHead><TableHead>Folio</TableHead>
-                  <TableHead>Vence</TableHead><TableHead className="text-right">Días</TableHead>
-                  <TableHead>Estado</TableHead><TableHead></TableHead>
+                  {spec.columns.map((c) => (
+                    <TableHead key={c.key} className={c.align === "right" ? "text-right" : ""}>{c.label}</TableHead>
+                  ))}
+                  {reportCode === "renovaciones" && <TableHead></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {previewRows.map((r: any) => (
-                  <TableRow key={r.policy_id}>
-                    <TableCell className="text-xs">{r.client_name}</TableCell>
-                    <TableCell className="text-xs font-mono">{r.folio}</TableCell>
-                    <TableCell className="text-xs">{r.end_date}</TableCell>
-                    <TableCell className="text-xs text-right">{r.days_to_expire}</TableCell>
-                    <TableCell className="text-xs">
-                      {r.renewal_status === "renewed" && <Badge variant="default" className="text-[10px]"><CheckCircle2 className="h-3 w-3 mr-1" />Renovado</Badge>}
-                      {r.renewal_status === "contacted" && <Badge variant="secondary" className="text-[10px]">Contactado</Badge>}
-                      {r.renewal_status === "pending" && <Badge variant="outline" className="text-[10px]">Por contactar</Badge>}
-                    </TableCell>
-                    <TableCell>
-                      {r.renewal_status !== "renewed" && (
-                        <div className="flex gap-1">
-                          <Input
-                            className="h-7 text-xs w-32"
-                            placeholder="Nota"
-                            value={contactNotes[r.policy_id] ?? ""}
-                            onChange={(e) => setContactNotes(p => ({ ...p, [r.policy_id]: e.target.value }))}
-                          />
-                          <Button size="sm" variant="outline" className="h-7 text-xs"
-                            onClick={() => contactMut.mutate({ policy_id: r.policy_id, notes: contactNotes[r.policy_id] ?? "" })}
-                            disabled={contactMut.isPending}>
-                            Marcar
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
+                {previewRows.map((r: any, idx: number) => (
+                  <TableRow key={r.policy_id ?? r.id ?? idx}>
+                    {spec.columns.map((c) => (
+                      <TableCell key={c.key} className={`text-xs ${c.align === "right" ? "text-right" : ""}`}>
+                        {formatCell(r[c.key], c.format)}
+                      </TableCell>
+                    ))}
+                    {reportCode === "renovaciones" && (
+                      <TableCell>
+                        {r.renewal_status !== "renewed" && (
+                          <div className="flex gap-1">
+                            <Input
+                              className="h-7 text-xs w-32"
+                              placeholder="Nota"
+                              value={contactNotes[r.policy_id] ?? ""}
+                              onChange={(e) => setContactNotes(p => ({ ...p, [r.policy_id]: e.target.value }))}
+                            />
+                            <Button size="sm" variant="outline" className="h-7 text-xs"
+                              onClick={() => contactMut.mutate({ policy_id: r.policy_id, notes: contactNotes[r.policy_id] ?? "" })}
+                              disabled={contactMut.isPending}>
+                              Marcar
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
                 {previewRows.length === 0 && !previewQ.isLoading && (
-                  <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">Sin resultados</TableCell></TableRow>
+                  <TableRow>
+                    <TableCell colSpan={spec.columns.length + (reportCode === "renovaciones" ? 1 : 0)} className="text-center text-xs text-muted-foreground py-6">
+                      Sin resultados
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
@@ -342,4 +345,33 @@ export function ReportPanel({ reportCode }: { reportCode: string }) {
       )}
     </div>
   );
+}
+
+function formatCell(value: any, format?: string): string {
+  if (value === null || value === undefined || value === "") return "—";
+  if (format === "money") {
+    const n = Number(value);
+    if (Number.isNaN(n)) return String(value);
+    return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(n);
+  }
+  if (format === "percent") {
+    const n = Number(value);
+    if (Number.isNaN(n)) return String(value);
+    return `${(n * (n <= 1 ? 100 : 1)).toFixed(1)}%`;
+  }
+  if (format === "int") {
+    const n = Number(value);
+    return Number.isNaN(n) ? String(value) : n.toLocaleString("es-MX");
+  }
+  if (format === "date") {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleDateString("es-MX");
+  }
+  if (format === "datetime") {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleString("es-MX");
+  }
+  return String(value);
 }

@@ -57,6 +57,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
       { key: "status", label: "Estado", width: 12 },
     ],
     implemented: true,
+    supports_preview: true,
   },
   cobranza: {
     code: "cobranza",
@@ -87,6 +88,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
     ],
     totals: ["amount"],
     implemented: true,
+    supports_preview: true,
   },
   siniestralidad: {
     code: "siniestralidad",
@@ -122,6 +124,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
     totals: ["sum_insured"],
     has_kpis: true,
     implemented: true,
+    supports_preview: true,
   },
   renovaciones: {
     code: "renovaciones",
@@ -168,6 +171,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
     ],
     totals: ["clients_captured", "policies_issued", "total_premium"],
     implemented: true,
+    supports_preview: true,
   },
   actividad: {
     code: "actividad",
@@ -202,6 +206,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
     implemented: true,
     admin_only: true,
     max_rows: 10000,
+    supports_preview: true,
   },
 };
 
