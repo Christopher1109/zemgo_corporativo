@@ -44,10 +44,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex bg-background w-full">
+    <div className="h-screen flex bg-background w-full overflow-hidden">
       {/* Sidebar */}
       <aside
-        className="w-64 shrink-0 flex flex-col text-white"
+        className="w-64 shrink-0 flex flex-col text-white h-screen sticky top-0 overflow-y-auto"
         style={{ backgroundColor: "var(--program-primary)" }}
       >
         <div className="p-4 border-b border-white/10">
