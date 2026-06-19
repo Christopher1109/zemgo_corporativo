@@ -48,6 +48,15 @@ export function ReportPanel({ reportCode }: { reportCode: string }) {
     if (!spec) return;
     const init: ReportFilters = { program_id: activeProgram?.id ?? "all" };
     if (spec.filters.some(f => f.type === "window")) init.window_days = 30;
+    // Por defecto: cargar los últimos 30 días en reportes con date_range,
+    // excepto "cartera" (queremos toda la cartera vigente desde el inicio).
+    if (reportCode !== "cartera" && spec.filters.some(f => f.type === "date_range")) {
+      const to = new Date();
+      const from = new Date();
+      from.setDate(from.getDate() - 30);
+      init.date_from = from.toISOString().slice(0, 10);
+      init.date_to = to.toISOString().slice(0, 10);
+    }
     setFilters(init);
     setLastUrl(null); setWarning(null); setPresetName(""); setContactNotes({});
   }, [reportCode, activeProgram?.id]);
