@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { ArrowLeft, FileDown, Loader2 } from "lucide-react";
+import { ArrowLeft, FileDown, Loader2, Pencil, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { changePolicyStatus, generateCertificatePdf } from "@/lib/policies.functions";
+import { listPolicyRevisions } from "@/lib/policies-edit.functions";
 import { PolicyPaymentsTab } from "@/components/payments/policy-payments-tab";
+import { EditPolicyDialog } from "@/components/policies/EditPolicyDialog";
+import { RenewPolicyDialog } from "@/components/policies/RenewPolicyDialog";
 
 export const Route = createFileRoute("/_authenticated/policies/$policyId")({
   head: () => ({ meta: [{ title: "Detalle de póliza — HOPE Consulting" }] }),
