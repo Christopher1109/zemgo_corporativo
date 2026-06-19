@@ -16,28 +16,31 @@ export const PDF_THEME: {
 } = {
   programs: {
     ABC: {
-      primary: "#2E7D32",
-      primaryDark: "#1B5E20",
-      accent: "#E8F5E9",
+      // Matches certificate sample: bright leaf-green header/footer with pale green section bars.
+      primary: "#7CB342",
+      primaryDark: "#558B2F",
+      accent: "#DCEDC8",
       textOnPrimary: "#FFFFFF",
-      sectionBg: "#C8E6C9",
+      sectionBg: "#AED581",
       sectionText: "#1B5E20",
     },
     FUTCARE: {
-      primary: "#1565C0",
-      primaryDark: "#0D47A1",
-      accent: "#E3F2FD",
+      // Matches certificate sample: deep navy header/footer with white text on section bars.
+      primary: "#1B2A55",
+      primaryDark: "#101A39",
+      accent: "#E8ECF7",
       textOnPrimary: "#FFFFFF",
-      sectionBg: "#BBDEFB",
-      sectionText: "#0D47A1",
+      sectionBg: "#1B2A55",
+      sectionText: "#FFFFFF",
     },
     MCV: {
-      primary: "#722F37",
-      primaryDark: "#4A1F26",
-      accent: "#F6E7EA",
+      // Matches certificate sample: dusty maroon/rosewood, section bars filled with brand color.
+      primary: "#A23B5C",
+      primaryDark: "#7A2B45",
+      accent: "#F4E1E7",
       textOnPrimary: "#FFFFFF",
-      sectionBg: "#E5D4D7",
-      sectionText: "#4A1F26",
+      sectionBg: "#A23B5C",
+      sectionText: "#FFFFFF",
     },
   },
   hir: {
