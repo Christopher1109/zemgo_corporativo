@@ -64,6 +64,7 @@ function ReportsPage() {
                     <div className="flex gap-1">
                       {t.admin_only && <Badge variant="outline" className="text-[10px]"><Lock className="h-3 w-3 mr-1" /> Admin</Badge>}
                       {!implemented && <Badge variant="secondary" className="text-[10px]">Próx.</Badge>}
+                      {spec?.has_kpis && <Badge variant="outline" className="text-[10px]">KPIs</Badge>}
                     </div>
                   </div>
                   <CardTitle className="text-base mt-3">{t.name}</CardTitle>

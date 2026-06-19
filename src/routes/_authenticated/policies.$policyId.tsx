@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { ArrowLeft, FileDown, Loader2 } from "lucide-react";
+import { ArrowLeft, FileDown, Loader2, Pencil, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { changePolicyStatus, generateCertificatePdf } from "@/lib/policies.functions";
+import { listPolicyRevisions } from "@/lib/policies-edit.functions";
 import { PolicyPaymentsTab } from "@/components/payments/policy-payments-tab";
+import { EditPolicyDialog } from "@/components/policies/EditPolicyDialog";
+import { RenewPolicyDialog } from "@/components/policies/RenewPolicyDialog";
 
 export const Route = createFileRoute("/_authenticated/policies/$policyId")({
   head: () => ({ meta: [{ title: "Detalle de póliza — HOPE Consulting" }] }),
@@ -42,10 +45,13 @@ function PolicyDetail() {
   const qc = useQueryClient();
   const changeFn = useServerFn(changePolicyStatus);
   const pdfFn = useServerFn(generateCertificatePdf);
+  const revisionsFn = useServerFn(listPolicyRevisions);
 
   const [statusDialog, setStatusDialog] = useState(false);
   const [nextStatus, setNextStatus] = useState<string>("");
   const [reason, setReason] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
+  const [renewOpen, setRenewOpen] = useState(false);
 
   const { data: policy, isLoading } = useQuery({
     queryKey: ["policy", policyId],
@@ -117,6 +123,11 @@ function PolicyDetail() {
     },
   });
 
+  const { data: revisions = [] } = useQuery({
+    queryKey: ["policy-revisions", policyId],
+    queryFn: () => revisionsFn({ data: { policy_id: policyId } }),
+  });
+
   const statusMutation = useMutation({
     mutationFn: () =>
       changeFn({ data: { policy_id: policyId, next_status: nextStatus as any, reason: reason || null } }),
@@ -165,7 +176,16 @@ function PolicyDetail() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {!["expired","cancelled"].includes(policy.status) && (
+            <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4 mr-2" /> Editar</Button>
+          )}
+          {["active","expired"].includes(policy.status) && policy.end_date && (() => {
+            const days = Math.floor((Date.parse(policy.end_date) - Date.now()) / 86400000);
+            return (days <= 60 && days >= -30) ? (
+              <Button variant="outline" onClick={() => setRenewOpen(true)}><RefreshCw className="h-4 w-4 mr-2" /> Renovar</Button>
+            ) : null;
+          })()}
           {allowed.length > 0 && (
             <Button variant="outline" onClick={() => setStatusDialog(true)}>Cambiar estado</Button>
           )}
@@ -286,23 +306,64 @@ function PolicyDetail() {
         </TabsContent>
 
         <TabsContent value="history">
-          <Card>
-            <Table>
-              <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Acción</TableHead><TableHead>Detalle</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {history.length === 0 && <TableRow><TableCell colSpan={3} className="text-center py-6 text-muted-foreground">Sin eventos registrados.</TableCell></TableRow>}
-                {history.map((h: any) => (
-                  <TableRow key={h.id}>
-                    <TableCell className="text-xs whitespace-nowrap">{new Date(h.created_at).toLocaleString("es-MX")}</TableCell>
-                    <TableCell className="font-mono text-xs">{h.action}</TableCell>
-                    <TableCell className="text-xs"><pre className="whitespace-pre-wrap font-mono">{h.diff ? JSON.stringify(h.diff, null, 0) : ""}</pre></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
+          <div className="space-y-4">
+            <Card className="p-0">
+              <div className="px-4 py-3 border-b">
+                <h3 className="text-sm font-semibold">Revisiones de la póliza</h3>
+                <p className="text-xs text-muted-foreground">Historial de ediciones (datos editados manualmente).</p>
+              </div>
+              <Table>
+                <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Editado por</TableHead><TableHead>Cambios</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {revisions.length === 0 && <TableRow><TableCell colSpan={3} className="text-center py-4 text-xs text-muted-foreground">Sin revisiones registradas.</TableCell></TableRow>}
+                  {revisions.map((r: any) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-xs whitespace-nowrap">{new Date(r.edited_at).toLocaleString("es-MX")}</TableCell>
+                      <TableCell className="text-xs">{r.profiles?.full_name ?? "—"}</TableCell>
+                      <TableCell className="text-xs">
+                        <div className="space-y-1">
+                          {Object.entries(r.fields_changed ?? {}).map(([field, val]: any) => (
+                            <div key={field} className="font-mono">
+                              <span className="text-muted-foreground">{field}:</span>{" "}
+                              {val?.from !== undefined ? (
+                                <><span className="line-through text-rose-600">{JSON.stringify(val.from)}</span>{" → "}<span className="text-emerald-700">{JSON.stringify(val.to)}</span></>
+                              ) : (
+                                <span className="text-emerald-700">actualizado</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+
+            <Card className="p-0">
+              <div className="px-4 py-3 border-b">
+                <h3 className="text-sm font-semibold">Bitácora de auditoría</h3>
+              </div>
+              <Table>
+                <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Acción</TableHead><TableHead>Detalle</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {history.length === 0 && <TableRow><TableCell colSpan={3} className="text-center py-6 text-muted-foreground">Sin eventos registrados.</TableCell></TableRow>}
+                  {history.map((h: any) => (
+                    <TableRow key={h.id}>
+                      <TableCell className="text-xs whitespace-nowrap">{new Date(h.created_at).toLocaleString("es-MX")}</TableCell>
+                      <TableCell className="font-mono text-xs">{h.action}</TableCell>
+                      <TableCell className="text-xs"><pre className="whitespace-pre-wrap font-mono">{h.diff ? JSON.stringify(h.diff, null, 0) : ""}</pre></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
+
+      <EditPolicyDialog open={editOpen} onOpenChange={setEditOpen} policy={policy} />
+      <RenewPolicyDialog open={renewOpen} onOpenChange={setRenewOpen} policy={policy} />
 
       <Dialog open={statusDialog} onOpenChange={setStatusDialog}>
         <DialogContent>
