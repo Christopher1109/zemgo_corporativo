@@ -23,11 +23,10 @@ function daysFrom(d: string) {
   return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
 }
 
-type Bucket = "all" | "overdue" | "7" | "15" | "30" | "later";
+type Bucket = "all" | "overdue" | "15" | "30" | "later";
 const BUCKET_OPTS: { value: Bucket; label: string }[] = [
   { value: "all", label: "Todos" },
   { value: "overdue", label: "Vencidos" },
-  { value: "7", label: "≤ 7 días" },
   { value: "15", label: "≤ 15 días" },
   { value: "30", label: "≤ 30 días" },
   { value: "later", label: "> 30 días" },
@@ -37,18 +36,27 @@ function matchBucket(days: number, isOverdue: boolean, bucket: Bucket): boolean 
   if (bucket === "all") return true;
   if (bucket === "overdue") return isOverdue;
   if (isOverdue) return false;
-  if (bucket === "7") return days <= 7;
   if (bucket === "15") return days <= 15;
   if (bucket === "30") return days <= 30;
   if (bucket === "later") return days > 30;
   return true;
 }
 
-/** Colored card per semáforo: vencido=rojo, ≤7d=naranja, resto=sin color */
+/** Colored card per semáforo: vencido=rojo, ≤15d=naranja, resto=sin color */
 function semaforo(days: number, isOverdue: boolean): string {
   if (isOverdue) return "bg-destructive/10 border-l-4 border-l-destructive";
-  if (days <= 7) return "bg-orange-500/10 border-l-4 border-l-orange-500";
+  if (days <= 15) return "bg-orange-500/10 border-l-4 border-l-orange-500";
   return "";
+}
+
+/** Sort: vencidos primero (más antiguos arriba), luego próximos a vencer (días asc). */
+function priorityCompare(aDays: number, aOverdue: boolean, bDays: number, bOverdue: boolean): number {
+  if (aOverdue && !bOverdue) return -1;
+  if (!aOverdue && bOverdue) return 1;
+  // ambos vencidos: el más antiguo (días más negativos) primero
+  if (aOverdue && bOverdue) return aDays - bDays;
+  // ambos próximos: el más próximo primero
+  return aDays - bDays;
 }
 
 function AlertsPage() {
@@ -66,19 +74,19 @@ function AlertsPage() {
 
   const data = q.data;
   const counts = useMemo(() => {
-    if (!data) return { reminders7: 0, reminders30: 0, overdue: 0, renewals30: 0, suspended: 0, overdueAmount: 0, upcomingAmount: 0 };
-    let reminders7 = 0, reminders30 = 0, overdue = 0, overdueAmount = 0, upcomingAmount = 0;
+    if (!data) return { reminders15: 0, reminders30: 0, overdue: 0, renewals30: 0, suspended: 0, overdueAmount: 0, upcomingAmount: 0 };
+    let reminders15 = 0, reminders30 = 0, overdue = 0, overdueAmount = 0, upcomingAmount = 0;
     for (const p of data.upcoming as any[]) {
       const d = daysFrom(p.due_date);
       if (p.status === "overdue") { overdue++; overdueAmount += Number(p.amount); }
       else {
         upcomingAmount += Number(p.amount);
-        if (d <= 7) reminders7++;
+        if (d <= 15) reminders15++;
         else if (d <= 30) reminders30++;
       }
     }
     const renewals30 = (data.renewals as any[]).filter((r) => daysFrom(r.end_date) <= 30).length;
-    return { reminders7, reminders30, overdue, renewals30, suspended: (data.suspended as any[]).length, overdueAmount, upcomingAmount };
+    return { reminders15, reminders30, overdue, renewals30, suspended: (data.suspended as any[]).length, overdueAmount, upcomingAmount };
   }, [data]);
 
   const s = search.trim().toLowerCase();
@@ -88,15 +96,25 @@ function AlertsPage() {
             (folio ?? "").toLowerCase().includes(s));
   }
 
-  const remFiltered = (data?.upcoming ?? []).filter((r: any) => {
-    const d = daysFrom(r.due_date);
-    const ov = r.status === "overdue";
-    return matchBucket(d, ov, bucket) && matchSearch(r.policies?.clients, r.policies?.folio);
-  });
-  const renFiltered = (data?.renewals ?? []).filter((r: any) => {
-    const d = daysFrom(r.end_date);
-    return matchBucket(d, false, bucket) && matchSearch(r.clients, r.folio);
-  });
+  const remFiltered = (data?.upcoming ?? [])
+    .filter((r: any) => {
+      const d = daysFrom(r.due_date);
+      const ov = r.status === "overdue";
+      return matchBucket(d, ov, bucket) && matchSearch(r.policies?.clients, r.policies?.folio);
+    })
+    .sort((a: any, b: any) => priorityCompare(
+      daysFrom(a.due_date), a.status === "overdue",
+      daysFrom(b.due_date), b.status === "overdue",
+    ));
+  const renFiltered = (data?.renewals ?? [])
+    .filter((r: any) => {
+      const d = daysFrom(r.end_date);
+      return matchBucket(d, d < 0, bucket) && matchSearch(r.clients, r.folio);
+    })
+    .sort((a: any, b: any) => {
+      const da = daysFrom(a.end_date), db = daysFrom(b.end_date);
+      return priorityCompare(da, da < 0, db, db < 0);
+    });
   const suspFiltered = (data?.suspended ?? []).filter((r: any) =>
     matchSearch(r.clients, r.folio)
   );
@@ -125,8 +143,9 @@ function AlertsPage() {
       {/* KPIs */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
         <KpiCard label="Pagos vencidos" value={counts.overdue} sub={`$${fmtMx(counts.overdueAmount)} MXN`} color="#dc2626" icon={AlertOctagon} />
-        <KpiCard label="Por vencer ≤ 7 días" value={counts.reminders7} sub="Urgente" color="#ea580c" icon={Calendar} />
-        <KpiCard label="Por vencer 8–30 días" value={counts.reminders30} sub="Próximo" icon={Bell} />
+        <KpiCard label="Por vencer ≤ 15 días" value={counts.reminders15} sub="Urgente" color="#ea580c" icon={Calendar} />
+        <KpiCard label="Por vencer 16–30 días" value={counts.reminders30} sub="Próximo" icon={Bell} />
+
         <KpiCard label="Renovaciones ≤ 30 días" value={counts.renewals30} sub="Contacto comercial" color="var(--program-primary)" icon={RefreshCw} />
         <KpiCard label="Pólizas suspendidas" value={counts.suspended} sub="Cobranza activa" color="#7c3aed" icon={AlertOctagon} />
       </div>
@@ -237,7 +256,7 @@ function RemindersList({ rows }: { rows: any[] }) {
                   <Badge variant="outline" className="font-mono text-[10px]">{r.policies?.folio}</Badge>
                   {isOverdue
                     ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vencido hace {Math.abs(d)}d</Badge>
-                    : d <= 7
+                    : d <= 15
                       ? <Badge className="bg-orange-500 text-white text-[10px]">Vence en {d}d</Badge>
                       : <Badge variant="secondary" className="text-[10px]">{d}d</Badge>
                   }
@@ -284,7 +303,7 @@ function RenewalsList({ rows }: { rows: any[] }) {
                   <Badge variant="outline" className="font-mono text-[10px]">{r.folio}</Badge>
                   {isOverdue
                     ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Venció hace {Math.abs(d)}d</Badge>
-                    : d <= 7
+                    : d <= 15
                       ? <Badge className="bg-orange-500 text-white text-[10px]">Vence en {d}d</Badge>
                       : <Badge variant="secondary" className="text-[10px]">{d}d</Badge>
                   }
