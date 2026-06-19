@@ -25,7 +25,7 @@ const NAV = [
   { to: "/payments", label: "Pagos", icon: CreditCard, enabled: true },
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, enabled: true },
   { to: "/reports", label: "Reportes", icon: BarChart3, enabled: true },
-  { to: "/settings", label: "Configuración", icon: Settings, enabled: false },
+  { to: "/settings", label: "Configuración", icon: Settings, enabled: true },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
