@@ -41,13 +41,13 @@ async function logAttempt(params: {
 }) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("bank_reconciliation_log").insert({
+    await (supabaseAdmin.from("bank_reconciliation_log") as any).insert({
       status: params.status,
       reference: params.reference ?? null,
       amount: params.amount ?? null,
       payment_id: params.payment_id ?? null,
       error_message: params.error_message ?? null,
-      raw_payload: params.raw_payload ?? null,
+      raw_payload: (params.raw_payload ?? null) as any,
       source_ip: params.source_ip ?? null,
     });
   } catch {
