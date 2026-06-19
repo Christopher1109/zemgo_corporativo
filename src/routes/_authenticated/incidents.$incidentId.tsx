@@ -326,7 +326,7 @@ function IncidentDetail() {
               <Select value={directorId} onValueChange={setDirectorId}>
                 <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
                 <SelectContent>
-                  {directors.length === 0 && <div className="p-2 text-xs text-muted-foreground">Sin directores con firma cargada.</div>}
+                  {directors.length === 0 && <div className="p-2 text-xs text-muted-foreground">No hay directores asignados a este programa.</div>}
                   {directors.map((d: any) => (
                     <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>
                   ))}
