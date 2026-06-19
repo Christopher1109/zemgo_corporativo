@@ -32,10 +32,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isAdminFn = useServerFn(checkIsSuperAdmin);
-  const isAdminQ = useQuery({
-    queryKey: ["is-super-admin"], queryFn: () => isAdminFn(), staleTime: 60_000,
-  });
+
+
 
   async function handleSignOut() {
     await signOut();
