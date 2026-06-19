@@ -226,7 +226,7 @@ function Dashboard() {
                   const days = Math.ceil((new Date(r.due_date).getTime() - Date.now()) / 86400000);
                   const isOverdue = r.status === "overdue";
                   const c = r.policies?.clients;
-                  const tone = isOverdue ? "bg-destructive/10" : days <= 7 ? "bg-orange-500/10" : "";
+                  const tone = isOverdue ? "bg-destructive/10" : days <= 15 ? "bg-orange-500/10" : "";
                   return (
                     <li key={r.id} className={cn("px-4 py-2.5 flex items-center justify-between gap-3", tone)}>
                       <div className="min-w-0">
@@ -238,7 +238,7 @@ function Dashboard() {
                       <div className="text-right">
                         {isOverdue
                           ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vencido {Math.abs(days)}d</Badge>
-                          : days <= 7
+                          : days <= 15
                             ? <Badge className="bg-orange-500 text-white text-[10px]">{days}d</Badge>
                             : <Badge variant="secondary" className="text-[10px]">{days}d</Badge>}
                       </div>

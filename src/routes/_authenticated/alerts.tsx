@@ -150,6 +150,23 @@ function AlertsPage() {
         <KpiCard label="Pólizas suspendidas" value={counts.suspended} sub="Cobranza activa" color="#7c3aed" icon={AlertOctagon} />
       </div>
 
+      {/* Leyenda de colores */}
+      <Card className="p-3">
+        <div className="flex flex-wrap items-center gap-4 text-xs">
+          <span className="font-medium text-muted-foreground uppercase tracking-wide">Semáforo:</span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-sm bg-destructive" /> Vencidos
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-sm bg-orange-500" /> Por vencer en ≤ 15 días
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-sm border bg-background" /> Más de 15 días
+          </span>
+          <span className="text-muted-foreground ml-auto">Orden: vencidos primero, luego los más próximos a vencer.</span>
+        </div>
+      </Card>
+
       {/* Filtros */}
       <Card className="p-3">
         <div className="grid md:grid-cols-[1fr_220px] gap-3 items-end">
