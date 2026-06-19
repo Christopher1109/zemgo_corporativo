@@ -23,11 +23,10 @@ function daysFrom(d: string) {
   return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
 }
 
-type Bucket = "all" | "overdue" | "7" | "15" | "30" | "later";
+type Bucket = "all" | "overdue" | "15" | "30" | "later";
 const BUCKET_OPTS: { value: Bucket; label: string }[] = [
   { value: "all", label: "Todos" },
   { value: "overdue", label: "Vencidos" },
-  { value: "7", label: "≤ 7 días" },
   { value: "15", label: "≤ 15 días" },
   { value: "30", label: "≤ 30 días" },
   { value: "later", label: "> 30 días" },
@@ -37,18 +36,27 @@ function matchBucket(days: number, isOverdue: boolean, bucket: Bucket): boolean 
   if (bucket === "all") return true;
   if (bucket === "overdue") return isOverdue;
   if (isOverdue) return false;
-  if (bucket === "7") return days <= 7;
   if (bucket === "15") return days <= 15;
   if (bucket === "30") return days <= 30;
   if (bucket === "later") return days > 30;
   return true;
 }
 
-/** Colored card per semáforo: vencido=rojo, ≤7d=naranja, resto=sin color */
+/** Colored card per semáforo: vencido=rojo, ≤15d=naranja, resto=sin color */
 function semaforo(days: number, isOverdue: boolean): string {
   if (isOverdue) return "bg-destructive/10 border-l-4 border-l-destructive";
-  if (days <= 7) return "bg-orange-500/10 border-l-4 border-l-orange-500";
+  if (days <= 15) return "bg-orange-500/10 border-l-4 border-l-orange-500";
   return "";
+}
+
+/** Sort: vencidos primero (más antiguos arriba), luego próximos a vencer (días asc). */
+function priorityCompare(aDays: number, aOverdue: boolean, bDays: number, bOverdue: boolean): number {
+  if (aOverdue && !bOverdue) return -1;
+  if (!aOverdue && bOverdue) return 1;
+  // ambos vencidos: el más antiguo (días más negativos) primero
+  if (aOverdue && bOverdue) return aDays - bDays;
+  // ambos próximos: el más próximo primero
+  return aDays - bDays;
 }
 
 function AlertsPage() {
