@@ -1,76 +1,78 @@
-# Turno A — Certificados, campos por programa y referencias bancarias
+## Plan de cambios
 
-## 1. Certificados PDF (réplica exacta de los 3 formatos)
+Trabajo dividido en bloques. Los puntos **(A) Formato ABC** y **(B) Certificado de póliza** quedan pendientes hasta que subas los archivos — no los incluyo aquí.
 
-Reemplazo el generador actual por un componente React-PDF parametrizado por programa. Mismo layout, mismas tablas, mismos textos legales — solo cambian colores y logo.
+---
 
-**Paleta por programa**
-- ABC de Protección: verde `#7CB342`, logo circular verde
-- FUT-CARE: azul marino `#1B2A55`, logo "FUT-CARE TU SEGURO FUTBOLERO"
-- Manos con Valor: vino `#A23B5C`, logo "Manos con Valor"
+### 1. Dashboard — reacomodo completo
 
-**Estructura compartida**
-- Header: logo + "CERTIFICADO DE COBERTURA" + dirección Monterrey + FOLIO
-- Sección "Ramo del seguro" + "Fecha de Emisión" (en MCV solo fecha, sin ramo)
-- Banner "ASEGURADO TITULAR" con datos del cliente
-- Banner "TABLA DE COBERTURA(s) CONTRATADA(s)" con coberturas por programa (sembradas desde `program_coverages`)
-- Banner "BENEFICIARIOS" con tabla de 2 filas mínimas
-- Banner "FIRMAS" con advertencia legal idéntica al PDF, vigencia y firmas
-- Footer: "Programa administrado, operado y respaldado por HOPE CONSULTING" + URL Zemgo
+**Quitar:** Top 10 deudores, Distribución de pólizas activas (gráfica), tamaño excesivo de las demás gráficas.
 
-Subo los 3 logos a Lovable Assets para reusarlos.
+**Dejar / mover arriba:**
+- KPIs financieros nuevos en la fila superior: **Por cobrar**, **Cobrado del mes**, **Vencido**, **Nuevos clientes (mes)**.
+- **Atención inmediata** (la que ya existe) baja un nivel.
+- **Alertas y renovaciones** → bloque destacado arriba con los próximos a vencer (7/15/30 días) y vencidos, con enlace al módulo.
+- **Pendientes de siniestros** → tarjeta con conteos por estado (abiertos, en revisión, cerrados del mes).
+- **Pases médicos pendientes** → tarjeta con "por aceptar" y "por realizar".
+- **Últimos clientes registrados** (lista 5–8).
+- **Actividad reciente** (audit_log resumido: pagos, altas, siniestros, pases).
+- **Cobranza por mes** se queda, pero en tamaño compacto.
+- **Shortcuts**: Nuevo cliente, Registrar pago, Reportar siniestro, Nuevo pase.
 
-## 2. Campos por programa al alta de cliente/póliza
+### 2. Nuevo módulo "Finanzas" en sidebar
 
-Hoy el formulario pide los mismos campos para todos los programas. Lo hago condicional según el `program_code` seleccionado:
+Mover ahí TODO el dashboard de cobranza que hoy está arriba en /payments:
+- Cobranza mensual
+- Top 10 clientes (este sí aquí, no en dashboard)
+- Pagos por método
+- Pagos pendientes, próximos, estimaciones, sugerencias
 
-**ABC de Protección** (más exhaustivo)
-- Nombres, Apellidos, Fecha de Nacimiento, **Edad** (auto-calculada), **Género**, **Estado Civil**, CURP, **Dependientes (texto libre: cónyuge e hijos)**, Dirección, Celular, Correo
+`/payments` queda solo con el listado + acciones. Sidebar: **Finanzas** (ícono Wallet/TrendingUp).
 
-**FUT-CARE**
-- Nombres, Apellidos, Fecha de Nacimiento, Género, CURP, Dirección, Celular, Correo
-- (sin Edad explícita, sin Estado Civil, sin Dependientes)
+### 3. Alertas y renovaciones — visual semáforo + filtros
 
-**Manos con Valor**
-- Mismos campos que FUT-CARE
+- Tarjeta completa del cliente coloreada:
+  - **Rojo** (bg + borde): vencido
+  - **Naranja**: ≤ 7 días por vencer
+  - **Sin color**: > 7 días
+- Filtros nuevos: **Todos / Vencidos / ≤7 días / ≤15 días / ≤30 días / >30 días**.
+- Buscador por cliente / póliza.
 
-**Implementación**
-- Tabla `clients`: ya tiene `marital_status` y otros campos opcionales. Agrego `program_specific_data jsonb` para guardar lo que no encaje (ej. dependientes de ABC como string).
-- Componente `ClientForm` lee `program.code` del contexto y muestra/oculta secciones con un schema Zod por programa.
-- Validación: campos requeridos solo cuando aplican al programa.
+### 4. Reportes — vista unificada con tabs
 
-## 3. Stub de referencias bancarias
+- Quitar la tarjeta "Mapa de pólizas" actual rota y reemplazar por una tarjeta llamada **Análisis geográfico** que abre `/reports?tab=geo`.
+- `/reports` por defecto abre **Cartera de clientes**.
+- **Tabs horizontales arriba**: Cartera · Cobranza · Siniestralidad · Renovaciones · Ventas por vendedor · Actividad del sistema · Análisis geográfico.
+- Cada tab renderiza el reporte ahí mismo + botones **Exportar PDF / Excel / CSV**.
+- Quitar "Mapa México" del sidebar.
+- Renombrar ruta `/reports/map` → integrada como tab `geo` (la ruta vieja redirige).
 
-**Generación determinística (sin integración bancaria todavía)**
-- Función `generate_bank_reference(payment_id)` que devuelve referencia de 20 dígitos: prefijo de convenio (4) + folio póliza compacto (8) + AAMM del cargo (4) + check digit (4).
-- Al crear un `payment` con status `pending` se calcula y se guarda en `payments.bank_reference`.
+### 5. Sidebar — limpieza
 
-**UI**
-- En la pantalla de póliza y en el listado de pagos: chip copiable "Ref. 1234 5678 9012 3456 7890" + botón "Descargar ficha PDF" (formato simple con instrucciones para Banorte).
-- Tab "Referencias pendientes" en `/payments` con todos los pagos pendientes y sus referencias.
+- Quitar **Administración de usuarios**.
+- Quitar **Seats demo**.
+- Quitar **Mapa México**.
+- Agregar **Finanzas**.
 
-**Endpoint de conciliación listo**
-- `POST /api/public/hooks/bank-reconciliation` que acepta:
-  ```json
-  { "referencia": "...", "monto": 100.00, "fecha_pago": "2026-06-19", "auth_code": "..." }
-  ```
-- Verifica firma HMAC con `BANK_WEBHOOK_SECRET` (lo agregamos antes de hacer la integración real).
-- Hace match contra `payments.bank_reference`, valida monto, marca `status='paid'`, registra en `payment_reconciliations` (tabla nueva con `source='webhook'|'manual'`).
-- Log de cada intento en `bank_reconciliation_log` para debug.
-- Mientras tanto, botón "Marcar como pagado" en la UI hace el mismo flujo con `source='manual'` para que se vea funcionando en la demo.
+### 6. Siniestros — verificación
 
-## Detalles técnicos
+Revisar el formulario de reporte de siniestro contra los campos que la tabla `incidents` espera y confirmarte qué pide hoy vs. qué falta. Si está completo, no toco nada y te lo confirmo. Si falta algo evidente, te lo listo antes de cambiarlo.
 
-- **Migraciones**: añadir `clients.program_specific_data jsonb`, `payments.bank_reference text unique`, tablas `payment_reconciliations` y `bank_reconciliation_log`, función `generate_bank_reference`.
-- **PDF**: nuevo `src/lib/pdf/templates/CertificadoCobertura.tsx` con variantes por programa; el viejo certificado se borra.
-- **Forms**: `src/components/clients/ClientForm.tsx` se parte en `BaseFields` + `<ProgramSpecificFields program={code} />`.
-- **Endpoint**: `src/routes/api/public/hooks/bank-reconciliation.ts`; usa `supabaseAdmin` cargado dentro del handler tras verificar firma.
-- **No tocamos**: alertas, mapa, plantillas de WhatsApp/Email (Turno B).
+---
 
-## Lo que NO incluye Turno A
-- Sistema de alertas de pago (Turno B)
-- Mapa de México con Mapbox (Turno B — necesitaré `MAPBOX_TOKEN` cuando lleguemos)
-- Plantillas WhatsApp/Email (pendiente, lo dejamos para Turno C)
-- Portal cliente y bot (fuera de alcance acordado)
+### Detalles técnicos
 
-Cuando termine Turno A te entrego: URLs de los 3 certificados de muestra, screenshots del formulario por programa, ejemplo de payload del endpoint de conciliación, y conteo de archivos cambiados.
+- **Dashboard**: nuevas RPC `get_dashboard_financials()` (sumas por cobrar / cobrado mes / vencido) y `get_dashboard_pending_ops()` (siniestros y pases por estado). Reutilizo `getAlertsOverview` para el bloque de alertas.
+- **Finanzas**: nueva ruta `/_authenticated/finance.tsx` que monta los componentes que hoy viven dentro de `payments.tsx`. Extraigo esos componentes a `src/components/finance/*` para reutilizar.
+- **Reportes**: refactor a `/_authenticated/reports.tsx` con `<Tabs>` shadcn + estado en URL search param. La ruta `/_authenticated/reports.map.tsx` redirige a `/reports?tab=geo`. Exportación: `papaparse` (CSV) + `xlsx` (Excel) + `@react-pdf/renderer` (PDF, ya instalado).
+- **Alertas**: actualizo `src/routes/_authenticated/alerts.tsx` con clases condicionales tipo `bg-destructive/10 border-destructive` y `bg-orange-500/10 border-orange-500`, filtro de bucket por días.
+- **Sidebar**: editar `src/components/app-shell.tsx` (quitar entradas, agregar Finanzas).
+- Sin cambios de DB salvo las 2 RPC mencionadas (read-only, sin tablas nuevas).
+
+---
+
+### Pendientes que NO se tocan en este turno
+
+- (A) Alta de cliente al formato ABC — espero archivo.
+- (B) Plantilla del certificado — espero archivo.
+- (C) Verificación detallada del formulario de siniestros — te confirmo después de revisarlo, sin cambios si está completo.
