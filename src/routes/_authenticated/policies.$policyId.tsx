@@ -176,7 +176,16 @@ function PolicyDetail() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {!["expired","cancelled"].includes(policy.status) && (
+            <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4 mr-2" /> Editar</Button>
+          )}
+          {["active","expired"].includes(policy.status) && policy.end_date && (() => {
+            const days = Math.floor((Date.parse(policy.end_date) - Date.now()) / 86400000);
+            return (days <= 60 && days >= -30) ? (
+              <Button variant="outline" onClick={() => setRenewOpen(true)}><RefreshCw className="h-4 w-4 mr-2" /> Renovar</Button>
+            ) : null;
+          })()}
           {allowed.length > 0 && (
             <Button variant="outline" onClick={() => setStatusDialog(true)}>Cambiar estado</Button>
           )}
