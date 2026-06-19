@@ -134,9 +134,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <header
-          className="h-14 px-6 border-b flex items-center justify-between"
+          className="h-14 px-6 border-b flex items-center justify-between shrink-0"
           style={{ borderTopColor: "var(--program-primary)", borderTopWidth: 3, borderTopStyle: "solid" }}
         >
           <div className="flex items-center gap-3">
@@ -151,7 +151,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <LogOut className="h-4 w-4 mr-2" /> Salir
           </Button>
         </header>
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
       </div>
     </div>
   );
