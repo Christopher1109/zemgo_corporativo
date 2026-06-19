@@ -143,8 +143,9 @@ function AlertsPage() {
       {/* KPIs */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
         <KpiCard label="Pagos vencidos" value={counts.overdue} sub={`$${fmtMx(counts.overdueAmount)} MXN`} color="#dc2626" icon={AlertOctagon} />
-        <KpiCard label="Por vencer ≤ 7 días" value={counts.reminders7} sub="Urgente" color="#ea580c" icon={Calendar} />
-        <KpiCard label="Por vencer 8–30 días" value={counts.reminders30} sub="Próximo" icon={Bell} />
+        <KpiCard label="Por vencer ≤ 15 días" value={counts.reminders15} sub="Urgente" color="#ea580c" icon={Calendar} />
+        <KpiCard label="Por vencer 16–30 días" value={counts.reminders30} sub="Próximo" icon={Bell} />
+
         <KpiCard label="Renovaciones ≤ 30 días" value={counts.renewals30} sub="Contacto comercial" color="var(--program-primary)" icon={RefreshCw} />
         <KpiCard label="Pólizas suspendidas" value={counts.suspended} sub="Cobranza activa" color="#7c3aed" icon={AlertOctagon} />
       </div>
