@@ -160,20 +160,40 @@ function NewClient() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Estado civil">
-              <Select value={form.marital_status} onValueChange={(v) => setForm((f) => ({ ...f, marital_status: v }))}>
-                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="soltero">Soltero(a)</SelectItem>
-                  <SelectItem value="casado">Casado(a)</SelectItem>
-                  <SelectItem value="union_libre">Unión libre</SelectItem>
-                  <SelectItem value="divorciado">Divorciado(a)</SelectItem>
-                  <SelectItem value="viudo">Viudo(a)</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
+            {isABC && (
+              <Field label="Estado civil">
+                <Select value={form.marital_status} onValueChange={(v) => setForm((f) => ({ ...f, marital_status: v }))}>
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="soltero">Soltero(a)</SelectItem>
+                    <SelectItem value="casado">Casado(a)</SelectItem>
+                    <SelectItem value="union_libre">Unión libre</SelectItem>
+                    <SelectItem value="divorciado">Divorciado(a)</SelectItem>
+                    <SelectItem value="viudo">Viudo(a)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
           </CardContent>
         </Card>
+
+        {isABC && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Dependientes (cónyuge e hijos)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Field label="Nombres separados por coma — aparecerán en el certificado ABC">
+                <Textarea
+                  rows={3}
+                  value={form.dependents_text}
+                  onChange={set("dependents_text")}
+                  placeholder="Ej. María López (cónyuge), Juan Pérez (hijo), Ana Pérez (hija)"
+                />
+              </Field>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader><CardTitle className="text-base">Contacto</CardTitle></CardHeader>
