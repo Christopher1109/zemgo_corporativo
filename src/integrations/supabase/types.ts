@@ -58,6 +58,50 @@ export type Database = {
           },
         ]
       }
+      bank_reconciliation_log: {
+        Row: {
+          amount: number | null
+          error_message: string | null
+          id: string
+          payment_id: string | null
+          raw_payload: Json | null
+          received_at: string
+          reference: string | null
+          source_ip: string | null
+          status: string
+        }
+        Insert: {
+          amount?: number | null
+          error_message?: string | null
+          id?: string
+          payment_id?: string | null
+          raw_payload?: Json | null
+          received_at?: string
+          reference?: string | null
+          source_ip?: string | null
+          status: string
+        }
+        Update: {
+          amount?: number | null
+          error_message?: string | null
+          id?: string
+          payment_id?: string | null
+          raw_payload?: Json | null
+          received_at?: string
+          reference?: string | null
+          source_ip?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_reconciliation_log_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       beneficiaries: {
         Row: {
           created_at: string
@@ -514,6 +558,50 @@ export type Database = {
           template_code?: string | null
         }
         Relationships: []
+      }
+      payment_reconciliations: {
+        Row: {
+          amount: number
+          created_at: string
+          external_id: string | null
+          id: string
+          paid_at: string
+          payment_id: string
+          raw_payload: Json | null
+          reference: string
+          source: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          paid_at?: string
+          payment_id: string
+          raw_payload?: Json | null
+          reference: string
+          source: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          paid_at?: string
+          payment_id?: string
+          raw_payload?: Json | null
+          reference?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_reconciliations_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_schedules: {
         Row: {
@@ -1265,6 +1353,17 @@ export type Database = {
       }
       next_policy_folio: { Args: { _program_id: string }; Returns: string }
       reactivate_user: { Args: { _user_id: string }; Returns: undefined }
+      reconcile_payment_by_reference: {
+        Args: {
+          _amount: number
+          _external_id: string
+          _paid_at: string
+          _raw: Json
+          _reference: string
+          _source?: string
+        }
+        Returns: Json
+      }
       refresh_dashboard_mvs: { Args: never; Returns: Json }
       refund_payment: {
         Args: { _payment_id: string; _reason: string }
