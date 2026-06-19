@@ -87,10 +87,8 @@ function PaymentsList() {
             {scope === "active" ? activeProgram?.name : "Todos los programas"} · {rows.length} pagos
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link to="/payments/dashboard"><BarChart3 className="h-4 w-4 mr-2" />Dashboard de cobranza</Link>
-        </Button>
       </div>
+
 
       <Card className="p-4 space-y-3">
         <div className="grid md:grid-cols-4 gap-3">

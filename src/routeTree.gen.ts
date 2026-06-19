@@ -25,22 +25,16 @@ import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedIncidentsIndexRouteImport } from './routes/_authenticated/incidents.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
 import { Route as ApiPublicPdfSmokeRouteImport } from './routes/api/public/pdf-smoke'
-import { Route as AuthenticatedReportsMapRouteImport } from './routes/_authenticated/reports.map'
 import { Route as AuthenticatedPoliciesNewRouteImport } from './routes/_authenticated/policies.new'
 import { Route as AuthenticatedPoliciesPolicyIdRouteImport } from './routes/_authenticated/policies.$policyId'
-import { Route as AuthenticatedPaymentsDashboardRouteImport } from './routes/_authenticated/payments.dashboard'
 import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
 import { Route as AuthenticatedIncidentsNewRouteImport } from './routes/_authenticated/incidents.new'
 import { Route as AuthenticatedIncidentsDashboardRouteImport } from './routes/_authenticated/incidents.dashboard'
 import { Route as AuthenticatedIncidentsIncidentIdRouteImport } from './routes/_authenticated/incidents.$incidentId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
-import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
-import { Route as AuthenticatedAdminSeedDemoRouteImport } from './routes/_authenticated/admin.seed-demo'
-import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin.users.index'
 import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
 import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
 import { Route as ApiPublicHooksBankReconciliationRouteImport } from './routes/api/public/hooks/bank-reconciliation'
-import { Route as AuthenticatedAdminUsersUserIdRouteImport } from './routes/_authenticated/admin.users.$userId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -125,11 +119,6 @@ const ApiPublicPdfSmokeRoute = ApiPublicPdfSmokeRouteImport.update({
   path: '/api/public/pdf-smoke',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedReportsMapRoute = AuthenticatedReportsMapRouteImport.update({
-  id: '/map',
-  path: '/map',
-  getParentRoute: () => AuthenticatedReportsRoute,
-} as any)
 const AuthenticatedPoliciesNewRoute =
   AuthenticatedPoliciesNewRouteImport.update({
     id: '/new',
@@ -141,12 +130,6 @@ const AuthenticatedPoliciesPolicyIdRoute =
     id: '/$policyId',
     path: '/$policyId',
     getParentRoute: () => AuthenticatedPoliciesRoute,
-  } as any)
-const AuthenticatedPaymentsDashboardRoute =
-  AuthenticatedPaymentsDashboardRouteImport.update({
-    id: '/dashboard',
-    path: '/dashboard',
-    getParentRoute: () => AuthenticatedPaymentsRoute,
   } as any)
 const AuthenticatedPaymentsPaymentIdRoute =
   AuthenticatedPaymentsPaymentIdRouteImport.update({
@@ -177,23 +160,6 @@ const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AuthenticatedClientsRoute,
 } as any)
-const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
-  id: '/admin/users',
-  path: '/admin/users',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminSeedDemoRoute =
-  AuthenticatedAdminSeedDemoRouteImport.update({
-    id: '/admin/seed-demo',
-    path: '/admin/seed-demo',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminUsersIndexRoute =
-  AuthenticatedAdminUsersIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedAdminUsersRoute,
-  } as any)
 const ApiPublicHooksPaymentHousekeepingRoute =
   ApiPublicHooksPaymentHousekeepingRouteImport.update({
     id: '/api/public/hooks/payment-housekeeping',
@@ -212,12 +178,6 @@ const ApiPublicHooksBankReconciliationRoute =
     path: '/api/public/hooks/bank-reconciliation',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedAdminUsersUserIdRoute =
-  AuthenticatedAdminUsersUserIdRouteImport.update({
-    id: '/$userId',
-    path: '/$userId',
-    getParentRoute: () => AuthenticatedAdminUsersRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -228,57 +188,46 @@ export interface FileRoutesByFullPath {
   '/incidents': typeof AuthenticatedIncidentsRouteWithChildren
   '/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/policies': typeof AuthenticatedPoliciesRouteWithChildren
-  '/reports': typeof AuthenticatedReportsRouteWithChildren
+  '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/admin/seed-demo': typeof AuthenticatedAdminSeedDemoRoute
-  '/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/clients/new': typeof AuthenticatedClientsNewRoute
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/incidents/new': typeof AuthenticatedIncidentsNewRoute
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
-  '/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
-  '/reports/map': typeof AuthenticatedReportsMapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
-  '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
-  '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/reports': typeof AuthenticatedReportsRouteWithChildren
+  '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/admin/seed-demo': typeof AuthenticatedAdminSeedDemoRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/incidents/new': typeof AuthenticatedIncidentsNewRoute
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
-  '/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
-  '/reports/map': typeof AuthenticatedReportsMapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/incidents': typeof AuthenticatedIncidentsIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
-  '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
-  '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -291,29 +240,23 @@ export interface FileRoutesById {
   '/_authenticated/incidents': typeof AuthenticatedIncidentsRouteWithChildren
   '/_authenticated/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/_authenticated/policies': typeof AuthenticatedPoliciesRouteWithChildren
-  '/_authenticated/reports': typeof AuthenticatedReportsRouteWithChildren
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
-  '/_authenticated/admin/seed-demo': typeof AuthenticatedAdminSeedDemoRoute
-  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
   '/_authenticated/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/_authenticated/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/_authenticated/incidents/new': typeof AuthenticatedIncidentsNewRoute
   '/_authenticated/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
-  '/_authenticated/payments/dashboard': typeof AuthenticatedPaymentsDashboardRoute
   '/_authenticated/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/_authenticated/policies/new': typeof AuthenticatedPoliciesNewRoute
-  '/_authenticated/reports/map': typeof AuthenticatedReportsMapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
-  '/_authenticated/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
-  '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -328,27 +271,21 @@ export interface FileRouteTypes {
     | '/policies'
     | '/reports'
     | '/settings'
-    | '/admin/seed-demo'
-    | '/admin/users'
     | '/clients/new'
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
     | '/incidents/new'
     | '/payments/$paymentId'
-    | '/payments/dashboard'
     | '/policies/$policyId'
     | '/policies/new'
-    | '/reports/map'
     | '/api/public/pdf-smoke'
     | '/clients/'
     | '/incidents/'
     | '/payments/'
     | '/policies/'
-    | '/admin/users/$userId'
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
-    | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -357,26 +294,21 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/reports'
     | '/settings'
-    | '/admin/seed-demo'
     | '/clients/new'
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
     | '/incidents/new'
     | '/payments/$paymentId'
-    | '/payments/dashboard'
     | '/policies/$policyId'
     | '/policies/new'
-    | '/reports/map'
     | '/api/public/pdf-smoke'
     | '/clients'
     | '/incidents'
     | '/payments'
     | '/policies'
-    | '/admin/users/$userId'
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
-    | '/admin/users'
   id:
     | '__root__'
     | '/'
@@ -390,27 +322,21 @@ export interface FileRouteTypes {
     | '/_authenticated/policies'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
-    | '/_authenticated/admin/seed-demo'
-    | '/_authenticated/admin/users'
     | '/_authenticated/clients/new'
     | '/_authenticated/incidents/$incidentId'
     | '/_authenticated/incidents/dashboard'
     | '/_authenticated/incidents/new'
     | '/_authenticated/payments/$paymentId'
-    | '/_authenticated/payments/dashboard'
     | '/_authenticated/policies/$policyId'
     | '/_authenticated/policies/new'
-    | '/_authenticated/reports/map'
     | '/api/public/pdf-smoke'
     | '/_authenticated/clients/'
     | '/_authenticated/incidents/'
     | '/_authenticated/payments/'
     | '/_authenticated/policies/'
-    | '/_authenticated/admin/users/$userId'
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
-    | '/_authenticated/admin/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -537,13 +463,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPdfSmokeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/reports/map': {
-      id: '/_authenticated/reports/map'
-      path: '/map'
-      fullPath: '/reports/map'
-      preLoaderRoute: typeof AuthenticatedReportsMapRouteImport
-      parentRoute: typeof AuthenticatedReportsRoute
-    }
     '/_authenticated/policies/new': {
       id: '/_authenticated/policies/new'
       path: '/new'
@@ -557,13 +476,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/policies/$policyId'
       preLoaderRoute: typeof AuthenticatedPoliciesPolicyIdRouteImport
       parentRoute: typeof AuthenticatedPoliciesRoute
-    }
-    '/_authenticated/payments/dashboard': {
-      id: '/_authenticated/payments/dashboard'
-      path: '/dashboard'
-      fullPath: '/payments/dashboard'
-      preLoaderRoute: typeof AuthenticatedPaymentsDashboardRouteImport
-      parentRoute: typeof AuthenticatedPaymentsRoute
     }
     '/_authenticated/payments/$paymentId': {
       id: '/_authenticated/payments/$paymentId'
@@ -600,27 +512,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsNewRouteImport
       parentRoute: typeof AuthenticatedClientsRoute
     }
-    '/_authenticated/admin/users': {
-      id: '/_authenticated/admin/users'
-      path: '/admin/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/seed-demo': {
-      id: '/_authenticated/admin/seed-demo'
-      path: '/admin/seed-demo'
-      fullPath: '/admin/seed-demo'
-      preLoaderRoute: typeof AuthenticatedAdminSeedDemoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/users/': {
-      id: '/_authenticated/admin/users/'
-      path: '/'
-      fullPath: '/admin/users/'
-      preLoaderRoute: typeof AuthenticatedAdminUsersIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminUsersRoute
-    }
     '/api/public/hooks/payment-housekeeping': {
       id: '/api/public/hooks/payment-housekeeping'
       path: '/api/public/hooks/payment-housekeeping'
@@ -641,13 +532,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/hooks/bank-reconciliation'
       preLoaderRoute: typeof ApiPublicHooksBankReconciliationRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/admin/users/$userId': {
-      id: '/_authenticated/admin/users/$userId'
-      path: '/$userId'
-      fullPath: '/admin/users/$userId'
-      preLoaderRoute: typeof AuthenticatedAdminUsersUserIdRouteImport
-      parentRoute: typeof AuthenticatedAdminUsersRoute
     }
   }
 }
@@ -688,13 +572,11 @@ const AuthenticatedIncidentsRouteWithChildren =
 
 interface AuthenticatedPaymentsRouteChildren {
   AuthenticatedPaymentsPaymentIdRoute: typeof AuthenticatedPaymentsPaymentIdRoute
-  AuthenticatedPaymentsDashboardRoute: typeof AuthenticatedPaymentsDashboardRoute
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
 }
 
 const AuthenticatedPaymentsRouteChildren: AuthenticatedPaymentsRouteChildren = {
   AuthenticatedPaymentsPaymentIdRoute: AuthenticatedPaymentsPaymentIdRoute,
-  AuthenticatedPaymentsDashboardRoute: AuthenticatedPaymentsDashboardRoute,
   AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
 }
 
@@ -720,33 +602,6 @@ const AuthenticatedPoliciesRouteWithChildren =
     AuthenticatedPoliciesRouteChildren,
   )
 
-interface AuthenticatedReportsRouteChildren {
-  AuthenticatedReportsMapRoute: typeof AuthenticatedReportsMapRoute
-}
-
-const AuthenticatedReportsRouteChildren: AuthenticatedReportsRouteChildren = {
-  AuthenticatedReportsMapRoute: AuthenticatedReportsMapRoute,
-}
-
-const AuthenticatedReportsRouteWithChildren =
-  AuthenticatedReportsRoute._addFileChildren(AuthenticatedReportsRouteChildren)
-
-interface AuthenticatedAdminUsersRouteChildren {
-  AuthenticatedAdminUsersUserIdRoute: typeof AuthenticatedAdminUsersUserIdRoute
-  AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
-}
-
-const AuthenticatedAdminUsersRouteChildren: AuthenticatedAdminUsersRouteChildren =
-  {
-    AuthenticatedAdminUsersUserIdRoute: AuthenticatedAdminUsersUserIdRoute,
-    AuthenticatedAdminUsersIndexRoute: AuthenticatedAdminUsersIndexRoute,
-  }
-
-const AuthenticatedAdminUsersRouteWithChildren =
-  AuthenticatedAdminUsersRoute._addFileChildren(
-    AuthenticatedAdminUsersRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRouteWithChildren
@@ -754,10 +609,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIncidentsRoute: typeof AuthenticatedIncidentsRouteWithChildren
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRouteWithChildren
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
-  AuthenticatedReportsRoute: typeof AuthenticatedReportsRouteWithChildren
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
-  AuthenticatedAdminSeedDemoRoute: typeof AuthenticatedAdminSeedDemoRoute
-  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -767,10 +620,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIncidentsRoute: AuthenticatedIncidentsRouteWithChildren,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRouteWithChildren,
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
-  AuthenticatedReportsRoute: AuthenticatedReportsRouteWithChildren,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
-  AuthenticatedAdminSeedDemoRoute: AuthenticatedAdminSeedDemoRoute,
-  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -789,3 +640,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
