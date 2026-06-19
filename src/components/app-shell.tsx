@@ -2,7 +2,7 @@ import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { checkIsSuperAdmin } from "@/lib/users.functions";
-import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Shield } from "lucide-react";
+import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Shield, Bell, Map as MapIcon } from "lucide-react";
 import { useProgram } from "@/lib/program-context";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,9 @@ const NAV = [
   { to: "/policies", label: "Pólizas", icon: FileText, enabled: true },
   { to: "/payments", label: "Pagos", icon: CreditCard, enabled: true },
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, enabled: true },
+  { to: "/alerts", label: "Alertas y renovaciones", icon: Bell, enabled: true },
   { to: "/reports", label: "Reportes", icon: BarChart3, enabled: true },
+  { to: "/reports/map", label: "Mapa México", icon: MapIcon, enabled: true },
   { to: "/settings", label: "Configuración", icon: Settings, enabled: true },
 ] as const;
 
