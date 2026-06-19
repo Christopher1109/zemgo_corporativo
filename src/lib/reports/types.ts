@@ -171,6 +171,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
     ],
     totals: ["clients_captured", "policies_issued", "total_premium"],
     implemented: true,
+    supports_preview: true,
   },
   actividad: {
     code: "actividad",
