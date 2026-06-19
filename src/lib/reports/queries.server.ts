@@ -217,7 +217,7 @@ export async function queryActividad(supabase: SupabaseClient, filters: ReportFi
   // Admin-only enforced at server fn level. RLS on audit_log applies.
   let q = supabase.from("audit_log").select(`
       id, created_at, user_id, action, entity_type, entity_id, program_id, ip_address,
-      programs(code), profiles!audit_log_user_id_fkey(full_name)
+      programs(code)
     `).order("created_at", { ascending: false }).limit(10000);
   if (filters.program_id && filters.program_id !== "all") q = q.eq("program_id", filters.program_id);
   const fromD = dateOrNull(filters.date_from);
@@ -229,9 +229,18 @@ export async function queryActividad(supabase: SupabaseClient, filters: ReportFi
   if (Array.isArray(filters.entities) && filters.entities.length > 0) q = q.in("entity_type", filters.entities);
   const { data, error } = await q;
   if (error) throw error;
+
+  // Resolve user names
+  const userIds = Array.from(new Set((data ?? []).map((r: any) => r.user_id).filter(Boolean))) as string[];
+  const nameMap = new Map<string, string>();
+  if (userIds.length > 0) {
+    const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", userIds);
+    (profs ?? []).forEach((p: any) => nameMap.set(p.id, p.full_name ?? ""));
+  }
+
   const rows = (data ?? []).map((r: any) => ({
     created_at: r.created_at,
-    user_name: r.profiles?.full_name ?? "Sistema",
+    user_name: r.user_id ? (nameMap.get(r.user_id) ?? "Usuario") : "Sistema",
     action: r.action,
     entity_type: r.entity_type,
     entity_id: r.entity_id ?? "",
