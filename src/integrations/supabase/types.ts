@@ -984,6 +984,7 @@ export type Database = {
           insurance_branch: string
           is_active: boolean
           name: string
+          payment_alert_offsets: number[]
         }
         Insert: {
           billing_note?: string | null
@@ -996,6 +997,7 @@ export type Database = {
           insurance_branch: string
           is_active?: boolean
           name: string
+          payment_alert_offsets?: number[]
         }
         Update: {
           billing_note?: string | null
@@ -1008,6 +1010,7 @@ export type Database = {
           insurance_branch?: string
           is_active?: boolean
           name?: string
+          payment_alert_offsets?: number[]
         }
         Relationships: []
       }
@@ -1280,6 +1283,16 @@ export type Database = {
       generate_bank_reference: { Args: { _payment_id: string }; Returns: Json }
       get_action_items: { Args: { _program_id: string }; Returns: Json }
       get_dashboard_kpis: { Args: { _program_id: string }; Returns: Json }
+      get_policies_by_state: {
+        Args: { _program_id: string }
+        Returns: {
+          active: number
+          expired: number
+          state: string
+          suspended: number
+          total: number
+        }[]
+      }
       get_policy_distribution: {
         Args: never
         Returns: {
@@ -1400,6 +1413,10 @@ export type Database = {
       }
       update_policy: {
         Args: { _changes: Json; _policy_id: string }
+        Returns: Json
+      }
+      update_program_alert_offsets: {
+        Args: { _offsets: number[]; _program_id: string }
         Returns: Json
       }
       update_user_program_access: {
