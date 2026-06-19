@@ -74,19 +74,19 @@ function AlertsPage() {
 
   const data = q.data;
   const counts = useMemo(() => {
-    if (!data) return { reminders7: 0, reminders30: 0, overdue: 0, renewals30: 0, suspended: 0, overdueAmount: 0, upcomingAmount: 0 };
-    let reminders7 = 0, reminders30 = 0, overdue = 0, overdueAmount = 0, upcomingAmount = 0;
+    if (!data) return { reminders15: 0, reminders30: 0, overdue: 0, renewals30: 0, suspended: 0, overdueAmount: 0, upcomingAmount: 0 };
+    let reminders15 = 0, reminders30 = 0, overdue = 0, overdueAmount = 0, upcomingAmount = 0;
     for (const p of data.upcoming as any[]) {
       const d = daysFrom(p.due_date);
       if (p.status === "overdue") { overdue++; overdueAmount += Number(p.amount); }
       else {
         upcomingAmount += Number(p.amount);
-        if (d <= 7) reminders7++;
+        if (d <= 15) reminders15++;
         else if (d <= 30) reminders30++;
       }
     }
     const renewals30 = (data.renewals as any[]).filter((r) => daysFrom(r.end_date) <= 30).length;
-    return { reminders7, reminders30, overdue, renewals30, suspended: (data.suspended as any[]).length, overdueAmount, upcomingAmount };
+    return { reminders15, reminders30, overdue, renewals30, suspended: (data.suspended as any[]).length, overdueAmount, upcomingAmount };
   }, [data]);
 
   const s = search.trim().toLowerCase();
@@ -96,15 +96,25 @@ function AlertsPage() {
             (folio ?? "").toLowerCase().includes(s));
   }
 
-  const remFiltered = (data?.upcoming ?? []).filter((r: any) => {
-    const d = daysFrom(r.due_date);
-    const ov = r.status === "overdue";
-    return matchBucket(d, ov, bucket) && matchSearch(r.policies?.clients, r.policies?.folio);
-  });
-  const renFiltered = (data?.renewals ?? []).filter((r: any) => {
-    const d = daysFrom(r.end_date);
-    return matchBucket(d, false, bucket) && matchSearch(r.clients, r.folio);
-  });
+  const remFiltered = (data?.upcoming ?? [])
+    .filter((r: any) => {
+      const d = daysFrom(r.due_date);
+      const ov = r.status === "overdue";
+      return matchBucket(d, ov, bucket) && matchSearch(r.policies?.clients, r.policies?.folio);
+    })
+    .sort((a: any, b: any) => priorityCompare(
+      daysFrom(a.due_date), a.status === "overdue",
+      daysFrom(b.due_date), b.status === "overdue",
+    ));
+  const renFiltered = (data?.renewals ?? [])
+    .filter((r: any) => {
+      const d = daysFrom(r.end_date);
+      return matchBucket(d, d < 0, bucket) && matchSearch(r.clients, r.folio);
+    })
+    .sort((a: any, b: any) => {
+      const da = daysFrom(a.end_date), db = daysFrom(b.end_date);
+      return priorityCompare(da, da < 0, db, db < 0);
+    });
   const suspFiltered = (data?.suspended ?? []).filter((r: any) =>
     matchSearch(r.clients, r.folio)
   );
