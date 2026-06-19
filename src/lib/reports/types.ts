@@ -206,6 +206,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
     implemented: true,
     admin_only: true,
     max_rows: 10000,
+    supports_preview: true,
   },
 };
 
