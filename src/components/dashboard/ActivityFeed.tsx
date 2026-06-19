@@ -34,7 +34,7 @@ function linkFor(row: ActivityRow): any | null {
     case "incident": return { to: "/incidents/$incidentId", params: { incidentId: row.entity_id } };
     case "medical_pass": return { to: "/incidents" };
     case "profiles":
-    case "user_program_access": return { to: "/admin/users/$userId", params: { userId: row.entity_id } };
+    case "user_program_access": return { to: "/settings" };
     default: return null;
   }
 }
