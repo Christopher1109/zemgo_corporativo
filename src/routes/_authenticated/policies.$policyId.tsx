@@ -13,7 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { changePolicyStatus, generateCertificatePdf } from "@/lib/policies.functions";
+import { changePolicyStatus } from "@/lib/policies.functions";
+import { generateCertificate } from "@/lib/pdf/generateCertificate";
 import { listPolicyRevisions } from "@/lib/policies-edit.functions";
 import { PolicyPaymentsTab } from "@/components/payments/policy-payments-tab";
 import { EditPolicyDialog } from "@/components/policies/EditPolicyDialog";
@@ -44,7 +45,7 @@ function PolicyDetail() {
   const { policyId } = Route.useParams();
   const qc = useQueryClient();
   const changeFn = useServerFn(changePolicyStatus);
-  const pdfFn = useServerFn(generateCertificatePdf);
+  const pdfFn = useServerFn(generateCertificate);
   const revisionsFn = useServerFn(listPolicyRevisions);
 
   const [statusDialog, setStatusDialog] = useState(false);
