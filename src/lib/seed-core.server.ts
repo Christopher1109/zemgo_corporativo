@@ -135,7 +135,8 @@ export async function runDemoSeed(supabaseAdmin: any, userId: string) {
         phone: fakePhone(),
         street: rand(STREETS), number: String(randInt(100, 9999)),
         colonia: rand(COLONIAS), city: city[0], state: city[1], zip: city[2],
-        sales_rep_id: rep?.id ?? null,
+        // clients.sales_rep_id FKs to auth.users(id) — use the admin user.
+        sales_rep_id: userId,
         created_by: userId,
         metadata: tag,
       };
