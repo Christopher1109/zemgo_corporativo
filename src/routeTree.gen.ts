@@ -33,6 +33,7 @@ import { Route as AuthenticatedIncidentsDashboardRouteImport } from './routes/_a
 import { Route as AuthenticatedIncidentsIncidentIdRouteImport } from './routes/_authenticated/incidents.$incidentId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
+import { Route as AuthenticatedAdminSeedDemoRouteImport } from './routes/_authenticated/admin.seed-demo'
 import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin.users.index'
 import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
 import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
@@ -168,6 +169,12 @@ const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminSeedDemoRoute =
+  AuthenticatedAdminSeedDemoRouteImport.update({
+    id: '/admin/seed-demo',
+    path: '/admin/seed-demo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminUsersIndexRoute =
   AuthenticatedAdminUsersIndexRouteImport.update({
     id: '/',
@@ -203,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/seed-demo': typeof AuthenticatedAdminSeedDemoRoute
   '/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/clients/new': typeof AuthenticatedClientsNewRoute
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
@@ -228,6 +236,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/seed-demo': typeof AuthenticatedAdminSeedDemoRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
@@ -258,6 +267,7 @@ export interface FileRoutesById {
   '/_authenticated/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/admin/seed-demo': typeof AuthenticatedAdminSeedDemoRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
   '/_authenticated/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
@@ -289,6 +299,7 @@ export interface FileRouteTypes {
     | '/policies'
     | '/reports'
     | '/settings'
+    | '/admin/seed-demo'
     | '/admin/users'
     | '/clients/new'
     | '/incidents/$incidentId'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/reports'
     | '/settings'
+    | '/admin/seed-demo'
     | '/clients/new'
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
@@ -343,6 +355,7 @@ export interface FileRouteTypes {
     | '/_authenticated/policies'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/_authenticated/admin/seed-demo'
     | '/_authenticated/admin/users'
     | '/_authenticated/clients/new'
     | '/_authenticated/incidents/$incidentId'
@@ -542,6 +555,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/seed-demo': {
+      id: '/_authenticated/admin/seed-demo'
+      path: '/admin/seed-demo'
+      fullPath: '/admin/seed-demo'
+      preLoaderRoute: typeof AuthenticatedAdminSeedDemoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/users/': {
       id: '/_authenticated/admin/users/'
       path: '/'
@@ -665,6 +685,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminSeedDemoRoute: typeof AuthenticatedAdminSeedDemoRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRouteWithChildren
 }
 
@@ -676,6 +697,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminSeedDemoRoute: AuthenticatedAdminSeedDemoRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRouteWithChildren,
 }
 

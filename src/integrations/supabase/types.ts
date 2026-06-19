@@ -64,6 +64,7 @@ export type Database = {
           display_order: number
           full_name: string
           id: string
+          metadata: Json
           percentage: number | null
           policy_id: string
           relationship: string | null
@@ -73,6 +74,7 @@ export type Database = {
           display_order?: number
           full_name: string
           id?: string
+          metadata?: Json
           percentage?: number | null
           policy_id: string
           relationship?: string | null
@@ -82,6 +84,7 @@ export type Database = {
           display_order?: number
           full_name?: string
           id?: string
+          metadata?: Json
           percentage?: number | null
           policy_id?: string
           relationship?: string | null
@@ -103,6 +106,7 @@ export type Database = {
           created_at: string
           enrolled_at: string
           id: string
+          metadata: Json
           program_id: string
           status: Database["public"]["Enums"]["client_program_status"]
         }
@@ -112,6 +116,7 @@ export type Database = {
           created_at?: string
           enrolled_at?: string
           id?: string
+          metadata?: Json
           program_id: string
           status?: Database["public"]["Enums"]["client_program_status"]
         }
@@ -121,6 +126,7 @@ export type Database = {
           created_at?: string
           enrolled_at?: string
           id?: string
+          metadata?: Json
           program_id?: string
           status?: Database["public"]["Enums"]["client_program_status"]
         }
@@ -155,6 +161,7 @@ export type Database = {
           id: string
           last_name: string
           marital_status: string | null
+          metadata: Json
           number: string | null
           phone: string | null
           referral_source_id: string | null
@@ -178,6 +185,7 @@ export type Database = {
           id?: string
           last_name: string
           marital_status?: string | null
+          metadata?: Json
           number?: string | null
           phone?: string | null
           referral_source_id?: string | null
@@ -201,6 +209,7 @@ export type Database = {
           id?: string
           last_name?: string
           marital_status?: string | null
+          metadata?: Json
           number?: string | null
           phone?: string | null
           referral_source_id?: string | null
@@ -219,6 +228,7 @@ export type Database = {
           date_of_birth: string | null
           full_name: string
           id: string
+          metadata: Json
           policy_id: string
           relationship: string | null
         }
@@ -227,6 +237,7 @@ export type Database = {
           date_of_birth?: string | null
           full_name: string
           id?: string
+          metadata?: Json
           policy_id: string
           relationship?: string | null
         }
@@ -235,6 +246,7 @@ export type Database = {
           date_of_birth?: string | null
           full_name?: string
           id?: string
+          metadata?: Json
           policy_id?: string
           relationship?: string | null
         }
@@ -297,6 +309,7 @@ export type Database = {
           hospital: string | null
           id: string
           location_description: string | null
+          metadata: Json
           occurred_at: string
           policy_id: string
           rejected_at: string | null
@@ -318,6 +331,7 @@ export type Database = {
           hospital?: string | null
           id?: string
           location_description?: string | null
+          metadata?: Json
           occurred_at: string
           policy_id: string
           rejected_at?: string | null
@@ -339,6 +353,7 @@ export type Database = {
           hospital?: string | null
           id?: string
           location_description?: string | null
+          metadata?: Json
           occurred_at?: string
           policy_id?: string
           rejected_at?: string | null
@@ -375,6 +390,7 @@ export type Database = {
           id: string
           incident_id: string
           issued_by: string | null
+          metadata: Json
           pdf_url: string | null
           policy_id: string
           revocation_reason: string | null
@@ -393,6 +409,7 @@ export type Database = {
           id?: string
           incident_id: string
           issued_by?: string | null
+          metadata?: Json
           pdf_url?: string | null
           policy_id: string
           revocation_reason?: string | null
@@ -411,6 +428,7 @@ export type Database = {
           id?: string
           incident_id?: string
           issued_by?: string | null
+          metadata?: Json
           pdf_url?: string | null
           policy_id?: string
           revocation_reason?: string | null
@@ -505,6 +523,7 @@ export type Database = {
           frequency: Database["public"]["Enums"]["payment_frequency"]
           id: string
           is_recurring: boolean
+          metadata: Json
           next_due_date: string | null
           policy_id: string
           reminder_days_before: number
@@ -516,6 +535,7 @@ export type Database = {
           frequency?: Database["public"]["Enums"]["payment_frequency"]
           id?: string
           is_recurring?: boolean
+          metadata?: Json
           next_due_date?: string | null
           policy_id: string
           reminder_days_before?: number
@@ -527,6 +547,7 @@ export type Database = {
           frequency?: Database["public"]["Enums"]["payment_frequency"]
           id?: string
           is_recurring?: boolean
+          metadata?: Json
           next_due_date?: string | null
           policy_id?: string
           reminder_days_before?: number
@@ -552,6 +573,7 @@ export type Database = {
           due_date: string | null
           failure_reason: string | null
           id: string
+          metadata: Json
           method: Database["public"]["Enums"]["payment_method"] | null
           notes: string | null
           paid_amount: number | null
@@ -574,6 +596,7 @@ export type Database = {
           due_date?: string | null
           failure_reason?: string | null
           id?: string
+          metadata?: Json
           method?: Database["public"]["Enums"]["payment_method"] | null
           notes?: string | null
           paid_amount?: number | null
@@ -596,6 +619,7 @@ export type Database = {
           due_date?: string | null
           failure_reason?: string | null
           id?: string
+          metadata?: Json
           method?: Database["public"]["Enums"]["payment_method"] | null
           notes?: string | null
           paid_amount?: number | null
@@ -792,6 +816,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_active: boolean
+          metadata: Json
           phone: string | null
           signature_url: string | null
           updated_at: string
@@ -801,6 +826,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_active?: boolean
+          metadata?: Json
           phone?: string | null
           signature_url?: string | null
           updated_at?: string
@@ -810,6 +836,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_active?: boolean
+          metadata?: Json
           phone?: string | null
           signature_url?: string | null
           updated_at?: string
