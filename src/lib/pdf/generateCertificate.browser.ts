@@ -4,7 +4,6 @@
 // of Cloudflare Workers), then uploads the resulting bytes through a server
 // function which writes to Storage and updates the policy record.
 
-import { pdf } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { getCertificatePayload, saveCertificatePdf } from "@/lib/certificate.functions";
 import { CertificateABC } from "./templates/CertificateABC";
