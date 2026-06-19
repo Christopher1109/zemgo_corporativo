@@ -114,17 +114,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        {isAdminQ.data?.isAdmin && (
-          <div className="px-2 pb-2 space-y-1 border-t border-white/10 pt-2">
-            <div className="text-[10px] uppercase tracking-wider opacity-60 px-3 pt-1 pb-1">Administración</div>
-            <Link to="/admin/users" className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition", pathname.startsWith("/admin/users") ? "bg-white/20 font-medium" : "hover:bg-white/10")}>
-              <Shield className="h-4 w-4" /><span>Usuarios</span>
-            </Link>
-            <Link to="/admin/seed-demo" className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition", pathname.startsWith("/admin/seed-demo") ? "bg-white/20 font-medium" : "hover:bg-white/10")}>
-              <Shield className="h-4 w-4" /><span>Seed demo</span>
-            </Link>
-          </div>
-        )}
+
+
 
         <div className="p-3 border-t border-white/10 text-xs opacity-80 truncate">{user?.email}</div>
       </aside>
