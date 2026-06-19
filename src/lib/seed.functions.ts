@@ -168,7 +168,7 @@ export const runSeedDemo = createServerFn({ method: "POST" })
     // 3. Sales reps (idempotent: reuse existing-by-name if present)
     const { data: existingReps } = await supabaseAdmin
       .from("sales_reps").select("id, full_name");
-    const existingRepNames = new Set((existingReps ?? []).map((r) => r.full_name));
+    const existingRepNames = new Set((existingReps ?? []).map((r: any) => r.full_name));
     const repsToInsert = SALES_REPS.filter((r) => !existingRepNames.has(r.name));
     let newReps: any[] = [];
     if (repsToInsert.length) {
