@@ -88,6 +88,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
     ],
     totals: ["amount"],
     implemented: true,
+    supports_preview: true,
   },
   siniestralidad: {
     code: "siniestralidad",
