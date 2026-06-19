@@ -45,10 +45,13 @@ function PolicyDetail() {
   const qc = useQueryClient();
   const changeFn = useServerFn(changePolicyStatus);
   const pdfFn = useServerFn(generateCertificatePdf);
+  const revisionsFn = useServerFn(listPolicyRevisions);
 
   const [statusDialog, setStatusDialog] = useState(false);
   const [nextStatus, setNextStatus] = useState<string>("");
   const [reason, setReason] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
+  const [renewOpen, setRenewOpen] = useState(false);
 
   const { data: policy, isLoading } = useQuery({
     queryKey: ["policy", policyId],
