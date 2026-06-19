@@ -123,6 +123,11 @@ function PolicyDetail() {
     },
   });
 
+  const { data: revisions = [] } = useQuery({
+    queryKey: ["policy-revisions", policyId],
+    queryFn: () => revisionsFn({ data: { policy_id: policyId } }),
+  });
+
   const statusMutation = useMutation({
     mutationFn: () =>
       changeFn({ data: { policy_id: policyId, next_status: nextStatus as any, reason: reason || null } }),
