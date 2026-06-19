@@ -306,23 +306,64 @@ function PolicyDetail() {
         </TabsContent>
 
         <TabsContent value="history">
-          <Card>
-            <Table>
-              <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Acción</TableHead><TableHead>Detalle</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {history.length === 0 && <TableRow><TableCell colSpan={3} className="text-center py-6 text-muted-foreground">Sin eventos registrados.</TableCell></TableRow>}
-                {history.map((h: any) => (
-                  <TableRow key={h.id}>
-                    <TableCell className="text-xs whitespace-nowrap">{new Date(h.created_at).toLocaleString("es-MX")}</TableCell>
-                    <TableCell className="font-mono text-xs">{h.action}</TableCell>
-                    <TableCell className="text-xs"><pre className="whitespace-pre-wrap font-mono">{h.diff ? JSON.stringify(h.diff, null, 0) : ""}</pre></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
+          <div className="space-y-4">
+            <Card className="p-0">
+              <div className="px-4 py-3 border-b">
+                <h3 className="text-sm font-semibold">Revisiones de la póliza</h3>
+                <p className="text-xs text-muted-foreground">Historial de ediciones (datos editados manualmente).</p>
+              </div>
+              <Table>
+                <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Editado por</TableHead><TableHead>Cambios</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {revisions.length === 0 && <TableRow><TableCell colSpan={3} className="text-center py-4 text-xs text-muted-foreground">Sin revisiones registradas.</TableCell></TableRow>}
+                  {revisions.map((r: any) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-xs whitespace-nowrap">{new Date(r.edited_at).toLocaleString("es-MX")}</TableCell>
+                      <TableCell className="text-xs">{r.profiles?.full_name ?? "—"}</TableCell>
+                      <TableCell className="text-xs">
+                        <div className="space-y-1">
+                          {Object.entries(r.fields_changed ?? {}).map(([field, val]: any) => (
+                            <div key={field} className="font-mono">
+                              <span className="text-muted-foreground">{field}:</span>{" "}
+                              {val?.from !== undefined ? (
+                                <><span className="line-through text-rose-600">{JSON.stringify(val.from)}</span>{" → "}<span className="text-emerald-700">{JSON.stringify(val.to)}</span></>
+                              ) : (
+                                <span className="text-emerald-700">actualizado</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+
+            <Card className="p-0">
+              <div className="px-4 py-3 border-b">
+                <h3 className="text-sm font-semibold">Bitácora de auditoría</h3>
+              </div>
+              <Table>
+                <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Acción</TableHead><TableHead>Detalle</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {history.length === 0 && <TableRow><TableCell colSpan={3} className="text-center py-6 text-muted-foreground">Sin eventos registrados.</TableCell></TableRow>}
+                  {history.map((h: any) => (
+                    <TableRow key={h.id}>
+                      <TableCell className="text-xs whitespace-nowrap">{new Date(h.created_at).toLocaleString("es-MX")}</TableCell>
+                      <TableCell className="font-mono text-xs">{h.action}</TableCell>
+                      <TableCell className="text-xs"><pre className="whitespace-pre-wrap font-mono">{h.diff ? JSON.stringify(h.diff, null, 0) : ""}</pre></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
+
+      <EditPolicyDialog open={editOpen} onOpenChange={setEditOpen} policy={policy} />
+      <RenewPolicyDialog open={renewOpen} onOpenChange={setRenewOpen} policy={policy} />
 
       <Dialog open={statusDialog} onOpenChange={setStatusDialog}>
         <DialogContent>
