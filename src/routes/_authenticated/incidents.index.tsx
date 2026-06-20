@@ -45,7 +45,7 @@ function IncidentsList() {
     queryFn: async () => {
       let q = supabase
         .from("incidents")
-        .select("id, status, reported_at, occurred_at, accident_date, hospital, description, policies!inner(folio, program_id, programs(code, name, color_primary)), clients!inner(first_name, last_name, curp)")
+        .select("id, status, reported_at, occurred_at, accident_date, hospital, description, policies!inner(folio, program_id, programs(code, name, color_primary)), clients!inner(first_name, last_name, curp), medical_passes(id, pdf_url, revoked_at, valid_until)")
         .order("reported_at", { ascending: false })
         .limit(500);
       if (activeProgram?.id) q = q.eq("policies.program_id", activeProgram.id);
