@@ -12,6 +12,7 @@ export const reportIncident = createServerFn({ method: "POST" })
       location: z.string().max(500).nullable().optional(),
       description: z.string().min(20).max(2000),
       hospital: z.string().max(200).nullable().optional(),
+      auto_issue_pass: z.boolean().optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -24,7 +25,40 @@ export const reportIncident = createServerFn({ method: "POST" })
       _hospital: data.hospital ?? null,
     });
     if (error) throw new Error(error.message);
-    return { incident_id: id as string };
+    const incidentId = id as string;
+
+    // Best-effort auto-emit: requires hospital + caller having admin/manager/claims in the program
+    // + at least one admin/manager available as "director que autoriza".
+    let auto_pass: { pass_id: string; path: string } | null = null;
+    let auto_pass_error: string | null = null;
+    if (data.auto_issue_pass && data.hospital && data.hospital.trim().length > 0) {
+      try {
+        const { data: pol } = await context.supabase
+          .from("policies").select("program_id").eq("id", data.policy_id).single();
+        if (pol?.program_id) {
+          const { data: dirs } = await context.supabase
+            .from("user_program_access")
+            .select("user_id, role, profiles!inner(id, full_name)")
+            .eq("program_id", pol.program_id)
+            .in("role", ["admin", "manager"])
+            .limit(1);
+          const directorId = (dirs?.[0] as any)?.user_id as string | undefined;
+          if (directorId) {
+            auto_pass = await issueMedicalPassImpl(context, {
+              incident_id: incidentId,
+              director_id: directorId,
+              hospital: data.hospital,
+            });
+          } else {
+            auto_pass_error = "no_director_available";
+          }
+        }
+      } catch (e: any) {
+        auto_pass_error = String(e?.message ?? e);
+      }
+    }
+
+    return { incident_id: incidentId, auto_pass, auto_pass_error };
   });
 
 export const rejectIncident = createServerFn({ method: "POST" })
