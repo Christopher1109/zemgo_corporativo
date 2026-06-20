@@ -80,7 +80,7 @@ export function EditPolicyDialog({
     },
     onSuccess: (res: any) => {
       if (res?.no_changes) toast.info("Sin cambios para guardar");
-      else toast.success("Póliza actualizada");
+      else toast.success("Certificado actualizado");
       qc.invalidateQueries({ queryKey: ["policy", policy.id] });
       qc.invalidateQueries({ queryKey: ["policy-audit", policy.id] });
       qc.invalidateQueries({ queryKey: ["policy-revisions", policy.id] });
@@ -91,8 +91,8 @@ export function EditPolicyDialog({
       const friendly: Record<string, string> = {
         cannot_lower_premium_with_paid: "No puedes bajar la prima: ya hay pagos registrados.",
         beneficiaries_must_sum_100: "Los beneficiarios deben sumar 100%.",
-        policy_locked: "Esta póliza no se puede editar en su estado actual.",
-        forbidden: "No tienes permisos para editar esta póliza.",
+        policy_locked: "Este certificado no se puede editar en su estado actual.",
+        forbidden: "No tienes permisos para editar este certificado.",
       };
       toast.error(friendly[msg] ?? msg);
     },
@@ -107,7 +107,7 @@ export function EditPolicyDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar póliza {policy.folio}</DialogTitle>
+          <DialogTitle>Editar certificado {policy.folio}</DialogTitle>
           <DialogDescription>
             Estado: <Badge variant="outline">{policy.status}</Badge>
             {policy.status === "active" && " · Solo beneficiarios y dependientes son editables."}

@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createPolicy } from "@/lib/policies.functions";
 
 export const Route = createFileRoute("/_authenticated/policies/new")({
-  head: () => ({ meta: [{ title: "Nueva póliza — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Nuevo certificado — HOPE Consulting" }] }),
   component: NewPolicy,
 });
 
@@ -124,10 +124,10 @@ function NewPolicy() {
         },
       }),
     onSuccess: (res) => {
-      toast.success(`Póliza creada: ${res.folio}`);
+      toast.success(`Certificado creado: ${res.folio}`);
       navigate({ to: "/policies/$policyId", params: { policyId: res.id } });
     },
-    onError: (err: any) => toast.error(err?.message ?? "Error al crear póliza"),
+    onError: (err: any) => toast.error(err?.message ?? "Error al crear certificado"),
   });
 
   const canSubmit =
@@ -144,7 +144,7 @@ function NewPolicy() {
         <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/policies" })}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Volver
         </Button>
-        <h1 className="text-2xl font-semibold">Nueva póliza</h1>
+        <h1 className="text-2xl font-semibold">Nuevo certificado</h1>
       </div>
 
       <Card className="p-5 space-y-4">
@@ -332,7 +332,7 @@ function NewPolicy() {
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={() => navigate({ to: "/policies" })}>Cancelar</Button>
         <Button disabled={!canSubmit || mutation.isPending} onClick={() => mutation.mutate()}>
-          {mutation.isPending ? "Creando…" : "Crear póliza"}
+          {mutation.isPending ? "Creando…" : "Crear certificado"}
         </Button>
       </div>
     </div>

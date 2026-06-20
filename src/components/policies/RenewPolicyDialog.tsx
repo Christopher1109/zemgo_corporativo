@@ -47,10 +47,10 @@ export function RenewPolicyDialog({
     },
     onError: (e: any) => {
       const friendly: Record<string, string> = {
-        forbidden: "No tienes permisos para renovar esta póliza.",
+        forbidden: "No tienes permisos para renovar este certificado.",
       };
       const m = e?.message ?? "Error";
-      toast.error(friendly[m] ?? (m.startsWith("cannot_renew_in_state:") ? "La póliza no puede renovarse en su estado actual." : m));
+      toast.error(friendly[m] ?? (m.startsWith("cannot_renew_in_state:") ? "El certificado no puede renovarse en su estado actual." : m));
     },
   });
 
@@ -60,9 +60,9 @@ export function RenewPolicyDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Renovar póliza</DialogTitle>
+          <DialogTitle>Renovar certificado</DialogTitle>
           <DialogDescription>
-            Se creará una nueva póliza con folio consecutivo, clonando beneficiarios y dependientes.
+            Se creará un nuevo certificado con folio consecutivo, clonando beneficiarios y dependientes.
           </DialogDescription>
         </DialogHeader>
 
