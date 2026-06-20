@@ -67,7 +67,7 @@ function PortalAppLayout() {
 
   const navItems = [
     { to: "/portal/dashboard", label: "Inicio", icon: Home },
-    { to: "/portal/policies", label: "Pólizas", icon: FileText },
+    { to: "/portal/policies", label: "Certificados", icon: FileText },
     { to: "/portal/payments", label: "Pagos", icon: CreditCard },
     { to: "/portal/incidents", label: "Siniestros", icon: AlertTriangle },
     { to: "/portal/profile", label: "Mis Datos", icon: User },

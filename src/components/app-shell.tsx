@@ -19,7 +19,7 @@ import { HopeLogo } from "@/components/hope-logo";
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, enabled: true },
   { to: "/clients", label: "Clientes", icon: Users, enabled: true },
-  { to: "/policies", label: "Pólizas", icon: FileText, enabled: true },
+  { to: "/policies", label: "Certificados", icon: FileText, enabled: true },
   { to: "/payments", label: "Pagos", icon: CreditCard, enabled: true },
   { to: "/finance", label: "Finanzas", icon: Wallet, enabled: true },
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, enabled: true },
