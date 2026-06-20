@@ -9,9 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PortalRouteImport } from './routes/portal'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalIndexRouteImport } from './routes/portal.index'
+import { Route as PortalVerifyRouteImport } from './routes/portal.verify'
+import { Route as PortalAppRouteImport } from './routes/portal._app'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedPoliciesRouteImport } from './routes/_authenticated/policies'
@@ -25,6 +29,11 @@ import { Route as AuthenticatedPoliciesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments.index'
 import { Route as AuthenticatedIncidentsIndexRouteImport } from './routes/_authenticated/incidents.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
+import { Route as PortalAppProfileRouteImport } from './routes/portal._app.profile'
+import { Route as PortalAppPoliciesRouteImport } from './routes/portal._app.policies'
+import { Route as PortalAppPaymentsRouteImport } from './routes/portal._app.payments'
+import { Route as PortalAppIncidentsRouteImport } from './routes/portal._app.incidents'
+import { Route as PortalAppDashboardRouteImport } from './routes/portal._app.dashboard'
 import { Route as ApiPublicPdfSmokeRouteImport } from './routes/api/public/pdf-smoke'
 import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
 import { Route as AuthenticatedPoliciesNewRouteImport } from './routes/_authenticated/policies.new'
@@ -34,10 +43,16 @@ import { Route as AuthenticatedIncidentsNewRouteImport } from './routes/_authent
 import { Route as AuthenticatedIncidentsDashboardRouteImport } from './routes/_authenticated/incidents.dashboard'
 import { Route as AuthenticatedIncidentsIncidentIdRouteImport } from './routes/_authenticated/incidents.$incidentId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
+import { Route as PortalAppIncidentsNewRouteImport } from './routes/portal._app.incidents.new'
 import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
 import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
 import { Route as ApiPublicHooksBankReconciliationRouteImport } from './routes/api/public/hooks/bank-reconciliation'
 
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -51,6 +66,20 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PortalIndexRoute = PortalIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalVerifyRoute = PortalVerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalAppRoute = PortalAppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => PortalRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -121,6 +150,31 @@ const AuthenticatedClientsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedClientsRoute,
   } as any)
+const PortalAppProfileRoute = PortalAppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => PortalAppRoute,
+} as any)
+const PortalAppPoliciesRoute = PortalAppPoliciesRouteImport.update({
+  id: '/policies',
+  path: '/policies',
+  getParentRoute: () => PortalAppRoute,
+} as any)
+const PortalAppPaymentsRoute = PortalAppPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => PortalAppRoute,
+} as any)
+const PortalAppIncidentsRoute = PortalAppIncidentsRouteImport.update({
+  id: '/incidents',
+  path: '/incidents',
+  getParentRoute: () => PortalAppRoute,
+} as any)
+const PortalAppDashboardRoute = PortalAppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => PortalAppRoute,
+} as any)
 const ApiPublicPdfSmokeRoute = ApiPublicPdfSmokeRouteImport.update({
   id: '/api/public/pdf-smoke',
   path: '/api/public/pdf-smoke',
@@ -172,6 +226,11 @@ const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AuthenticatedClientsRoute,
 } as any)
+const PortalAppIncidentsNewRoute = PortalAppIncidentsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => PortalAppIncidentsRoute,
+} as any)
 const ApiPublicHooksPaymentHousekeepingRoute =
   ApiPublicHooksPaymentHousekeepingRouteImport.update({
     id: '/api/public/hooks/payment-housekeeping',
@@ -194,6 +253,7 @@ const ApiPublicHooksBankReconciliationRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/portal': typeof PortalAppRouteWithChildren
   '/alerts': typeof AuthenticatedAlertsRoute
   '/clients': typeof AuthenticatedClientsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -203,6 +263,8 @@ export interface FileRoutesByFullPath {
   '/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/portal/verify': typeof PortalVerifyRoute
+  '/portal/': typeof PortalIndexRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
@@ -212,6 +274,11 @@ export interface FileRoutesByFullPath {
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
+  '/portal/dashboard': typeof PortalAppDashboardRoute
+  '/portal/incidents': typeof PortalAppIncidentsRouteWithChildren
+  '/portal/payments': typeof PortalAppPaymentsRoute
+  '/portal/policies': typeof PortalAppPoliciesRoute
+  '/portal/profile': typeof PortalAppProfileRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
@@ -219,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
+  '/portal/incidents/new': typeof PortalAppIncidentsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -228,6 +296,8 @@ export interface FileRoutesByTo {
   '/finance': typeof AuthenticatedFinanceRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/portal': typeof PortalIndexRoute
+  '/portal/verify': typeof PortalVerifyRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
@@ -237,6 +307,11 @@ export interface FileRoutesByTo {
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
+  '/portal/dashboard': typeof PortalAppDashboardRoute
+  '/portal/incidents': typeof PortalAppIncidentsRouteWithChildren
+  '/portal/payments': typeof PortalAppPaymentsRoute
+  '/portal/policies': typeof PortalAppPoliciesRoute
+  '/portal/profile': typeof PortalAppProfileRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/incidents': typeof AuthenticatedIncidentsIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
@@ -244,12 +319,14 @@ export interface FileRoutesByTo {
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
+  '/portal/incidents/new': typeof PortalAppIncidentsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/portal': typeof PortalRouteWithChildren
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -259,6 +336,9 @@ export interface FileRoutesById {
   '/_authenticated/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/portal/_app': typeof PortalAppRouteWithChildren
+  '/portal/verify': typeof PortalVerifyRoute
+  '/portal/': typeof PortalIndexRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
   '/_authenticated/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/_authenticated/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
@@ -268,6 +348,11 @@ export interface FileRoutesById {
   '/_authenticated/policies/new': typeof AuthenticatedPoliciesNewRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
+  '/portal/_app/dashboard': typeof PortalAppDashboardRoute
+  '/portal/_app/incidents': typeof PortalAppIncidentsRouteWithChildren
+  '/portal/_app/payments': typeof PortalAppPaymentsRoute
+  '/portal/_app/policies': typeof PortalAppPoliciesRoute
+  '/portal/_app/profile': typeof PortalAppProfileRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
@@ -275,12 +360,14 @@ export interface FileRoutesById {
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
+  '/portal/_app/incidents/new': typeof PortalAppIncidentsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/portal'
     | '/alerts'
     | '/clients'
     | '/dashboard'
@@ -290,6 +377,8 @@ export interface FileRouteTypes {
     | '/policies'
     | '/reports'
     | '/settings'
+    | '/portal/verify'
+    | '/portal/'
     | '/clients/new'
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
@@ -299,6 +388,11 @@ export interface FileRouteTypes {
     | '/policies/new'
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
+    | '/portal/dashboard'
+    | '/portal/incidents'
+    | '/portal/payments'
+    | '/portal/policies'
+    | '/portal/profile'
     | '/clients/'
     | '/incidents/'
     | '/payments/'
@@ -306,6 +400,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
+    | '/portal/incidents/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -315,6 +410,8 @@ export interface FileRouteTypes {
     | '/finance'
     | '/reports'
     | '/settings'
+    | '/portal'
+    | '/portal/verify'
     | '/clients/new'
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
@@ -324,6 +421,11 @@ export interface FileRouteTypes {
     | '/policies/new'
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
+    | '/portal/dashboard'
+    | '/portal/incidents'
+    | '/portal/payments'
+    | '/portal/policies'
+    | '/portal/profile'
     | '/clients'
     | '/incidents'
     | '/payments'
@@ -331,11 +433,13 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
+    | '/portal/incidents/new'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/portal'
     | '/_authenticated/alerts'
     | '/_authenticated/clients'
     | '/_authenticated/dashboard'
@@ -345,6 +449,9 @@ export interface FileRouteTypes {
     | '/_authenticated/policies'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/portal/_app'
+    | '/portal/verify'
+    | '/portal/'
     | '/_authenticated/clients/new'
     | '/_authenticated/incidents/$incidentId'
     | '/_authenticated/incidents/dashboard'
@@ -354,6 +461,11 @@ export interface FileRouteTypes {
     | '/_authenticated/policies/new'
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
+    | '/portal/_app/dashboard'
+    | '/portal/_app/incidents'
+    | '/portal/_app/payments'
+    | '/portal/_app/policies'
+    | '/portal/_app/profile'
     | '/_authenticated/clients/'
     | '/_authenticated/incidents/'
     | '/_authenticated/payments/'
@@ -361,12 +473,14 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
+    | '/portal/_app/incidents/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PortalRoute: typeof PortalRouteWithChildren
   ApiPublicBootstrapRoute: typeof ApiPublicBootstrapRoute
   ApiPublicPdfSmokeRoute: typeof ApiPublicPdfSmokeRoute
   ApiPublicHooksBankReconciliationRoute: typeof ApiPublicHooksBankReconciliationRoute
@@ -376,6 +490,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -396,6 +517,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/portal/': {
+      id: '/portal/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/verify': {
+      id: '/portal/verify'
+      path: '/verify'
+      fullPath: '/portal/verify'
+      preLoaderRoute: typeof PortalVerifyRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/_app': {
+      id: '/portal/_app'
+      path: ''
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalAppRouteImport
+      parentRoute: typeof PortalRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
@@ -488,6 +630,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsIndexRouteImport
       parentRoute: typeof AuthenticatedClientsRoute
     }
+    '/portal/_app/profile': {
+      id: '/portal/_app/profile'
+      path: '/profile'
+      fullPath: '/portal/profile'
+      preLoaderRoute: typeof PortalAppProfileRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
+    '/portal/_app/policies': {
+      id: '/portal/_app/policies'
+      path: '/policies'
+      fullPath: '/portal/policies'
+      preLoaderRoute: typeof PortalAppPoliciesRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
+    '/portal/_app/payments': {
+      id: '/portal/_app/payments'
+      path: '/payments'
+      fullPath: '/portal/payments'
+      preLoaderRoute: typeof PortalAppPaymentsRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
+    '/portal/_app/incidents': {
+      id: '/portal/_app/incidents'
+      path: '/incidents'
+      fullPath: '/portal/incidents'
+      preLoaderRoute: typeof PortalAppIncidentsRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
+    '/portal/_app/dashboard': {
+      id: '/portal/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/portal/dashboard'
+      preLoaderRoute: typeof PortalAppDashboardRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
     '/api/public/pdf-smoke': {
       id: '/api/public/pdf-smoke'
       path: '/api/public/pdf-smoke'
@@ -550,6 +727,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/clients/new'
       preLoaderRoute: typeof AuthenticatedClientsNewRouteImport
       parentRoute: typeof AuthenticatedClientsRoute
+    }
+    '/portal/_app/incidents/new': {
+      id: '/portal/_app/incidents/new'
+      path: '/new'
+      fullPath: '/portal/incidents/new'
+      preLoaderRoute: typeof PortalAppIncidentsNewRouteImport
+      parentRoute: typeof PortalAppIncidentsRoute
     }
     '/api/public/hooks/payment-housekeeping': {
       id: '/api/public/hooks/payment-housekeeping'
@@ -668,10 +852,57 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface PortalAppIncidentsRouteChildren {
+  PortalAppIncidentsNewRoute: typeof PortalAppIncidentsNewRoute
+}
+
+const PortalAppIncidentsRouteChildren: PortalAppIncidentsRouteChildren = {
+  PortalAppIncidentsNewRoute: PortalAppIncidentsNewRoute,
+}
+
+const PortalAppIncidentsRouteWithChildren =
+  PortalAppIncidentsRoute._addFileChildren(PortalAppIncidentsRouteChildren)
+
+interface PortalAppRouteChildren {
+  PortalAppDashboardRoute: typeof PortalAppDashboardRoute
+  PortalAppIncidentsRoute: typeof PortalAppIncidentsRouteWithChildren
+  PortalAppPaymentsRoute: typeof PortalAppPaymentsRoute
+  PortalAppPoliciesRoute: typeof PortalAppPoliciesRoute
+  PortalAppProfileRoute: typeof PortalAppProfileRoute
+}
+
+const PortalAppRouteChildren: PortalAppRouteChildren = {
+  PortalAppDashboardRoute: PortalAppDashboardRoute,
+  PortalAppIncidentsRoute: PortalAppIncidentsRouteWithChildren,
+  PortalAppPaymentsRoute: PortalAppPaymentsRoute,
+  PortalAppPoliciesRoute: PortalAppPoliciesRoute,
+  PortalAppProfileRoute: PortalAppProfileRoute,
+}
+
+const PortalAppRouteWithChildren = PortalAppRoute._addFileChildren(
+  PortalAppRouteChildren,
+)
+
+interface PortalRouteChildren {
+  PortalAppRoute: typeof PortalAppRouteWithChildren
+  PortalVerifyRoute: typeof PortalVerifyRoute
+  PortalIndexRoute: typeof PortalIndexRoute
+}
+
+const PortalRouteChildren: PortalRouteChildren = {
+  PortalAppRoute: PortalAppRouteWithChildren,
+  PortalVerifyRoute: PortalVerifyRoute,
+  PortalIndexRoute: PortalIndexRoute,
+}
+
+const PortalRouteWithChildren =
+  PortalRoute._addFileChildren(PortalRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  PortalRoute: PortalRouteWithChildren,
   ApiPublicBootstrapRoute: ApiPublicBootstrapRoute,
   ApiPublicPdfSmokeRoute: ApiPublicPdfSmokeRoute,
   ApiPublicHooksBankReconciliationRoute: ApiPublicHooksBankReconciliationRoute,
