@@ -164,9 +164,12 @@ function IncidentsList() {
                   </TableCell>
                   <TableCell className="text-sm">{days}</TableCell>
                   <TableCell>
-                    <Button asChild size="sm" variant="ghost">
-                      <Link to="/incidents/$incidentId" params={{ incidentId: i.id }}>Abrir</Link>
-                    </Button>
+                    <div className="flex items-center gap-1 justify-end">
+                      <PassDownloadButton passes={i.medical_passes ?? []} />
+                      <Button asChild size="sm" variant="ghost">
+                        <Link to="/incidents/$incidentId" params={{ incidentId: i.id }}>Abrir</Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -184,5 +187,32 @@ function IncidentsList() {
         )}
       </Card>
     </div>
+  );
+}
+
+function PassDownloadButton({ passes }: { passes: Array<{ id: string; pdf_url: string | null; revoked_at: string | null; valid_until: string }> }) {
+  const fn = useServerFn(getMedicalPassSignedUrl);
+  const active = passes
+    .filter((p) => p.pdf_url && !p.revoked_at)
+    .sort((a, b) => (a.valid_until < b.valid_until ? 1 : -1))[0];
+  if (!active) return null;
+  const isExpired = new Date(active.valid_until).getTime() < Date.now();
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-7 px-2"
+      title={isExpired ? "Pase vencido (descargar copia)" : "Descargar pase médico"}
+      onClick={async () => {
+        try {
+          const { url } = await fn({ data: { pass_id: active.id } });
+          window.open(url, "_blank", "noopener");
+        } catch (e: any) {
+          toast.error(e?.message ?? "No se pudo descargar el pase");
+        }
+      }}
+    >
+      <Download className="h-3.5 w-3.5 mr-1" /> Pase
+    </Button>
   );
 }
