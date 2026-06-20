@@ -199,6 +199,21 @@ function NewIncident() {
           </datalist>
         </div>
 
+        <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+          <input
+            type="checkbox"
+            checked={autoIssuePass}
+            onChange={(e) => setAutoIssuePass(e.target.checked)}
+            className="mt-0.5 h-4 w-4"
+          />
+          <div className="text-sm">
+            <div className="font-medium">Emitir pase médico automáticamente</div>
+            <div className="text-xs text-muted-foreground">
+              Si capturas hospital y existe un director admin/manager en el programa, el pase se genera al reportar el siniestro. Si no, puedes emitirlo manualmente desde el detalle.
+            </div>
+          </div>
+        </label>
+
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" asChild><Link to="/incidents">Cancelar</Link></Button>
           <Button onClick={onSubmit} disabled={saving}>{saving ? "Reportando…" : "Reportar siniestro"}</Button>
