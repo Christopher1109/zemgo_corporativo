@@ -898,6 +898,88 @@ export type Database = {
           },
         ]
       }
+      portal_access_codes: {
+        Row: {
+          attempts: number
+          client_id: string
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          ip_address: unknown
+          used_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          client_id: string
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip_address?: unknown
+          used_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          client_id?: string
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_address?: unknown
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_access_codes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_sessions: {
+        Row: {
+          client_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          ip_address: unknown
+          revoked_at: string | null
+          token_hash: string
+          user_agent: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip_address?: unknown
+          revoked_at?: string | null
+          token_hash: string
+          user_agent?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_address?: unknown
+          revoked_at?: string | null
+          token_hash?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1174,6 +1256,42 @@ export type Database = {
           },
         ]
       }
+      sheet_sync_log: {
+        Row: {
+          ended_at: string | null
+          error: string | null
+          id: string
+          rows_detected: number | null
+          rows_imported: number | null
+          rows_skipped: number | null
+          sheet_id: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          ended_at?: string | null
+          error?: string | null
+          id?: string
+          rows_detected?: number | null
+          rows_imported?: number | null
+          rows_skipped?: number | null
+          sheet_id: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          ended_at?: string | null
+          error?: string | null
+          id?: string
+          rows_detected?: number | null
+          rows_imported?: number | null
+          rows_skipped?: number | null
+          sheet_id?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       system_config: {
         Row: {
           description: string | null
@@ -1303,6 +1421,10 @@ export type Database = {
           program_id: string
         }[]
       }
+      get_portal_dashboard: { Args: { _token: string }; Returns: Json }
+      get_portal_incidents: { Args: { _token: string }; Returns: Json }
+      get_portal_payments: { Args: { _token: string }; Returns: Json }
+      get_portal_policies: { Args: { _token: string }; Returns: Json }
       get_recent_activity: {
         Args: { _limit?: number; _program_id: string }
         Returns: {
@@ -1401,18 +1523,41 @@ export type Database = {
         }
         Returns: string
       }
+      report_portal_incident: {
+        Args: {
+          _accident_date: string
+          _accident_time: string
+          _description: string
+          _hospital: string
+          _location: string
+          _policy_id: string
+          _token: string
+        }
+        Returns: string
+      }
+      request_portal_access: {
+        Args: { _curp: string; _full_name: string }
+        Returns: Json
+      }
+      resolve_portal_session: { Args: { _token: string }; Returns: string }
       revoke_medical_pass: {
         Args: { _pass_id: string; _reason: string }
         Returns: undefined
       }
+      revoke_portal_session: { Args: { _token: string }; Returns: undefined }
       run_pass_expiration_check: { Args: never; Returns: Json }
       run_payment_housekeeping: { Args: never; Returns: Json }
       set_medical_pass_pdf_url: {
         Args: { _pass_id: string; _pdf_url: string }
         Returns: undefined
       }
+      unaccent: { Args: { "": string }; Returns: string }
       update_policy: {
         Args: { _changes: Json; _policy_id: string }
+        Returns: Json
+      }
+      update_portal_profile: {
+        Args: { _changes: Json; _token: string }
         Returns: Json
       }
       update_program_alert_offsets: {
@@ -1421,6 +1566,10 @@ export type Database = {
       }
       update_user_program_access: {
         Args: { _program_id: string; _role_text: string; _user_id: string }
+        Returns: Json
+      }
+      verify_portal_code: {
+        Args: { _client_id: string; _code: string; _ip: string; _ua: string }
         Returns: Json
       }
     }
