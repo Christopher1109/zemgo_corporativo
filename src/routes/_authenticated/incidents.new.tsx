@@ -35,6 +35,7 @@ function NewIncident() {
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [hospital, setHospital] = useState("");
+  const [autoIssuePass, setAutoIssuePass] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const { data: policies = [] } = useQuery({
