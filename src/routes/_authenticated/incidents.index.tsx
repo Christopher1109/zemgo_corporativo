@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Plus, AlertTriangle, BarChart3 } from "lucide-react";
+import { Plus, AlertTriangle, BarChart3, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useProgram } from "@/lib/program-context";
+import { getMedicalPassSignedUrl } from "@/lib/incidents.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/incidents/")({
   head: () => ({ meta: [{ title: "Siniestros — HOPE Consulting" }] }),
@@ -42,7 +45,7 @@ function IncidentsList() {
     queryFn: async () => {
       let q = supabase
         .from("incidents")
-        .select("id, status, reported_at, occurred_at, accident_date, hospital, description, policies!inner(folio, program_id, programs(code, name, color_primary)), clients!inner(first_name, last_name, curp)")
+        .select("id, status, reported_at, occurred_at, accident_date, hospital, description, policies!inner(folio, program_id, programs(code, name, color_primary)), clients!inner(first_name, last_name, curp), medical_passes(id, pdf_url, revoked_at, valid_until)")
         .order("reported_at", { ascending: false })
         .limit(500);
       if (activeProgram?.id) q = q.eq("policies.program_id", activeProgram.id);
@@ -161,9 +164,12 @@ function IncidentsList() {
                   </TableCell>
                   <TableCell className="text-sm">{days}</TableCell>
                   <TableCell>
-                    <Button asChild size="sm" variant="ghost">
-                      <Link to="/incidents/$incidentId" params={{ incidentId: i.id }}>Abrir</Link>
-                    </Button>
+                    <div className="flex items-center gap-1 justify-end">
+                      <PassDownloadButton passes={i.medical_passes ?? []} />
+                      <Button asChild size="sm" variant="ghost">
+                        <Link to="/incidents/$incidentId" params={{ incidentId: i.id }}>Abrir</Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -181,5 +187,32 @@ function IncidentsList() {
         )}
       </Card>
     </div>
+  );
+}
+
+function PassDownloadButton({ passes }: { passes: Array<{ id: string; pdf_url: string | null; revoked_at: string | null; valid_until: string }> }) {
+  const fn = useServerFn(getMedicalPassSignedUrl);
+  const active = passes
+    .filter((p) => p.pdf_url && !p.revoked_at)
+    .sort((a, b) => (a.valid_until < b.valid_until ? 1 : -1))[0];
+  if (!active) return null;
+  const isExpired = new Date(active.valid_until).getTime() < Date.now();
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-7 px-2"
+      title={isExpired ? "Pase vencido (descargar copia)" : "Descargar pase médico"}
+      onClick={async () => {
+        try {
+          const { url } = await fn({ data: { pass_id: active.id } });
+          window.open(url, "_blank", "noopener");
+        } catch (e: any) {
+          toast.error(e?.message ?? "No se pudo descargar el pase");
+        }
+      }}
+    >
+      <Download className="h-3.5 w-3.5 mr-1" /> Pase
+    </Button>
   );
 }

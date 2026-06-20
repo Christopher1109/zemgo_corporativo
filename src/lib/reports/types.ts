@@ -208,6 +208,27 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
     max_rows: 10000,
     supports_preview: true,
   },
+  emisiones: {
+    code: "emisiones",
+    name: "Emisiones de certificados",
+    description: "Nuevos certificados emitidos por mes y programa.",
+    filters: [
+      { key: "program_id", label: "Programa", type: "program" },
+      { key: "date_range", label: "Rango (fecha de emisión)", type: "date_range" },
+    ],
+    columns: [
+      { key: "month", label: "Mes", width: 12 },
+      { key: "program_code", label: "Programa", width: 12 },
+      { key: "issued", label: "Emitidos", align: "right", format: "int", width: 10 },
+      { key: "renewals", label: "Renovaciones", align: "right", format: "int", width: 12 },
+      { key: "new_clients", label: "Nuevos clientes", align: "right", format: "int", width: 14 },
+      { key: "total_premium", label: "Prima total", format: "money", align: "right", width: 16 },
+      { key: "total_sum_insured", label: "Suma asegurada", format: "money", align: "right", width: 18 },
+    ],
+    totals: ["issued", "renewals", "new_clients", "total_premium", "total_sum_insured"],
+    implemented: true,
+    supports_preview: true,
+  },
 };
 
 export type ReportFilters = Record<string, any>;

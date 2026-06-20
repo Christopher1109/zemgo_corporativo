@@ -35,6 +35,7 @@ function NewIncident() {
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [hospital, setHospital] = useState("");
+  const [autoIssuePass, setAutoIssuePass] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const { data: policies = [] } = useQuery({
@@ -108,9 +109,16 @@ function NewIncident() {
           location: location || null,
           description,
           hospital: hospital || null,
+          auto_issue_pass: autoIssuePass && !!hospital,
         },
       });
-      toast.success("Siniestro reportado");
+      if ((res as any).auto_pass?.pass_id) {
+        toast.success("Siniestro reportado y pase médico emitido");
+      } else if ((res as any).auto_pass_error) {
+        toast.success("Siniestro reportado. El pase se emite manualmente desde el detalle.");
+      } else {
+        toast.success("Siniestro reportado");
+      }
       navigate({ to: "/incidents/$incidentId", params: { incidentId: res.incident_id } });
     } catch (e: any) {
       toast.error(e.message ?? "Error al reportar");
@@ -190,6 +198,21 @@ function NewIncident() {
             {hospitalSuggestions.map((h) => <option key={h} value={h} />)}
           </datalist>
         </div>
+
+        <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+          <input
+            type="checkbox"
+            checked={autoIssuePass}
+            onChange={(e) => setAutoIssuePass(e.target.checked)}
+            className="mt-0.5 h-4 w-4"
+          />
+          <div className="text-sm">
+            <div className="font-medium">Emitir pase médico automáticamente</div>
+            <div className="text-xs text-muted-foreground">
+              Si capturas hospital y existe un director admin/manager en el programa, el pase se genera al reportar el siniestro. Si no, puedes emitirlo manualmente desde el detalle.
+            </div>
+          </div>
+        </label>
 
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" asChild><Link to="/incidents">Cancelar</Link></Button>

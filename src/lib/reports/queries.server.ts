@@ -250,6 +250,52 @@ export async function queryActividad(supabase: SupabaseClient, filters: ReportFi
   return { rows };
 }
 
+export async function queryEmisiones(supabase: SupabaseClient, filters: ReportFilters): Promise<ReportResult> {
+  let q = supabase.from("policies").select(`
+      id, start_date, premium, sum_insured, renewed_from_id, client_id,
+      programs(code)
+    `).order("start_date", { ascending: false }).limit(10000);
+  if (filters.program_id && filters.program_id !== "all") q = q.eq("program_id", filters.program_id);
+  const from = dateOrNull(filters.date_from); const to = dateOrNull(filters.date_to);
+  if (from) q = q.gte("start_date", from);
+  if (to) q = q.lte("start_date", to);
+  const { data, error } = await q;
+  if (error) throw error;
+
+  // First-time client detection: minimum start_date per client_id wins as "new client"
+  const minByClient = new Map<string, string>();
+  for (const r of (data ?? []) as any[]) {
+    if (!r.client_id) continue;
+    const cur = minByClient.get(r.client_id);
+    if (!cur || r.start_date < cur) minByClient.set(r.client_id, r.start_date);
+  }
+
+  type Agg = { issued: number; renewals: number; new_clients: number; total_premium: number; total_sum_insured: number };
+  const buckets = new Map<string, Agg>();
+  for (const r of (data ?? []) as any[]) {
+    const month = (r.start_date ?? "").slice(0, 7); // YYYY-MM
+    if (!month) continue;
+    const code = r.programs?.code ?? "—";
+    const key = `${month}|${code}`;
+    const b = buckets.get(key) ?? { issued: 0, renewals: 0, new_clients: 0, total_premium: 0, total_sum_insured: 0 };
+    b.issued += 1;
+    if (r.renewed_from_id) b.renewals += 1;
+    if (r.client_id && minByClient.get(r.client_id) === r.start_date) b.new_clients += 1;
+    b.total_premium += Number(r.premium ?? 0);
+    b.total_sum_insured += Number(r.sum_insured ?? 0);
+    buckets.set(key, b);
+  }
+
+  const rows = Array.from(buckets.entries())
+    .map(([k, v]) => {
+      const [month, program_code] = k.split("|");
+      return { month, program_code, ...v };
+    })
+    .sort((a, b) => (a.month < b.month ? 1 : a.month > b.month ? -1 : a.program_code.localeCompare(b.program_code)));
+
+  return { rows };
+}
+
 export type ReportQueryFn = (s: SupabaseClient, f: ReportFilters) => Promise<ReportResult>;
 export const REPORT_QUERIES: Record<string, ReportQueryFn> = {
   cartera: queryCartera,
@@ -258,4 +304,5 @@ export const REPORT_QUERIES: Record<string, ReportQueryFn> = {
   renovaciones: queryRenovaciones,
   ventas: queryVentas,
   actividad: queryActividad,
+  emisiones: queryEmisiones,
 };
