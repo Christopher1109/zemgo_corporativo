@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { BarChart3, Users, CreditCard, AlertTriangle, RefreshCw, TrendingUp, Activity, Map as MapIcon } from "lucide-react";
+import { BarChart3, Users, CreditCard, AlertTriangle, RefreshCw, TrendingUp, Activity, Map as MapIcon, FilePlus2 } from "lucide-react";
 import { ReportPanel } from "@/components/reports/ReportPanel";
 import { GeoReport } from "@/components/reports/GeoReport";
 
 const tabSchema = z.object({
-  tab: z.enum(["cartera", "cobranza", "siniestralidad", "renovaciones", "ventas", "actividad", "geo"]).optional(),
+  tab: z.enum(["cartera", "emisiones", "cobranza", "siniestralidad", "renovaciones", "ventas", "actividad", "geo"]).optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/reports")({
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
 
 const TABS = [
   { value: "cartera", label: "Cartera", icon: Users },
+  { value: "emisiones", label: "Emisiones", icon: FilePlus2 },
   { value: "cobranza", label: "Cobranza", icon: CreditCard },
   { value: "siniestralidad", label: "Siniestralidad", icon: AlertTriangle },
   { value: "renovaciones", label: "Renovaciones", icon: RefreshCw },
