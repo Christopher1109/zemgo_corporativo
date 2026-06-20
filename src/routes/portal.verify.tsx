@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { HopeLogo } from "@/components/hope-logo";
 import { verifyPortalCode, requestPortalAccess } from "@/lib/portal/portal.functions";
 
 export const Route = createFileRoute("/portal/verify")({
@@ -15,7 +16,8 @@ type Pending = { client_id: string; first_name: string; dev_code: string | null 
 function VerifyPage() {
   const navigate = useNavigate();
   const verify = useServerFn(verifyPortalCode);
-  const resend = useServerFn(requestPortalAccess);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _resend = useServerFn(requestPortalAccess);
   const [pending, setPending] = useState<Pending | null>(null);
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const refs = useRef<Array<HTMLInputElement | null>>([]);
@@ -76,20 +78,22 @@ function VerifyPage() {
 
   async function onResend() {
     if (!pending || cooldown > 0) return;
-    try {
-      // We need CURP+name again — but only have client_id. Ask user to restart.
-      toast.message("Por seguridad, vuelve a ingresar tu CURP para reenviar.");
-      navigate({ to: "/portal" });
-    } catch {
-      toast.error("No fue posible reenviar");
-    }
+    toast.message("Por seguridad, vuelve a ingresar tu CURP para reenviar.");
+    navigate({ to: "/portal" });
   }
 
   if (!pending) return null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+    <div className="flex min-h-screen items-center justify-center px-4 py-10 bg-slate-50">
       <div className="w-full max-w-md">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="rounded-xl bg-slate-900 px-5 py-3 mb-3">
+            <HopeLogo variant="light" className="h-9 w-auto" />
+          </div>
+          <p className="text-xs uppercase tracking-widest text-slate-500">Portal del Asegurado</p>
+        </div>
+
         {pending.dev_code ? (
           <div className="mb-4 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm">
             <div className="font-semibold text-yellow-900">MODO QA</div>
@@ -103,7 +107,7 @@ function VerifyPage() {
         ) : null}
 
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h1 className="text-xl font-semibold">Hola, {pending.first_name}</h1>
+          <h1 className="text-xl font-semibold text-slate-900">Hola, {pending.first_name}</h1>
           <p className="mt-1 text-sm text-slate-600">
             Te enviamos un código de verificación. Ingrésalo abajo.
           </p>
@@ -125,7 +129,11 @@ function VerifyPage() {
             ))}
           </div>
 
-          <Button onClick={onVerify} disabled={loading} className="mt-6 w-full">
+          <Button
+            onClick={onVerify}
+            disabled={loading}
+            className="mt-6 w-full bg-slate-900 hover:bg-slate-800 text-white"
+          >
             {loading ? "Verificando…" : "Verificar"}
           </Button>
 

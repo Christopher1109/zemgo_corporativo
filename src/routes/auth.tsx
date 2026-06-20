@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { HopeLogo } from "@/components/hope-logo";
 
 // Username-based login. Usernames are mapped to a synthetic email
 // `${username}@hope.local` so we can keep using Supabase Auth.
@@ -43,13 +44,20 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">HOPE Consulting</CardTitle>
-          <CardDescription>
-            Plataforma interna · acceso solo para usuarios autorizados
-          </CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.08] pointer-events-none"
+           style={{ background: "radial-gradient(ellipse at top, #facc15 0%, transparent 55%)" }} />
+      <Card className="w-full max-w-md relative z-10 border-slate-200 shadow-2xl">
+        <CardHeader className="text-center space-y-4">
+          <div className="mx-auto rounded-xl bg-slate-900 px-5 py-3 inline-block">
+            <HopeLogo variant="light" className="h-9 w-auto" />
+          </div>
+          <div>
+            <CardTitle className="text-xl">Acceso interno</CardTitle>
+            <CardDescription>
+              Plataforma administrativa · solo personal autorizado
+            </CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={signIn} className="space-y-4">
@@ -74,7 +82,7 @@ function AuthPage() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={busy}>
+            <Button type="submit" className="w-full bg-slate-900 hover:bg-slate-800" disabled={busy}>
               {busy ? "Iniciando..." : "Entrar"}
             </Button>
             <p className="text-xs text-muted-foreground text-center pt-2">
@@ -86,3 +94,4 @@ function AuthPage() {
     </div>
   );
 }
+
