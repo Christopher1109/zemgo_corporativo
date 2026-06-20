@@ -109,9 +109,16 @@ function NewIncident() {
           location: location || null,
           description,
           hospital: hospital || null,
+          auto_issue_pass: autoIssuePass && !!hospital,
         },
       });
-      toast.success("Siniestro reportado");
+      if ((res as any).auto_pass?.pass_id) {
+        toast.success("Siniestro reportado y pase médico emitido");
+      } else if ((res as any).auto_pass_error) {
+        toast.success("Siniestro reportado. El pase se emite manualmente desde el detalle.");
+      } else {
+        toast.success("Siniestro reportado");
+      }
       navigate({ to: "/incidents/$incidentId", params: { incidentId: res.incident_id } });
     } catch (e: any) {
       toast.error(e.message ?? "Error al reportar");
