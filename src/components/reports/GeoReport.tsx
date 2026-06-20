@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useMemo } from "react";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
+import { useMemo, useState } from "react";
 import { getPoliciesByState } from "@/lib/map.functions";
-import { matchState } from "@/lib/mx-states";
+import { matchState, MX_STATES } from "@/lib/mx-states";
+import { MX_VIEWBOX, MX_STATE_PATHS } from "@/lib/mx-paths";
 import { useProgram } from "@/lib/program-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 type Row = { state: string; total: number; active: number; suspended: number; expired: number };
 
@@ -23,9 +23,16 @@ export function GeoReport() {
   const rows = (q.data as Row[] | undefined) ?? [];
   const totalAll = rows.reduce((s, r) => s + Number(r.total), 0);
 
-  const items = useMemo(() => rows
-    .map((r) => ({ row: r, match: matchState(r.state) }))
-    .filter((x) => x.match), [rows]);
+  // Build code → row
+  const byCode = useMemo(() => {
+    const m = new Map<string, Row>();
+    for (const r of rows) {
+      const match = matchState(r.state);
+      if (match) m.set(match.code, r);
+    }
+    return m;
+  }, [rows]);
+
   const unknown = rows.filter((r) => !matchState(r.state));
 
   return (
@@ -37,108 +44,143 @@ export function GeoReport() {
         </p>
       </div>
 
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <MapView items={items} loading={q.isLoading} />
+      <Card>
+        <CardContent className="p-3 sm:p-4">
+          <MxMap byCode={byCode} loading={q.isLoading} />
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="md:col-span-2">
-          <CardHeader><CardTitle className="text-base">Estados con cobertura ({items.length})</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid gap-1.5 sm:grid-cols-2 max-h-80 overflow-auto pr-1">
-              {items.sort((a, b) => Number(b.row.total) - Number(a.row.total)).map(({ row, match }) => (
-                <div key={row.state} className="flex items-center justify-between rounded border px-2.5 py-1.5 text-sm">
-                  <span className="truncate">{match!.name}</span>
-                  <div className="flex gap-1.5 shrink-0">
-                    <Badge variant="secondary">{Number(row.total)}</Badge>
-                    {Number(row.active) > 0 && <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30">{Number(row.active)} act.</Badge>}
-                  </div>
-                </div>
-              ))}
-              {items.length === 0 && !q.isLoading && (
-                <div className="text-sm text-muted-foreground italic">Sin datos para este programa.</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      {unknown.length > 0 && (
         <Card>
           <CardHeader><CardTitle className="text-base">Sin geolocalizar</CardTitle></CardHeader>
           <CardContent>
-            {unknown.length === 0 ? (
-              <div className="text-sm text-muted-foreground italic">Todos los estados están mapeados.</div>
-            ) : (
-              <ul className="text-sm space-y-1">
-                {unknown.map((u) => (
-                  <li key={u.state} className="flex justify-between">
-                    <span className="truncate">{u.state}</span>
-                    <Badge variant="outline">{Number(u.total)}</Badge>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ul className="text-sm grid sm:grid-cols-2 gap-1">
+              {unknown.map((u) => (
+                <li key={u.state} className="flex justify-between rounded border px-2.5 py-1.5">
+                  <span className="truncate">{u.state || "—"}</span>
+                  <Badge variant="outline">{Number(u.total)}</Badge>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   );
 }
 
-function MapView({ items, loading }: { items: { row: Row; match: any }[]; loading: boolean }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
+function MxMap({ byCode, loading }: { byCode: Map<string, Row>; loading: boolean }) {
+  const [hover, setHover] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
+  const active = selected ?? hover;
 
-  useEffect(() => {
-    if (!ref.current || mapRef.current) return;
-    const map = new maplibregl.Map({
-      container: ref.current,
-      style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-      center: [-102, 23.6],
-      zoom: 4.2,
-      attributionControl: { compact: true },
-    });
-    map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), "top-right");
-    mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
-  }, []);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    markersRef.current.forEach((m) => m.remove());
-    markersRef.current = [];
-    if (items.length === 0) return;
-    const max = Math.max(...items.map((i) => Number(i.row.total)), 1);
-    for (const { row, match } of items) {
-      const total = Number(row.total);
-      const size = Math.max(28, Math.min(64, 24 + (total / max) * 40));
-      const el = document.createElement("div");
-      el.style.cssText = `width:${size}px;height:${size}px;border-radius:9999px;background:var(--program-primary,#7CB342);color:white;display:grid;place-items:center;font-weight:700;font-size:${Math.max(11, size/4)}px;box-shadow:0 2px 8px rgba(0,0,0,.25);border:2px solid white;cursor:pointer;`;
-      el.textContent = String(total);
-      const popup = new maplibregl.Popup({ offset: 18 }).setHTML(
-        `<div style="font-family:inherit;font-size:13px;min-width:160px">
-           <div style="font-weight:600;margin-bottom:4px">${match.name}</div>
-           <div>Total: <strong>${total}</strong></div>
-           <div>Activas: ${Number(row.active)}</div>
-           <div>Suspendidas: ${Number(row.suspended)}</div>
-           <div>Expiradas: ${Number(row.expired)}</div>
-         </div>`
-      );
-      const marker = new maplibregl.Marker({ element: el }).setLngLat([match.lng, match.lat]).setPopup(popup).addTo(map);
-      markersRef.current.push(marker);
+  const codes = Object.keys(MX_STATE_PATHS);
+  const max = useMemo(() => {
+    let m = 0;
+    for (const c of codes) {
+      const r = byCode.get(c);
+      if (r) m = Math.max(m, Number(r.total));
     }
-  }, [items]);
+    return m || 1;
+  }, [byCode]);
+
+  const fillFor = (code: string) => {
+    const r = byCode.get(code);
+    if (!r || Number(r.total) === 0) return "hsl(var(--muted))";
+    // green ramp using program color via CSS var fallback
+    const intensity = 0.25 + 0.75 * (Number(r.total) / max);
+    return `color-mix(in oklch, var(--program-primary, hsl(var(--primary))) ${Math.round(intensity * 100)}%, hsl(var(--muted)))`;
+  };
+
+  const activeRow = active ? byCode.get(active) : null;
+  const activeName = active ? MX_STATES[active]?.name : null;
 
   return (
-    <div className="relative w-full" style={{ height: 480 }}>
-      <div ref={ref} className="absolute inset-0" />
-      {loading && (
-        <div className="absolute inset-0 grid place-items-center bg-background/60 backdrop-blur-sm text-sm">
-          Cargando mapa…
+    <div className="grid gap-4 md:grid-cols-[1fr_280px]">
+      <div className="relative w-full rounded-md border bg-muted/20 overflow-hidden">
+        <svg viewBox={MX_VIEWBOX} className="w-full h-auto block" role="img" aria-label="Mapa de México por estado">
+          <g>
+            {codes.map((code) => {
+              const r = byCode.get(code);
+              const total = r ? Number(r.total) : 0;
+              const isActive = active === code;
+              return (
+                <path
+                  key={code}
+                  d={MX_STATE_PATHS[code]}
+                  fill={fillFor(code)}
+                  stroke={isActive ? "hsl(var(--foreground))" : "hsl(var(--border))"}
+                  strokeWidth={isActive ? 1.6 : 0.6}
+                  className="cursor-pointer transition-[stroke,filter] hover:brightness-110"
+                  onMouseEnter={() => setHover(code)}
+                  onMouseLeave={() => setHover((h) => (h === code ? null : h))}
+                  onClick={() => setSelected((s) => (s === code ? null : code))}
+                >
+                  <title>{`${MX_STATES[code]?.name ?? code}: ${total} certificado${total === 1 ? "" : "s"}`}</title>
+                </path>
+              );
+            })}
+          </g>
+        </svg>
+        {loading && (
+          <div className="absolute inset-0 grid place-items-center bg-background/60 text-sm">
+            Cargando…
+          </div>
+        )}
+        <div className="absolute bottom-2 left-2 flex items-center gap-2 rounded-md border bg-background/80 px-2 py-1 text-[11px] text-muted-foreground backdrop-blur">
+          <span>0</span>
+          <div className="h-2 w-24 rounded-full" style={{ background: "linear-gradient(to right, hsl(var(--muted)), var(--program-primary, hsl(var(--primary))))" }} />
+          <span>{max}</span>
         </div>
-      )}
+      </div>
+
+      <aside className="rounded-md border bg-card p-4 min-h-[260px]">
+        {!active && (
+          <div className="text-sm text-muted-foreground">
+            Pasa el cursor sobre un estado para ver sus métricas. Haz clic para fijar la selección.
+          </div>
+        )}
+        {active && (
+          <div className="space-y-3">
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Estado</div>
+              <div className="text-lg font-semibold">{activeName}</div>
+            </div>
+            {!activeRow || Number(activeRow.total) === 0 ? (
+              <div className="text-sm text-muted-foreground italic">Sin certificados registrados.</div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Kpi label="Total" value={Number(activeRow.total)} tone="default" />
+                <Kpi label="Activos" value={Number(activeRow.active)} tone="success" />
+                <Kpi label="Suspendidos" value={Number(activeRow.suspended)} tone="warning" />
+                <Kpi label="Vencidos" value={Number(activeRow.expired)} tone="danger" />
+              </div>
+            )}
+            {selected && (
+              <button
+                onClick={() => setSelected(null)}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Quitar selección
+              </button>
+            )}
+          </div>
+        )}
+      </aside>
+    </div>
+  );
+}
+
+function Kpi({ label, value, tone }: { label: string; value: number; tone: "default" | "success" | "warning" | "danger" }) {
+  return (
+    <div className={cn(
+      "rounded-md border p-2.5",
+      tone === "success" && "border-emerald-500/30 bg-emerald-500/5",
+      tone === "warning" && "border-amber-500/30 bg-amber-500/5",
+      tone === "danger" && "border-red-500/30 bg-red-500/5",
+    )}>
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-xl font-bold tabular-nums">{value}</div>
     </div>
   );
 }
