@@ -128,7 +128,7 @@ function AlertsPage() {
             Alertas y Renovaciones
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Recordatorios de pago, renovaciones próximas y pólizas suspendidas — {activeProgram?.name ?? "todos los programas"}.
+            Recordatorios de pago, renovaciones próximas y certificados suspendidos — {activeProgram?.name ?? "todos los programas"}.
           </p>
         </div>
         <Select value={scope} onValueChange={(v) => setScope(v as any)}>
@@ -147,7 +147,7 @@ function AlertsPage() {
         <KpiCard label="Por vencer 16–30 días" value={counts.reminders30} sub="Próximo" icon={Bell} />
 
         <KpiCard label="Renovaciones ≤ 30 días" value={counts.renewals30} sub="Contacto comercial" color="var(--program-primary)" icon={RefreshCw} />
-        <KpiCard label="Pólizas suspendidas" value={counts.suspended} sub="Cobranza activa" color="#7c3aed" icon={AlertOctagon} />
+        <KpiCard label="Certificados suspendidos" value={counts.suspended} sub="Cobranza activa" color="#7c3aed" icon={AlertOctagon} />
       </div>
 
       {/* Leyenda de colores */}
@@ -345,7 +345,7 @@ function RenewalsList({ rows }: { rows: any[] }) {
 }
 
 function SuspendedList({ rows }: { rows: any[] }) {
-  if (rows.length === 0) return <EmptyState text="No hay pólizas suspendidas." />;
+  if (rows.length === 0) return <EmptyState text="No hay certificados suspendidos." />;
   return (
     <div className="grid gap-2">
       {rows.map((r) => {
