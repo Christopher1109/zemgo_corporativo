@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
+import { HopeLogo } from "@/components/hope-logo";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, enabled: true },
@@ -48,8 +49,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         style={{ backgroundColor: "var(--program-primary)" }}
       >
         <div className="p-4 border-b border-white/10">
-          <div className="text-xs uppercase tracking-wider opacity-75">HOPE Consulting</div>
-          <div className="font-semibold text-lg mt-0.5">Administración</div>
+          <div className="rounded-md bg-black/25 px-3 py-2 flex items-center justify-center">
+            <HopeLogo variant="light" className="h-7 w-auto" />
+          </div>
+          <div className="mt-2 text-[10px] uppercase tracking-widest opacity-70 text-center">
+            Administración
+          </div>
         </div>
 
         {/* Program selector */}

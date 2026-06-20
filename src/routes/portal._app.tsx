@@ -132,10 +132,10 @@ function PortalAppLayout() {
               key={n.to}
               to={n.to}
               className={`flex flex-col items-center gap-1 py-2 text-xs ${
-                active ? "text-slate-900" : "text-slate-500"
+                active ? "text-slate-900 font-medium" : "text-slate-500"
               }`}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className={`h-5 w-5 ${active ? "text-yellow-500" : ""}`} />
               <span>{n.label}</span>
             </Link>
           );
