@@ -27,6 +27,19 @@ function getToken(): string | null {
   }
 }
 
+function getPortalCookieOptions(maxAge?: number) {
+  let host = "";
+  try { host = getRequestHeader("host") ?? ""; } catch {}
+  const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
+  return {
+    httpOnly: true,
+    secure: !isLocal,
+    sameSite: isLocal ? "lax" as const : "none" as const,
+    path: "/",
+    ...(maxAge ? { maxAge } : {}),
+  };
+}
+
 // ---------------- Auth ----------------
 
 export const requestPortalAccess = createServerFn({ method: "POST" })
@@ -57,13 +70,7 @@ export const verifyPortalCode = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     const token = (res as { token: string }).token;
-    setCookie(COOKIE, token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24,
-    });
+    setCookie(COOKIE, token, getPortalCookieOptions(60 * 60 * 24));
     return { ok: true };
   });
 
@@ -73,7 +80,7 @@ export const portalLogout = createServerFn({ method: "POST" }).handler(async () 
     const sb = await admin();
     await sb.rpc("revoke_portal_session", { _token: token });
   }
-  deleteCookie(COOKIE, { path: "/" });
+  deleteCookie(COOKIE, getPortalCookieOptions());
   return { ok: true };
 });
 
