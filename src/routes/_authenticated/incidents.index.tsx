@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Plus, AlertTriangle, BarChart3 } from "lucide-react";
+import { Plus, AlertTriangle, BarChart3, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useProgram } from "@/lib/program-context";
+import { getMedicalPassSignedUrl } from "@/lib/incidents.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/incidents/")({
   head: () => ({ meta: [{ title: "Siniestros — HOPE Consulting" }] }),
