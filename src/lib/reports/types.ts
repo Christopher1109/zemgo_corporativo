@@ -34,10 +34,10 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
   cartera: {
     code: "cartera",
     name: "Cartera de clientes",
-    description: "Listado de clientes con pólizas vigentes.",
+    description: "Listado de clientes con certificados vigentes.",
     filters: [
       { key: "program_id", label: "Programa", type: "program" },
-      { key: "status", label: "Estado de póliza", type: "select",
+      { key: "status", label: "Estado de certificado", type: "select",
         options: [
           { value: "all", label: "Todos" },
           { value: "active", label: "Activas" },
@@ -113,7 +113,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
     columns: [
       { key: "incident_folio", label: "Folio inc.", width: 12 },
       { key: "client_name", label: "Cliente", width: 24 },
-      { key: "folio", label: "Póliza", width: 16 },
+      { key: "folio", label: "Certificado", width: 16 },
       { key: "accident_date", label: "Fecha", format: "date", width: 12 },
       { key: "description", label: "Descripción", width: 36 },
       { key: "hospital", label: "Hospital", width: 22 },
@@ -129,7 +129,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
   renovaciones: {
     code: "renovaciones",
     name: "Renovaciones",
-    description: "Pólizas próximas a vencer o vencidas.",
+    description: "Certificados próximos a vencer o vencidos.",
     filters: [
       { key: "program_id", label: "Programa", type: "program" },
       { key: "window_days", label: "Ventana (días al vencimiento)", type: "window" },
@@ -165,7 +165,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
       { key: "sales_rep_name", label: "Vendedor", width: 26 },
       { key: "source", label: "Fuente", width: 20 },
       { key: "clients_captured", label: "Clientes", align: "right", format: "int", width: 10 },
-      { key: "policies_issued", label: "Pólizas", align: "right", format: "int", width: 10 },
+      { key: "policies_issued", label: "Certificados", align: "right", format: "int", width: 10 },
       { key: "total_premium", label: "Prima total", format: "money", align: "right", width: 16 },
       { key: "conversion_rate", label: "Conv. %", format: "percent", align: "right", width: 10 },
     ],
@@ -184,7 +184,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
       { key: "actions", label: "Tipos de acción", type: "multi_select" },
       { key: "entities", label: "Entidades", type: "multi_select",
         options: [
-          { value: "policy", label: "Pólizas" },
+          { value: "policy", label: "Certificados" },
           { value: "clients", label: "Clientes" },
           { value: "payments", label: "Pagos" },
           { value: "incident", label: "Siniestros" },
