@@ -71,7 +71,7 @@ function PortalLanding() {
             <span className="text-yellow-400 font-semibold">siempre a la mano.</span>
           </h2>
           <p className="text-sm text-slate-300 leading-relaxed">
-            Consulta tu póliza, descarga tu certificado, paga tu seguro y reporta un siniestro
+            Consulta tu certificado, descarga tu certificado, paga tu seguro y reporta un siniestro
             desde cualquier dispositivo, las 24 horas.
           </p>
           <div className="flex gap-6 pt-4 text-xs text-slate-400">

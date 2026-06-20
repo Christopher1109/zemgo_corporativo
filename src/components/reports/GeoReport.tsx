@@ -33,7 +33,7 @@ export function GeoReport() {
       <div>
         <h2 className="text-lg font-semibold">Análisis geográfico</h2>
         <p className="text-sm text-muted-foreground">
-          Distribución de pólizas por estado · <strong>{activeProgram?.name ?? "Todos"}</strong> · Total: <strong>{totalAll}</strong>
+          Distribución de certificados por estado · <strong>{activeProgram?.name ?? "Todos"}</strong> · Total: <strong>{totalAll}</strong>
         </p>
       </div>
 
