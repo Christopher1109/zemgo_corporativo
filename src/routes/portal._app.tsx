@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { portalMe, portalLogout } from "@/lib/portal/portal.functions";
 import { Home, FileText, CreditCard, AlertTriangle, User, LogOut } from "lucide-react";
+import { HopeLogo } from "@/components/hope-logo";
 
 export const Route = createFileRoute("/portal/_app")({
   component: PortalAppLayout,
@@ -73,12 +74,14 @@ function PortalAppLayout() {
   ];
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <div className="min-h-screen pb-20 md:pb-0 bg-slate-50">
+      <header className="sticky top-0 z-10 border-b border-slate-200 bg-slate-900 text-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link to="/portal/dashboard" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white text-sm font-bold">H</div>
-            <span className="font-semibold">Portal del Asegurado</span>
+          <Link to="/portal/dashboard" className="flex items-center gap-3">
+            <HopeLogo variant="light" className="h-8 w-auto" />
+            <span className="hidden sm:inline text-xs uppercase tracking-widest text-slate-300 border-l border-slate-700 pl-3">
+              Portal del Asegurado
+            </span>
           </Link>
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map((n) => {
@@ -88,17 +91,30 @@ function PortalAppLayout() {
                   key={n.to}
                   to={n.to}
                   className={`rounded-md px-3 py-2 text-sm transition ${
-                    active ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
+                    active
+                      ? "bg-yellow-400 text-slate-900 font-medium"
+                      : "text-slate-200 hover:bg-white/10"
                   }`}
                 >
                   {n.label}
                 </Link>
               );
             })}
-            <button onClick={onLogout} className="ml-2 rounded-md px-3 py-2 text-sm text-slate-600 hover:bg-slate-100">
+            <button
+              onClick={onLogout}
+              className="ml-2 rounded-md px-3 py-2 text-sm text-slate-300 hover:bg-white/10"
+              title="Cerrar sesión"
+            >
               <LogOut className="inline h-4 w-4" />
             </button>
           </nav>
+          <button
+            onClick={onLogout}
+            className="md:hidden rounded-md p-2 text-slate-300 hover:bg-white/10"
+            title="Cerrar sesión"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </header>
 
