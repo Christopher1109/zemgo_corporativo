@@ -210,7 +210,7 @@ function PolicyDetail() {
           <Card className="p-5 grid md:grid-cols-2 gap-4 text-sm">
             <Field label="Folio" value={policy.folio} />
             <Field label="Programa" value={policy.programs?.name} />
-            <Field label="No. Póliza HIR" value={policy.policy_number ?? "—"} />
+            <Field label="No. Certificado HIR" value={policy.policy_number ?? "—"} />
             <Field label="No. Certificado" value={policy.certificate_number ?? "—"} />
             <Field label="Titular" value={`${policy.clients?.first_name} ${policy.clients?.last_name}`} />
             <Field label="CURP" value={policy.clients?.curp} />

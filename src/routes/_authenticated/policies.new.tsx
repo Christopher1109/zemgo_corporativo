@@ -195,7 +195,7 @@ function NewPolicy() {
           </div>
 
           <div>
-            <Label>No. Póliza HIR</Label>
+            <Label>No. Certificado HIR</Label>
             <Input value={form.policy_number} onChange={(e) => setForm({ ...form, policy_number: e.target.value })} />
           </div>
           <div>

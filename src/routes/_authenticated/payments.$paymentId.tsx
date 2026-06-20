@@ -105,7 +105,7 @@ function PaymentDetail() {
           <div className="text-xs text-muted-foreground">{c?.curp}</div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground">Póliza</div>
+          <div className="text-xs text-muted-foreground">Certificado</div>
           <Link to="/policies/$policyId" params={{ policyId: pol.id }} className="font-mono font-medium text-primary underline">{pol.folio}</Link>
           <div className="text-xs text-muted-foreground">{prog?.name}</div>
         </div>
