@@ -194,7 +194,7 @@ export function MedicalPassHIR(props: MedicalPassHIRProps) {
 
           <View style={s.fieldRow}>
             <View style={s.field}>
-              <Text style={s.pillLabel}>N° de Póliza:</Text>
+              <Text style={s.pillLabel}>N° de Certificado:</Text>
               <Text style={s.fieldValue}>{safe(snap.policy_number)}</Text>
             </View>
             <View style={[s.field, s.fieldLast]}>

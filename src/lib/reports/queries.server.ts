@@ -111,7 +111,7 @@ export async function querySiniestralidad(supabase: SupabaseClient, filters: Rep
       { label: "Total incidentes", value: String(total) },
       { label: "Aprobados", value: String(approved) },
       { label: "Rechazados", value: String(rejected) },
-      { label: "Pólizas activas", value: String(activePolCount ?? 0) },
+      { label: "Certificados activos", value: String(activePolCount ?? 0) },
       { label: "Tasa siniestralidad", value: `${rate.toFixed(2)}%` },
       { label: "Monto expuesto", value: exposed.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }) },
     ],

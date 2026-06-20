@@ -12,7 +12,7 @@ import { useProgram } from "@/lib/program-context";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/policies/")({
-  head: () => ({ meta: [{ title: "Pólizas — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Certificados — HOPE Consulting" }] }),
   component: PoliciesList,
 });
 
@@ -74,12 +74,12 @@ function PoliciesList() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Pólizas</h1>
+          <h1 className="text-2xl font-semibold">Certificados</h1>
           <p className="text-sm text-muted-foreground">Gestión centralizada por programa.</p>
         </div>
         <Button asChild>
           <Link to="/policies/new">
-            <Plus className="h-4 w-4 mr-2" /> Nueva póliza
+            <Plus className="h-4 w-4 mr-2" /> Nuevo certificado
           </Link>
         </Button>
       </div>
@@ -155,7 +155,7 @@ function PoliciesList() {
               <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Cargando…</TableCell></TableRow>
             )}
             {!isLoading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Sin pólizas registradas.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Sin certificados registrados.</TableCell></TableRow>
             )}
             {rows.map((r: any) => (
               <TableRow key={r.id}>

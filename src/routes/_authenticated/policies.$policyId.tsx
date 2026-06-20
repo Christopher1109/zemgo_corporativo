@@ -21,7 +21,7 @@ import { EditPolicyDialog } from "@/components/policies/EditPolicyDialog";
 import { RenewPolicyDialog } from "@/components/policies/RenewPolicyDialog";
 
 export const Route = createFileRoute("/_authenticated/policies/$policyId")({
-  head: () => ({ meta: [{ title: "Detalle de póliza — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Detalle de certificado — HOPE Consulting" }] }),
   component: PolicyDetail,
 });
 
@@ -154,7 +154,7 @@ function PolicyDetail() {
   });
 
   if (isLoading || !policy) {
-    return <div className="text-muted-foreground">Cargando póliza…</div>;
+    return <div className="text-muted-foreground">Cargando certificado…</div>;
   }
 
   const allowed = NEXT_STATUS[policy.status] ?? [];
@@ -164,7 +164,7 @@ function PolicyDetail() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/policies"><ArrowLeft className="h-4 w-4 mr-1" /> Pólizas</Link>
+            <Link to="/policies"><ArrowLeft className="h-4 w-4 mr-1" /> Certificados</Link>
           </Button>
           <div>
             <h1 className="text-2xl font-semibold flex items-center gap-3">
@@ -210,7 +210,7 @@ function PolicyDetail() {
           <Card className="p-5 grid md:grid-cols-2 gap-4 text-sm">
             <Field label="Folio" value={policy.folio} />
             <Field label="Programa" value={policy.programs?.name} />
-            <Field label="No. Póliza HIR" value={policy.policy_number ?? "—"} />
+            <Field label="No. Certificado HIR" value={policy.policy_number ?? "—"} />
             <Field label="No. Certificado" value={policy.certificate_number ?? "—"} />
             <Field label="Titular" value={`${policy.clients?.first_name} ${policy.clients?.last_name}`} />
             <Field label="CURP" value={policy.clients?.curp} />
@@ -309,7 +309,7 @@ function PolicyDetail() {
           <div className="space-y-4">
             <Card className="p-0">
               <div className="px-4 py-3 border-b">
-                <h3 className="text-sm font-semibold">Revisiones de la póliza</h3>
+                <h3 className="text-sm font-semibold">Revisiones del certificado</h3>
                 <p className="text-xs text-muted-foreground">Historial de ediciones (datos editados manualmente).</p>
               </div>
               <Table>

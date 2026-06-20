@@ -107,8 +107,8 @@ export const issueMedicalPass = createServerFn({ method: "POST" })
 
     line("Pase #:", pass.id);
     line("Programa:", `${programCode} — ${snap.program_name ?? ""}`);
-    line("Folio póliza:", snap.folio ?? "—");
-    line("No. Póliza HIR:", snap.policy_number ?? "—");
+    line("Folio certificado:", snap.folio ?? "—");
+    line("No. Certificado HIR:", snap.policy_number ?? "—");
     line("No. Certificado:", snap.certificate_number ?? "—");
     line("Contratante:", snap.contracting_party ?? "—");
     y -= 6;

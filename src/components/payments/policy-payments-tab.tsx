@@ -41,7 +41,7 @@ export function PolicyPaymentsTab({ policyId, policyStatus }: { policyId: string
     <div className="space-y-4">
       {policyStatus === "suspended" && (
         <div className="rounded-md border border-red-300 bg-red-50 text-red-900 p-3 text-sm dark:bg-red-950 dark:text-red-100 dark:border-red-800">
-          Esta póliza está suspendida. Para reactivarla, registra los pagos vencidos.
+          Este certificado está suspendido. Para reactivarlo, registra los pagos vencidos.
         </div>
       )}
 

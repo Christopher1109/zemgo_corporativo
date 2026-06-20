@@ -15,7 +15,7 @@ const ACTION_LABELS: Record<string, string> = {
   PASS_ISSUED: "emitió un pase médico",
   PASS_REVOKED: "revocó un pase médico",
   PASS_AUTO_EXPIRED: "expiró pase automáticamente",
-  POLICY_AUTO_SUSPENDED: "suspendió póliza por cobranza",
+  POLICY_AUTO_SUSPENDED: "suspendió certificado por cobranza",
   CERTIFICATE_PDF_GENERATED: "generó certificado PDF",
   USER_INVITED: "invitó a un usuario",
   USER_DEACTIVATED: "desactivó a un usuario",

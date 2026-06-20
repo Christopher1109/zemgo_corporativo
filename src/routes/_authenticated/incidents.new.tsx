@@ -95,7 +95,7 @@ function NewIncident() {
   }, [accidentDate, selected]);
 
   async function onSubmit() {
-    if (!policyId) return toast.error("Selecciona una póliza");
+    if (!policyId) return toast.error("Selecciona un certificado");
     if (!accidentDate) return toast.error("Fecha del accidente requerida");
     if (description.trim().length < 20) return toast.error("La descripción debe tener mínimo 20 caracteres");
     setSaving(true);
@@ -126,9 +126,9 @@ function NewIncident() {
 
       <Card className="p-6 space-y-4">
         <div>
-          <Label>Póliza activa *</Label>
+          <Label>Certificado activo *</Label>
           <Select value={policyId} onValueChange={setPolicyId}>
-            <SelectTrigger><SelectValue placeholder="Selecciona una póliza activa…" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Selecciona un certificado activo…" /></SelectTrigger>
             <SelectContent>
               {policies.map((p: any) => (
                 <SelectItem key={p.id} value={p.id}>

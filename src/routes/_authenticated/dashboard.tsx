@@ -191,7 +191,7 @@ function Dashboard() {
       {/* Shortcuts */}
       <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
         <ShortcutCard to="/clients/new" icon={UserPlus} label="Nuevo cliente" />
-        <ShortcutCard to="/policies/new" icon={FilePlus} label="Nueva póliza" />
+        <ShortcutCard to="/policies/new" icon={FilePlus} label="Nuevo certificado" />
         <ShortcutCard to="/payments" icon={CreditCard} label="Registrar pago" />
         <ShortcutCard to="/incidents/new" icon={Stethoscope} label="Reportar siniestro" />
       </div>

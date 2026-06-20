@@ -217,7 +217,7 @@ function IncidentDetail() {
       <Tabs defaultValue="info">
         <TabsList>
           <TabsTrigger value="info">Siniestro</TabsTrigger>
-          <TabsTrigger value="insured">Asegurado y póliza</TabsTrigger>
+          <TabsTrigger value="insured">Asegurado y certificado</TabsTrigger>
           <TabsTrigger value="passes">Pases médicos ({passes.length})</TabsTrigger>
           <TabsTrigger value="history">Historial</TabsTrigger>
         </TabsList>
@@ -247,8 +247,8 @@ function IncidentDetail() {
             <Field label="CURP" value={incident.clients.curp ?? "—"} />
             <Field label="Fecha nacimiento" value={incident.clients.date_of_birth ?? "—"} />
             <Field label="Contratante" value={incident.policies.contracting_party ?? "—"} />
-            <Field label="Folio póliza" value={incident.policies.folio} />
-            <Field label="No. Póliza HIR" value={incident.policies.policy_number ?? "—"} />
+            <Field label="Folio certificado" value={incident.policies.folio} />
+            <Field label="No. Certificado HIR" value={incident.policies.policy_number ?? "—"} />
             <Field label="No. Certificado" value={incident.policies.certificate_number ?? "—"} />
             <Field label="Vigencia" value={`${incident.policies.start_date ?? "—"} → ${incident.policies.end_date ?? "—"}`} />
             <Field label="Suma asegurada" value={incident.policies.sum_insured ? `$${incident.policies.sum_insured}` : "—"} />
@@ -314,7 +314,7 @@ function IncidentDetail() {
           <div className="space-y-3 text-sm">
             <div className="bg-muted p-3 rounded">
               <div><b>Asegurado:</b> {incident.clients.first_name} {incident.clients.last_name}</div>
-              <div><b>Póliza:</b> {incident.policies.folio}</div>
+              <div><b>Certificado:</b> {incident.policies.folio}</div>
               <div><b>Accidente:</b> {incident.accident_date} {incident.accident_time}</div>
             </div>
             <div>

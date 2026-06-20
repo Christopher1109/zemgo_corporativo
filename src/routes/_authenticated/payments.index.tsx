@@ -142,7 +142,7 @@ function PaymentsList() {
           <TableHeader>
             <TableRow>
               <TableHead>Cliente</TableHead>
-              <TableHead>Póliza</TableHead>
+              <TableHead>Certificado</TableHead>
               <TableHead>Programa</TableHead>
               <TableHead className="text-right">Monto</TableHead>
               <TableHead>Vencimiento</TableHead>

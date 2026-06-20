@@ -196,7 +196,7 @@ export const generateCertificatePdf = createServerFn({ method: "POST" })
     page.drawText("CERTIFICADO DE COBERTURA", { x: 40, y, size: 14, font: bold });
     y -= 28;
     line("Folio:", pol.folio);
-    line("No. Póliza HIR:", pol.policy_number ?? "—");
+    line("No. Certificado HIR:", pol.policy_number ?? "—");
     line("No. Certificado:", pol.certificate_number ?? "—");
     line("Titular:", `${(pol as any).clients?.first_name ?? ""} ${(pol as any).clients?.last_name ?? ""}`);
     line("CURP:", (pol as any).clients?.curp ?? "—");
