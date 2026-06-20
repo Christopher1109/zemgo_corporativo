@@ -1,78 +1,92 @@
-## Plan de cambios
 
-Trabajo dividido en bloques. Los puntos **(A) Formato ABC** y **(B) Certificado de póliza** quedan pendientes hasta que subas los archivos — no los incluyo aquí.
+# Portal del Cliente
 
----
+Construcción del área de autoservicio en `/portal`, separada visualmente del CRM, con autenticación propia por CURP + código de 6 dígitos (sin usar `auth.users` de Supabase).
 
-### 1. Dashboard — reacomodo completo
+## Alcance (en este entregable)
 
-**Quitar:** Top 10 deudores, Distribución de pólizas activas (gráfica), tamaño excesivo de las demás gráficas.
+- Rutas, layout mobile-first y theming por programa
+- Auth por CURP + nombre → OTP de 6 dígitos (banner amarillo "MODO QA")
+- Sesión de 24h con cookie httpOnly
+- Dashboard, Pólizas, Pagos, Siniestros, Mi perfil, Logout
+- Reporte de siniestro y modificación de perfil desde el portal
+- Descarga de certificado (reusa generador React-PDF actual)
+- Generación de referencia bancaria (reusa RPC existente)
+- Stubs preparados para WhatsApp y Google Sheets
+- Migración con tablas, RLS y RPCs `SECURITY DEFINER`
 
-**Dejar / mover arriba:**
-- KPIs financieros nuevos en la fila superior: **Por cobrar**, **Cobrado del mes**, **Vencido**, **Nuevos clientes (mes)**.
-- **Atención inmediata** (la que ya existe) baja un nivel.
-- **Alertas y renovaciones** → bloque destacado arriba con los próximos a vencer (7/15/30 días) y vencidos, con enlace al módulo.
-- **Pendientes de siniestros** → tarjeta con conteos por estado (abiertos, en revisión, cerrados del mes).
-- **Pases médicos pendientes** → tarjeta con "por aceptar" y "por realizar".
-- **Últimos clientes registrados** (lista 5–8).
-- **Actividad reciente** (audit_log resumido: pagos, altas, siniestros, pases).
-- **Cobranza por mes** se queda, pero en tamaño compacto.
-- **Shortcuts**: Nuevo cliente, Registrar pago, Reportar siniestro, Nuevo pase.
+## Fuera de alcance (explícitamente diferido)
 
-### 2. Nuevo módulo "Finanzas" en sidebar
+- Envío real WhatsApp / lectura real Sheets / pago con tarjeta Banorte
+- Recuperación de cuenta sin CURP
+- Multi-idioma
 
-Mover ahí TODO el dashboard de cobranza que hoy está arriba en /payments:
-- Cobranza mensual
-- Top 10 clientes (este sí aquí, no en dashboard)
-- Pagos por método
-- Pagos pendientes, próximos, estimaciones, sugerencias
+## Arquitectura técnica
 
-`/payments` queda solo con el listado + acciones. Sidebar: **Finanzas** (ícono Wallet/TrendingUp).
+### Rutas (`src/routes/portal/*`)
+- `portal.tsx` — layout propio (sin app-shell del CRM), maneja redirect si hay sesión
+- `portal.index.tsx` — landing + formulario CURP/Nombre
+- `portal.verify.tsx` — OTP 6 inputs, contador reenviar, banner QA
+- `portal._app.tsx` — layout protegido (valida cookie vía server fn), nav inferior mobile / tabs desktop
+- `portal._app.dashboard.tsx`
+- `portal._app.policies.tsx`
+- `portal._app.payments.tsx`
+- `portal._app.incidents.tsx`
+- `portal._app.incidents.new.tsx`
+- `portal._app.profile.tsx`
+- `portal._app.logout.tsx`
 
-### 3. Alertas y renovaciones — visual semáforo + filtros
+Todas con `ssr: false` (el portal vive en cliente, igual que `_authenticated`).
 
-- Tarjeta completa del cliente coloreada:
-  - **Rojo** (bg + borde): vencido
-  - **Naranja**: ≤ 7 días por vencer
-  - **Sin color**: > 7 días
-- Filtros nuevos: **Todos / Vencidos / ≤7 días / ≤15 días / ≤30 días / >30 días**.
-- Buscador por cliente / póliza.
+### Auth model
+- No usa `auth.uid()`. Cookie httpOnly `portal_token` (token aleatorio 256-bit, `token_hash` SHA-256 guardado en DB).
+- Server functions del portal (NO `requireSupabaseAuth`) leen la cookie con `getRequestHeader('cookie')`, validan token contra `portal_sessions` usando `supabaseAdmin` (cargado dinámico dentro del handler), resuelven `client_id` y filtran TODAS las queries por ese `client_id`.
+- Las RPCs `SECURITY DEFINER` reciben el token, resuelven `client_id` internamente y solo operan sobre datos de ese cliente — defensa en profundidad.
 
-### 4. Reportes — vista unificada con tabs
+### Tablas nuevas (migración)
+- `portal_access_codes` (id, client_id FK, code_hash, expires_at, used_at, attempts, ip_address, created_at)
+- `portal_sessions` (id, client_id FK, token_hash UNIQUE, expires_at, revoked_at, ip_address, user_agent, created_at)
+- `sheet_sync_log` (id, sheet_id, started_at, ended_at, rows_detected, rows_imported, rows_skipped, status, error)
+- Índices en `code_hash`, `token_hash`, `expires_at`, `client_id`
+- GRANTs solo a `service_role` (acceso únicamente por RPC `SECURITY DEFINER`) + RLS habilitado con policy `USING (false)` para `anon`/`authenticated`
+- Llaves nuevas en `system_config` para WhatsApp y Google Sheets (insert idempotente)
 
-- Quitar la tarjeta "Mapa de pólizas" actual rota y reemplazar por una tarjeta llamada **Análisis geográfico** que abre `/reports?tab=geo`.
-- `/reports` por defecto abre **Cartera de clientes**.
-- **Tabs horizontales arriba**: Cartera · Cobranza · Siniestralidad · Renovaciones · Ventas por vendedor · Actividad del sistema · Análisis geográfico.
-- Cada tab renderiza el reporte ahí mismo + botones **Exportar PDF / Excel / CSV**.
-- Quitar "Mapa México" del sidebar.
-- Renombrar ruta `/reports/map` → integrada como tab `geo` (la ruta vieja redirige).
+### RPCs nuevas (en migración, `SECURITY DEFINER`)
+- `request_portal_access(_curp, _full_name)` — valida cliente, normaliza nombre (lower + unaccent), genera código, hashea (usa `crypt()` con bcrypt vía `pgcrypto`), invalida códigos previos, devuelve `{client_id, dev_code}` (el `dev_code` solo se devuelve si `system_config.portal.qa_mode = true`; en prod no se expone)
+- `verify_portal_code(_client_id, _code, _ip, _ua)` — verifica bcrypt, rate-limit 5 intentos / 15 min, crea sesión, devuelve token plano (único momento)
+- `resolve_portal_session(_token)` — devuelve client_id si válido
+- `get_portal_dashboard(_token)`, `get_portal_policies(_token)`, `get_portal_payments(_token)`, `get_portal_incidents(_token)`
+- `report_portal_incident(_token, _payload)` — reusa lógica de `report_incident` marcando `metadata.reported_from='portal'`
+- `update_portal_profile(_token, _changes)` — whitelist: phone, email, address; audit `CLIENT_SELF_UPDATED`
+- `revoke_portal_session(_token)`
 
-### 5. Sidebar — limpieza
+### Server functions (`src/lib/portal/*.functions.ts`)
+- `requestPortalAccess`, `verifyPortalCode` — devuelven datos + setean cookie (`setResponseHeader('set-cookie', ...)`)
+- `portalMe`, `portalDashboard`, `portalPolicies`, `portalPayments`, `portalIncidents`, `portalReportIncident`, `portalUpdateProfile`, `portalLogout`, `portalGenerateBankReference`, `portalCertificatePayload`
+- Helper `getPortalClientId()` lee cookie y llama `resolve_portal_session`; throw 401 si inválido
 
-- Quitar **Administración de usuarios**.
-- Quitar **Seats demo**.
-- Quitar **Mapa México**.
-- Agregar **Finanzas**.
+### Stubs preparados
+- `src/lib/whatsapp.ts` — interface `WhatsAppSender`, impl `StubSender` que `console.log` + inserta en `notifications` (channel='whatsapp')
+- `src/lib/google-sheets.ts` — interface `SheetsReader`, impl stub devuelve `[]`
+- `src/lib/sheets-sync.functions.ts` — server fn que loguea stub y escribe en `sheet_sync_log`
 
-### 6. Siniestros — verificación
+### Theming
+- Layout del portal usa `ProgramThemeProvider` con el programa de la primera póliza activa (o ABC por defecto)
+- Sin sidebar CRM. Header simple con logo HOPE + estado de sesión. Bottom nav en mobile (tabs).
 
-Revisar el formulario de reporte de siniestro contra los campos que la tabla `incidents` espera y confirmarte qué pide hoy vs. qué falta. Si está completo, no toco nada y te lo confirmo. Si falta algo evidente, te lo listo antes de cambiarlo.
+## Verificación
 
----
+1. Migración aplicada, tablas creadas con RLS
+2. Seed: usar un cliente existente con CURP del seed (lo identifico tras la migración)
+3. Flujo manual: `/portal` → ingresar CURP+nombre → ver banner amarillo con código → `/portal/verify` → ingresar → dashboard
+4. Verificar aislamiento: intentar acceder a `/portal/policies` con cookie inválida → redirect
+5. Verificar que reportar siniestro desde portal aparezca en `/incidents` del CRM con flag
 
-### Detalles técnicos
+## Entregables al terminar
 
-- **Dashboard**: nuevas RPC `get_dashboard_financials()` (sumas por cobrar / cobrado mes / vencido) y `get_dashboard_pending_ops()` (siniestros y pases por estado). Reutilizo `getAlertsOverview` para el bloque de alertas.
-- **Finanzas**: nueva ruta `/_authenticated/finance.tsx` que monta los componentes que hoy viven dentro de `payments.tsx`. Extraigo esos componentes a `src/components/finance/*` para reutilizar.
-- **Reportes**: refactor a `/_authenticated/reports.tsx` con `<Tabs>` shadcn + estado en URL search param. La ruta `/_authenticated/reports.map.tsx` redirige a `/reports?tab=geo`. Exportación: `papaparse` (CSV) + `xlsx` (Excel) + `@react-pdf/renderer` (PDF, ya instalado).
-- **Alertas**: actualizo `src/routes/_authenticated/alerts.tsx` con clases condicionales tipo `bg-destructive/10 border-destructive` y `bg-orange-500/10 border-orange-500`, filtro de bucket por días.
-- **Sidebar**: editar `src/components/app-shell.tsx` (quitar entradas, agregar Finanzas).
-- Sin cambios de DB salvo las 2 RPC mencionadas (read-only, sin tablas nuevas).
+1. URL del portal (`/portal`) y CURP de un cliente seed para probar
+2. Lista de RPCs creadas
+3. Confirmación de que el banner QA muestra el código
+4. Checklist con resultados
 
----
-
-### Pendientes que NO se tocan en este turno
-
-- (A) Alta de cliente al formato ABC — espero archivo.
-- (B) Plantilla del certificado — espero archivo.
-- (C) Verificación detallada del formulario de siniestros — te confirmo después de revisarlo, sin cambios si está completo.
+¿Procedo con la implementación?
