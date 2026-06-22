@@ -86,10 +86,11 @@ function MxMap({ byCode, loading }: { byCode: Map<string, Row>; loading: boolean
 
   const fillFor = (code: string) => {
     const r = byCode.get(code);
-    if (!r || Number(r.total) === 0) return "hsl(var(--muted))";
-    // green ramp using program color via CSS var fallback
-    const intensity = 0.25 + 0.75 * (Number(r.total) / max);
-    return `color-mix(in oklch, var(--program-primary, hsl(var(--primary))) ${Math.round(intensity * 100)}%, hsl(var(--muted)))`;
+    const base = "var(--muted)";
+    const accent = "var(--program-primary, var(--primary))";
+    if (!r || Number(r.total) === 0) return base;
+    const intensity = 0.35 + 0.65 * (Number(r.total) / max);
+    return `color-mix(in oklch, ${accent} ${Math.round(intensity * 100)}%, ${base})`;
   };
 
   const activeRow = active ? byCode.get(active) : null;
@@ -97,7 +98,7 @@ function MxMap({ byCode, loading }: { byCode: Map<string, Row>; loading: boolean
 
   return (
     <div className="grid gap-4 md:grid-cols-[1fr_280px]">
-      <div className="relative w-full rounded-md border bg-muted/20 overflow-hidden">
+      <div className="relative w-full rounded-md border bg-card overflow-hidden">
         <svg viewBox={MX_VIEWBOX} className="w-full h-auto block" role="img" aria-label="Mapa de México por estado">
           <g>
             {codes.map((code) => {
@@ -109,9 +110,10 @@ function MxMap({ byCode, loading }: { byCode: Map<string, Row>; loading: boolean
                   key={code}
                   d={MX_STATE_PATHS[code]}
                   fill={fillFor(code)}
-                  stroke={isActive ? "hsl(var(--foreground))" : "hsl(var(--border))"}
-                  strokeWidth={isActive ? 1.6 : 0.6}
-                  className="cursor-pointer transition-[stroke,filter] hover:brightness-110"
+                  stroke={isActive ? "var(--foreground)" : "var(--background)"}
+                  strokeWidth={isActive ? 1.4 : 0.8}
+                  vectorEffect="non-scaling-stroke"
+                  className="cursor-pointer transition-[stroke,filter] hover:brightness-95"
                   onMouseEnter={() => setHover(code)}
                   onMouseLeave={() => setHover((h) => (h === code ? null : h))}
                   onClick={() => setSelected((s) => (s === code ? null : code))}
@@ -129,7 +131,7 @@ function MxMap({ byCode, loading }: { byCode: Map<string, Row>; loading: boolean
         )}
         <div className="absolute bottom-2 left-2 flex items-center gap-2 rounded-md border bg-background/80 px-2 py-1 text-[11px] text-muted-foreground backdrop-blur">
           <span>0</span>
-          <div className="h-2 w-24 rounded-full" style={{ background: "linear-gradient(to right, hsl(var(--muted)), var(--program-primary, hsl(var(--primary))))" }} />
+          <div className="h-2 w-24 rounded-full" style={{ background: "linear-gradient(to right, var(--muted), var(--program-primary, var(--primary)))" }} />
           <span>{max}</span>
         </div>
       </div>
