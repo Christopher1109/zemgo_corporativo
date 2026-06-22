@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      _secret_keys: {
+        Row: {
+          created_at: string
+          name: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          value?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -193,6 +211,7 @@ export type Database = {
       }
       clients: {
         Row: {
+          address_full: string | null
           city: string | null
           colonia: string | null
           created_at: string
@@ -208,6 +227,7 @@ export type Database = {
           metadata: Json
           number: string | null
           phone: string | null
+          phone_alt: string | null
           referral_source_id: string | null
           rfc: string | null
           sales_rep_id: string | null
@@ -217,6 +237,7 @@ export type Database = {
           zip: string | null
         }
         Insert: {
+          address_full?: string | null
           city?: string | null
           colonia?: string | null
           created_at?: string
@@ -232,6 +253,7 @@ export type Database = {
           metadata?: Json
           number?: string | null
           phone?: string | null
+          phone_alt?: string | null
           referral_source_id?: string | null
           rfc?: string | null
           sales_rep_id?: string | null
@@ -241,6 +263,7 @@ export type Database = {
           zip?: string | null
         }
         Update: {
+          address_full?: string | null
           city?: string | null
           colonia?: string | null
           created_at?: string
@@ -256,6 +279,7 @@ export type Database = {
           metadata?: Json
           number?: string | null
           phone?: string | null
+          phone_alt?: string | null
           referral_source_id?: string | null
           rfc?: string | null
           sales_rep_id?: string | null
@@ -264,7 +288,15 @@ export type Database = {
           updated_at?: string
           zip?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_sales_rep_id_fkey"
+            columns: ["sales_rep_id"]
+            isOneToOne: false
+            referencedRelation: "sales_reps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dependents: {
         Row: {
@@ -1190,7 +1222,10 @@ export type Database = {
       }
       sales_reps: {
         Row: {
+          code: string | null
+          commission_rate: number | null
           created_at: string
+          created_by_sheet_sync: boolean
           full_name: string
           id: string
           is_active: boolean
@@ -1199,7 +1234,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          code?: string | null
+          commission_rate?: number | null
           created_at?: string
+          created_by_sheet_sync?: boolean
           full_name: string
           id?: string
           is_active?: boolean
@@ -1208,7 +1246,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          code?: string | null
+          commission_rate?: number | null
           created_at?: string
+          created_by_sheet_sync?: boolean
           full_name?: string
           id?: string
           is_active?: boolean
@@ -1258,39 +1299,129 @@ export type Database = {
       }
       sheet_sync_log: {
         Row: {
+          details: Json
+          duration_ms: number | null
           ended_at: string | null
           error: string | null
           id: string
           rows_detected: number | null
+          rows_failed: number
           rows_imported: number | null
+          rows_new: number
           rows_skipped: number | null
+          rows_updated: number
           sheet_id: string
+          sheet_program: string | null
           started_at: string
           status: string
+          warnings: Json
         }
         Insert: {
+          details?: Json
+          duration_ms?: number | null
           ended_at?: string | null
           error?: string | null
           id?: string
           rows_detected?: number | null
+          rows_failed?: number
           rows_imported?: number | null
+          rows_new?: number
           rows_skipped?: number | null
+          rows_updated?: number
           sheet_id: string
+          sheet_program?: string | null
           started_at?: string
           status?: string
+          warnings?: Json
         }
         Update: {
+          details?: Json
+          duration_ms?: number | null
           ended_at?: string | null
           error?: string | null
           id?: string
           rows_detected?: number | null
+          rows_failed?: number
           rows_imported?: number | null
+          rows_new?: number
           rows_skipped?: number | null
+          rows_updated?: number
           sheet_id?: string
+          sheet_program?: string | null
           started_at?: string
           status?: string
+          warnings?: Json
         }
         Relationships: []
+      }
+      sheet_synced_rows: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          error_message: string | null
+          folio: string | null
+          id: string
+          last_synced_at: string
+          policy_id: string | null
+          raw_data: Json
+          row_hash: string
+          row_number: number
+          sheet_id: string
+          sheet_program: string
+          status: string
+          updated_at: string
+          warnings: Json
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          folio?: string | null
+          id?: string
+          last_synced_at?: string
+          policy_id?: string | null
+          raw_data?: Json
+          row_hash: string
+          row_number: number
+          sheet_id: string
+          sheet_program: string
+          status?: string
+          updated_at?: string
+          warnings?: Json
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          folio?: string | null
+          id?: string
+          last_synced_at?: string
+          policy_id?: string | null
+          raw_data?: Json
+          row_hash?: string
+          row_number?: number
+          sheet_id?: string
+          sheet_program?: string
+          status?: string
+          updated_at?: string
+          warnings?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sheet_synced_rows_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sheet_synced_rows_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_config: {
         Row: {
@@ -1401,6 +1532,8 @@ export type Database = {
       generate_bank_reference: { Args: { _payment_id: string }; Returns: Json }
       get_action_items: { Args: { _program_id: string }; Returns: Json }
       get_dashboard_kpis: { Args: { _program_id: string }; Returns: Json }
+      get_google_sheets_credentials: { Args: never; Returns: Json }
+      get_google_sheets_credentials_meta: { Args: never; Returns: Json }
       get_policies_by_state: {
         Args: { _program_id: string }
         Returns: {
@@ -1547,6 +1680,10 @@ export type Database = {
       revoke_portal_session: { Args: { _token: string }; Returns: undefined }
       run_pass_expiration_check: { Args: never; Returns: Json }
       run_payment_housekeeping: { Args: never; Returns: Json }
+      save_google_sheets_credentials: {
+        Args: { _json: Json }
+        Returns: undefined
+      }
       set_medical_pass_pdf_url: {
         Args: { _pass_id: string; _pdf_url: string }
         Returns: undefined
