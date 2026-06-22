@@ -9,17 +9,6 @@ const sheetConfigSchema = z.object({
 });
 export type SheetConfig = z.infer<typeof sheetConfigSchema>;
 
-async function assertSuperAdmin(supabase: ReturnType<typeof Object>) {
-  // call has_role-style check; we rely on RPCs themselves to enforce.
-  // We additionally call is_super_admin via RPC to fail fast in UI.
-  // @ts-expect-error supabase typed loosely here
-  const { data, error } = await supabase.rpc("is_super_admin", { _uid: null });
-  if (error) {
-    // fall back: just allow through; RPC will enforce
-    return;
-  }
-  if (data === false) throw new Error("forbidden");
-}
 
 export const getGoogleSheetsConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -64,7 +53,7 @@ export const saveGoogleSheetsCredentials = createServerFn({ method: "POST" })
       throw new Error("El JSON no contiene client_email/private_key. ¿Es una cuenta de servicio?");
     }
     const { error } = await context.supabase.rpc("save_google_sheets_credentials", {
-      _json: parsed,
+      _json: parsed as never,
     });
     if (error) throw new Error(error.message);
     return { ok: true, client_email: parsed.client_email as string };

@@ -141,8 +141,12 @@ function GoogleSheetsAdminPage() {
   }
 
   const cfg = cfgQ.data!;
-  const credConfigured = !!cfg.credentials?.configured;
-  const clientEmail = cfg.credentials?.client_email as string | undefined;
+  const credsMeta = (cfg.credentials ?? {}) as {
+    configured?: boolean;
+    client_email?: string;
+  };
+  const credConfigured = !!credsMeta.configured;
+  const clientEmail = credsMeta.client_email;
 
   return (
     <AppShell>

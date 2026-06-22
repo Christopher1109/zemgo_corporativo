@@ -47,6 +47,7 @@ import { Route as PortalAppIncidentsNewRouteImport } from './routes/portal._app.
 import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
 import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
 import { Route as ApiPublicHooksBankReconciliationRouteImport } from './routes/api/public/hooks/bank-reconciliation'
+import { Route as AuthenticatedAdminIntegrationsGoogleSheetsRouteImport } from './routes/_authenticated/admin.integrations.google-sheets'
 
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
@@ -249,6 +250,12 @@ const ApiPublicHooksBankReconciliationRoute =
     path: '/api/public/hooks/bank-reconciliation',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedAdminIntegrationsGoogleSheetsRoute =
+  AuthenticatedAdminIntegrationsGoogleSheetsRouteImport.update({
+    id: '/admin/integrations/google-sheets',
+    path: '/admin/integrations/google-sheets',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -283,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
+  '/admin/integrations/google-sheets': typeof AuthenticatedAdminIntegrationsGoogleSheetsRoute
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
@@ -316,6 +324,7 @@ export interface FileRoutesByTo {
   '/incidents': typeof AuthenticatedIncidentsIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
+  '/admin/integrations/google-sheets': typeof AuthenticatedAdminIntegrationsGoogleSheetsRoute
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
@@ -357,6 +366,7 @@ export interface FileRoutesById {
   '/_authenticated/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
+  '/_authenticated/admin/integrations/google-sheets': typeof AuthenticatedAdminIntegrationsGoogleSheetsRoute
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
@@ -397,6 +407,7 @@ export interface FileRouteTypes {
     | '/incidents/'
     | '/payments/'
     | '/policies/'
+    | '/admin/integrations/google-sheets'
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/incidents'
     | '/payments'
     | '/policies'
+    | '/admin/integrations/google-sheets'
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
@@ -470,6 +482,7 @@ export interface FileRouteTypes {
     | '/_authenticated/incidents/'
     | '/_authenticated/payments/'
     | '/_authenticated/policies/'
+    | '/_authenticated/admin/integrations/google-sheets'
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
@@ -756,6 +769,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksBankReconciliationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/integrations/google-sheets': {
+      id: '/_authenticated/admin/integrations/google-sheets'
+      path: '/admin/integrations/google-sheets'
+      fullPath: '/admin/integrations/google-sheets'
+      preLoaderRoute: typeof AuthenticatedAdminIntegrationsGoogleSheetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -835,6 +855,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminIntegrationsGoogleSheetsRoute: typeof AuthenticatedAdminIntegrationsGoogleSheetsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -847,6 +868,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminIntegrationsGoogleSheetsRoute:
+    AuthenticatedAdminIntegrationsGoogleSheetsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
