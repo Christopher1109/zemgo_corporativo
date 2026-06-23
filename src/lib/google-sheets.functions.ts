@@ -125,7 +125,8 @@ export const runGoogleSheetsSyncNow = createServerFn({ method: "POST" })
       headers: { "content-type": "application/json" },
       body: JSON.stringify(data.sheet_id ? { sheet_id: data.sheet_id } : {}),
     });
-    const json = await res.json();
-    return json as { ok: boolean; results?: unknown; error?: string };
+    const json = (await res.json()) as { ok: boolean; results?: unknown; error?: string };
+    return { ok: json.ok, error: json.error, results: JSON.stringify(json.results ?? null) };
   });
+
 
