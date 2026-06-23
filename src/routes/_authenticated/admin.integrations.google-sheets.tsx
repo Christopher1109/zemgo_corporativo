@@ -70,7 +70,35 @@ export const Route = createFileRoute("/_authenticated/admin/integrations/google-
 });
 
 function GoogleSheetsAdminPage() {
+  const { data: isSuperAdmin, isLoading: roleLoading } = useIsSuperAdmin();
   const qc = useQueryClient();
+  if (roleLoading) {
+    return (
+      <AppShell>
+        <div className="p-8 flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" /> Verificando permisos…
+        </div>
+      </AppShell>
+    );
+  }
+  if (!isSuperAdmin) {
+    return (
+      <AppShell>
+        <div className="max-w-2xl mx-auto p-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <ShieldAlert className="h-5 w-5" /> Acceso restringido
+              </CardTitle>
+              <CardDescription>
+                Esta pantalla solo está disponible para super administradores.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      </AppShell>
+    );
+  }
   const fetchConfig = useServerFn(getGoogleSheetsConfig);
   const fetchLog = useServerFn(listSheetSyncLog);
   const saveCreds = useServerFn(saveGoogleSheetsCredentials);
