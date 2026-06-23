@@ -36,6 +36,7 @@ import {
   listSheetSyncLog,
   runGoogleSheetsSyncNow,
 } from "@/lib/google-sheets.functions";
+import { SheetProblemRowsCard } from "@/components/admin/sheet-problem-rows";
 
 export const Route = createFileRoute("/_authenticated/admin/integrations/google-sheets")({
   component: GoogleSheetsAdminPage,
@@ -382,7 +383,10 @@ function GoogleSheetsAdminPage() {
           </CardContent>
         </Card>
 
-        {/* C — Historial */}
+        {/* C — Filas con problemas */}
+        <SheetProblemRowsCard />
+
+        {/* D — Historial */}
         <Card>
           <CardHeader>
             <CardTitle>Historial de sincronizaciones</CardTitle>
