@@ -188,8 +188,8 @@ export function SheetProblemRowsCard() {
             {filtered.map((r) => {
               const isOpen = expanded === r.id;
               return (
-                <>
-                  <TableRow key={r.id}>
+                <Fragment key={r.id}>
+                  <TableRow>
                     <TableCell>
                       <Button
                         variant="ghost"
@@ -237,7 +237,7 @@ export function SheetProblemRowsCard() {
                     </TableCell>
                   </TableRow>
                   {isOpen && (
-                    <TableRow key={r.id + "-raw"}>
+                    <TableRow>
                       <TableCell colSpan={7} className="bg-muted/40">
                         <pre className="text-xs whitespace-pre-wrap font-mono overflow-x-auto">
                           {JSON.stringify(r.raw_data, null, 2)}
@@ -245,7 +245,7 @@ export function SheetProblemRowsCard() {
                       </TableCell>
                     </TableRow>
                   )}
-                </>
+                </Fragment>
               );
             })}
           </TableBody>
