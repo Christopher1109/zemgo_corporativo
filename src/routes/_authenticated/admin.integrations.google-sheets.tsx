@@ -145,7 +145,7 @@ function GoogleSheetsAdminPage() {
         toast.success("Sincronización ejecutada");
         qc.invalidateQueries({ queryKey: ["gs-log"] });
       } else {
-        toast.info(res.message ?? "");
+        toast.error(res.error ?? "Sincronización falló");
       }
     },
     onError: (e: Error) => toast.error(e.message),
