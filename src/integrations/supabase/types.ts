@@ -1529,6 +1529,20 @@ export type Database = {
         Args: { _reason: string; _user_id: string }
         Returns: undefined
       }
+      finish_sheet_sync: {
+        Args: {
+          _details?: Json
+          _detected: number
+          _error?: string
+          _failed: number
+          _log_id: string
+          _new: number
+          _skipped: number
+          _updated: number
+          _warnings?: Json
+        }
+        Returns: undefined
+      }
       generate_bank_reference: { Args: { _payment_id: string }; Returns: Json }
       get_action_items: { Args: { _program_id: string }; Returns: Json }
       get_dashboard_kpis: { Args: { _program_id: string }; Returns: Json }
@@ -1599,6 +1613,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_valid_curp: { Args: { _curp: string }; Returns: boolean }
       issue_medical_pass: {
         Args: { _director_id: string; _hospital: string; _incident_id: string }
         Returns: string
@@ -1620,6 +1635,16 @@ export type Database = {
         Returns: Json
       }
       next_policy_folio: { Args: { _program_id: string }; Returns: string }
+      process_sheet_row: {
+        Args: {
+          _program: string
+          _row_data: Json
+          _row_hash: string
+          _row_number: number
+          _sheet_id: string
+        }
+        Returns: Json
+      }
       reactivate_user: { Args: { _user_id: string }; Returns: undefined }
       reconcile_payment_by_reference: {
         Args: {
@@ -1688,6 +1713,10 @@ export type Database = {
         Args: { _pass_id: string; _pdf_url: string }
         Returns: undefined
       }
+      start_sheet_sync: {
+        Args: { _program: string; _sheet_id: string }
+        Returns: string
+      }
       unaccent: { Args: { "": string }; Returns: string }
       update_policy: {
         Args: { _changes: Json; _policy_id: string }
@@ -1705,6 +1734,7 @@ export type Database = {
         Args: { _program_id: string; _role_text: string; _user_id: string }
         Returns: Json
       }
+      upsert_sales_rep_by_name: { Args: { _name: string }; Returns: string }
       verify_portal_code: {
         Args: { _client_id: string; _code: string; _ip: string; _ua: string }
         Returns: Json

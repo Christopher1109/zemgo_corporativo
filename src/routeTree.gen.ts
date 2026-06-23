@@ -44,6 +44,7 @@ import { Route as AuthenticatedIncidentsDashboardRouteImport } from './routes/_a
 import { Route as AuthenticatedIncidentsIncidentIdRouteImport } from './routes/_authenticated/incidents.$incidentId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
 import { Route as PortalAppIncidentsNewRouteImport } from './routes/portal._app.incidents.new'
+import { Route as ApiPublicHooksSheetsSyncRouteImport } from './routes/api/public/hooks/sheets-sync'
 import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
 import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
 import { Route as ApiPublicHooksBankReconciliationRouteImport } from './routes/api/public/hooks/bank-reconciliation'
@@ -232,6 +233,12 @@ const PortalAppIncidentsNewRoute = PortalAppIncidentsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => PortalAppIncidentsRoute,
 } as any)
+const ApiPublicHooksSheetsSyncRoute =
+  ApiPublicHooksSheetsSyncRouteImport.update({
+    id: '/api/public/hooks/sheets-sync',
+    path: '/api/public/hooks/sheets-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksPaymentHousekeepingRoute =
   ApiPublicHooksPaymentHousekeepingRouteImport.update({
     id: '/api/public/hooks/payment-housekeeping',
@@ -294,6 +301,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
+  '/api/public/hooks/sheets-sync': typeof ApiPublicHooksSheetsSyncRoute
   '/portal/incidents/new': typeof PortalAppIncidentsNewRoute
 }
 export interface FileRoutesByTo {
@@ -328,6 +336,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
+  '/api/public/hooks/sheets-sync': typeof ApiPublicHooksSheetsSyncRoute
   '/portal/incidents/new': typeof PortalAppIncidentsNewRoute
 }
 export interface FileRoutesById {
@@ -370,6 +379,7 @@ export interface FileRoutesById {
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
   '/api/public/hooks/payment-housekeeping': typeof ApiPublicHooksPaymentHousekeepingRoute
+  '/api/public/hooks/sheets-sync': typeof ApiPublicHooksSheetsSyncRoute
   '/portal/_app/incidents/new': typeof PortalAppIncidentsNewRoute
 }
 export interface FileRouteTypes {
@@ -411,6 +421,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
+    | '/api/public/hooks/sheets-sync'
     | '/portal/incidents/new'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
+    | '/api/public/hooks/sheets-sync'
     | '/portal/incidents/new'
   id:
     | '__root__'
@@ -486,6 +498,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
     | '/api/public/hooks/payment-housekeeping'
+    | '/api/public/hooks/sheets-sync'
     | '/portal/_app/incidents/new'
   fileRoutesById: FileRoutesById
 }
@@ -499,6 +512,7 @@ export interface RootRouteChildren {
   ApiPublicHooksBankReconciliationRoute: typeof ApiPublicHooksBankReconciliationRoute
   ApiPublicHooksPassExpirationRoute: typeof ApiPublicHooksPassExpirationRoute
   ApiPublicHooksPaymentHousekeepingRoute: typeof ApiPublicHooksPaymentHousekeepingRoute
+  ApiPublicHooksSheetsSyncRoute: typeof ApiPublicHooksSheetsSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -748,6 +762,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalAppIncidentsNewRouteImport
       parentRoute: typeof PortalAppIncidentsRoute
     }
+    '/api/public/hooks/sheets-sync': {
+      id: '/api/public/hooks/sheets-sync'
+      path: '/api/public/hooks/sheets-sync'
+      fullPath: '/api/public/hooks/sheets-sync'
+      preLoaderRoute: typeof ApiPublicHooksSheetsSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/payment-housekeeping': {
       id: '/api/public/hooks/payment-housekeeping'
       path: '/api/public/hooks/payment-housekeeping'
@@ -932,6 +953,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksPassExpirationRoute: ApiPublicHooksPassExpirationRoute,
   ApiPublicHooksPaymentHousekeepingRoute:
     ApiPublicHooksPaymentHousekeepingRoute,
+  ApiPublicHooksSheetsSyncRoute: ApiPublicHooksSheetsSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
