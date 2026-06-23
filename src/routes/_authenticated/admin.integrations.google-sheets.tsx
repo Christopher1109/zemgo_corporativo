@@ -12,7 +12,7 @@ import {
   Play,
   ShieldAlert,
 } from "lucide-react";
-import { AppShell } from "@/components/app-shell";
+import { AppShell, useIsSuperAdmin } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
