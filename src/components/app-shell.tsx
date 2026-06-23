@@ -53,6 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data: isSuperAdmin } = useIsSuperAdmin();
 
 
 
