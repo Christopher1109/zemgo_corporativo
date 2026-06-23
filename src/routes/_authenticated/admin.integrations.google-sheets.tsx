@@ -36,6 +36,7 @@ import {
   listSheetSyncLog,
   runGoogleSheetsSyncNow,
 } from "@/lib/google-sheets.functions";
+import { SheetProblemRowsCard } from "@/components/admin/sheet-problem-rows";
 
 export const Route = createFileRoute("/_authenticated/admin/integrations/google-sheets")({
   component: GoogleSheetsAdminPage,
