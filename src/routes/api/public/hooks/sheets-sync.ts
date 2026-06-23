@@ -114,7 +114,7 @@ export const Route = createFileRoute("/api/public/hooks/sheets-sync")({
             return Response.json({ ok: false, reason: "disabled" });
           }
           const allSheets = (cfg?.find((c: any) => c.key === "google_sheets.sheets")
-            ?.value ?? []) as SheetCfg[];
+            ?.value ?? []) as unknown as SheetCfg[];
           const sheets = bodyJson.sheet_id
             ? allSheets.filter((s) => s.sheet_id === bodyJson.sheet_id)
             : allSheets;
