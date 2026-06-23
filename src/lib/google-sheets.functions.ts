@@ -105,6 +105,91 @@ export const listSheetSyncLog = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+export const listSheetProblemRows = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("sheet_synced_rows")
+      .select("id, sheet_id, sheet_program, row_number, folio, status, error_message, warnings, raw_data, last_synced_at")
+      .in("status", ["failed"])
+      .order("last_synced_at", { ascending: false })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const ignoreSheetRow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("is_super_admin", {
+      _user_id: context.userId,
+    });
+    if (!isAdmin) throw new Error("forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("sheet_synced_rows")
+      .update({ status: "ignored", error_message: null })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const retrySheetRow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("is_super_admin", {
+      _user_id: context.userId,
+    });
+    if (!isAdmin) throw new Error("forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("sheet_synced_rows")
+      .select("sheet_id, sheet_program, row_number")
+      .eq("id", data.id)
+      .single();
+    if (error || !row) throw new Error(error?.message ?? "row not found");
+    const { data: cfg } = await supabaseAdmin
+      .from("system_config")
+      .select("value")
+      .eq("key", "google_sheets.sheets")
+      .single();
+    const sheets = z
+      .array(sheetConfigSchema)
+      .parse(cfg?.value ?? []);
+    const s = sheets.find((x) => x.sheet_id === row.sheet_id);
+    if (!s) throw new Error("config de sheet ya no existe");
+    const { data: creds } = await supabaseAdmin.rpc("get_google_sheets_credentials");
+    if (!creds) throw new Error("sin credenciales");
+    const { readAndNormalizeSheet } = await import("./google-sheets.server");
+    const rows = await readAndNormalizeSheet(
+      creds as never,
+      row.sheet_id,
+      s.tab,
+    );
+    const target = rows.find((r) => r.row_number === row.row_number);
+    if (!target) {
+      // Row disappeared from sheet → mark ignored
+      await supabaseAdmin
+        .from("sheet_synced_rows")
+        .update({ status: "ignored", error_message: "Fila ya no existe en el sheet" })
+        .eq("id", data.id);
+      return { ok: true, action: "vanished" as const };
+    }
+    const { data: res, error: rpcErr } = await supabaseAdmin.rpc("process_sheet_row", {
+      _sheet_id: row.sheet_id,
+      _program: row.sheet_program,
+      _row_number: target.row_number,
+      _row_hash: target.hash,
+      _row_data: target.data,
+    });
+    if (rpcErr) throw new Error(rpcErr.message);
+    return { ok: true, result: res as { action: string } };
+  });
+
+
+
 // Trigger sync now: super-admins only. Calls the public hook same-origin.
 export const runGoogleSheetsSyncNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
