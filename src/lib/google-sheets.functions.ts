@@ -105,16 +105,27 @@ export const listSheetSyncLog = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
-// Phase 2 placeholder. Returns ok=false so the UI can show a clear message.
+// Trigger sync now: super-admins only. Calls the public hook same-origin.
 export const runGoogleSheetsSyncNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
     z.object({ sheet_id: z.string().optional() }).parse(d ?? {}),
   )
-  .handler(async () => {
-    return {
-      ok: false,
-      message:
-        "La sincronización se implementa en la Fase 2. La Fase 1 cubre credenciales, prueba de conexión, configuración y bitácora.",
-    };
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("is_super_admin", {
+      _user_id: context.userId,
+    });
+    if (!isAdmin) throw new Error("forbidden");
+    const { getRequestHost } = await import("@tanstack/react-start/server");
+    const host = getRequestHost();
+    const proto = host.startsWith("localhost") ? "http" : "https";
+    const url = `${proto}://${host}/api/public/hooks/sheets-sync`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(data.sheet_id ? { sheet_id: data.sheet_id } : {}),
+    });
+    const json = await res.json();
+    return json as { ok: boolean; results?: unknown; error?: string };
   });
+
