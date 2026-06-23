@@ -383,7 +383,10 @@ function GoogleSheetsAdminPage() {
           </CardContent>
         </Card>
 
-        {/* C — Historial */}
+        {/* C — Filas con problemas */}
+        <SheetProblemRowsCard />
+
+        {/* D — Historial */}
         <Card>
           <CardHeader>
             <CardTitle>Historial de sincronizaciones</CardTitle>
