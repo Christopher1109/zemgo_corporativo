@@ -95,10 +95,10 @@ function PortalLanding() {
         <div className="w-full max-w-md">
           {/* mobile-only header */}
           <div className="md:hidden mb-6 flex flex-col items-center text-center">
-            <div className="rounded-xl bg-[#0a1628] px-4 py-3 mb-3 flex items-center gap-3">
-              <HopeLogo variant="light" className="h-10 w-auto" />
+            <div className="rounded-xl bg-[#0a1628] px-5 py-4 mb-3 flex items-center gap-3">
+              <HopeLogo variant="light" className="h-12 w-auto" />
               <div className="text-left leading-tight text-white">
-                <div className="text-sm font-semibold">Zemgo</div>
+                <div className="text-base font-bold">ZEMGO</div>
                 <div className="text-[10px] uppercase tracking-widest text-slate-300">
                   Agente de seguros y fianzas
                 </div>
