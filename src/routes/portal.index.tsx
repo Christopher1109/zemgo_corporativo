@@ -146,13 +146,13 @@ function PortalLanding() {
 
           <p className="mt-6 text-center text-xs text-slate-500">
             ¿No estás registrado? Visita{" "}
-            <a href="https://Zemgo" className="font-medium text-slate-700 underline">
-              Zemgo
+            <a href="https://ZEMGO" className="font-medium text-slate-700 underline">
+              ZEMGO
             </a>
           </p>
           <p className="mt-2 text-center text-xs text-slate-400">
             <Link to="/auth" className="hover:underline">
-              Acceso para personal Zemgo
+              Acceso para personal ZEMGO
             </Link>
           </p>
         </div>
