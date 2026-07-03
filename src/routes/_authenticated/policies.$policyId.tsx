@@ -21,7 +21,7 @@ import { EditPolicyDialog } from "@/components/policies/EditPolicyDialog";
 import { RenewPolicyDialog } from "@/components/policies/RenewPolicyDialog";
 
 export const Route = createFileRoute("/_authenticated/policies/$policyId")({
-  head: () => ({ meta: [{ title: "Detalle de certificado — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Detalle de certificado — Zemgo" }] }),
   component: PolicyDetail,
 });
 

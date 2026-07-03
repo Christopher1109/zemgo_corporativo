@@ -18,7 +18,7 @@ import { reportIncident } from "@/lib/incidents.functions";
 const searchSchema = z.object({ policy: z.string().uuid().optional() });
 
 export const Route = createFileRoute("/_authenticated/incidents/new")({
-  head: () => ({ meta: [{ title: "Reportar siniestro — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Reportar siniestro — Zemgo" }] }),
   validateSearch: searchSchema,
   component: NewIncident,
 });

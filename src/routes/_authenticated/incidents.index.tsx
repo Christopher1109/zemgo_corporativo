@@ -15,7 +15,7 @@ import { getMedicalPassSignedUrl } from "@/lib/incidents.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/incidents/")({
-  head: () => ({ meta: [{ title: "Siniestros — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Siniestros — Zemgo" }] }),
   component: IncidentsList,
 });
 

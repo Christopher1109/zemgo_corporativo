@@ -80,7 +80,7 @@ function PortalLanding() {
           </div>
         </div>
         <div className="relative z-10 text-xs text-slate-400">
-          © {new Date().getFullYear()} HOPE Consulting · Portal del Asegurado
+          © {new Date().getFullYear()} Zemgo · Portal del Asegurado
         </div>
       </div>
 
@@ -134,13 +134,13 @@ function PortalLanding() {
 
           <p className="mt-6 text-center text-xs text-slate-500">
             ¿No estás registrado? Visita{" "}
-            <a href="https://www.hopeconsulting.mx" className="font-medium text-slate-700 underline">
-              www.hopeconsulting.mx
+            <a href="https://Zemgo" className="font-medium text-slate-700 underline">
+              Zemgo
             </a>
           </p>
           <p className="mt-2 text-center text-xs text-slate-400">
             <Link to="/auth" className="hover:underline">
-              Acceso para personal HOPE
+              Acceso para personal Zemgo
             </Link>
           </p>
         </div>
