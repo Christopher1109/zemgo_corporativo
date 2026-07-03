@@ -62,11 +62,11 @@ function PortalLanding() {
       <div className="relative hidden md:flex flex-col justify-between p-10 text-white overflow-hidden bg-[#0a1628]">
         <div className="absolute inset-0 opacity-[0.07] pointer-events-none"
              style={{ background: "radial-gradient(ellipse at top right, #facc15 0%, transparent 60%)" }} />
-        <div className="relative z-10 flex items-center gap-3">
-          <HopeLogo variant="light" className="h-14 w-auto" />
+        <div className="relative z-10 flex items-center gap-4">
+          <HopeLogo variant="light" className="h-20 w-auto" />
           <div className="leading-tight">
-            <div className="text-lg font-semibold tracking-tight">Zemgo</div>
-            <div className="text-[11px] uppercase tracking-widest text-slate-300">
+            <div className="text-2xl font-bold tracking-tight">ZEMGO</div>
+            <div className="text-xs uppercase tracking-widest text-slate-300">
               Agente de seguros y fianzas
             </div>
           </div>
