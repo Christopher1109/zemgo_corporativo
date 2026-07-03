@@ -183,7 +183,7 @@ function GoogleSheetsAdminPage() {
         <div>
           <h1 className="text-2xl font-semibold">Integración Google Sheets</h1>
           <p className="text-muted-foreground text-sm">
-            Sincroniza los 3 sheets de HOPE Consulting con el CRM. El CRM solo lee — AutoCrat sigue
+            Sincroniza los 3 sheets de Zemgo con el CRM. El CRM solo lee — AutoCrat sigue
             generando los certificados.
           </p>
         </div>

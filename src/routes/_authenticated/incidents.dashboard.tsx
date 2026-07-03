@@ -10,7 +10,7 @@ import { useProgram } from "@/lib/program-context";
 import { INCIDENT_STATUS } from "./incidents.index";
 
 export const Route = createFileRoute("/_authenticated/incidents/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard de siniestros — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Dashboard de siniestros — Zemgo" }] }),
   component: IncidentsDashboard,
 });
 

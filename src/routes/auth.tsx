@@ -14,7 +14,7 @@ import { HopeLogo } from "@/components/hope-logo";
 const USERNAME_DOMAIN = "hope.local";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Iniciar sesión — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Iniciar sesión — Zemgo" }] }),
   component: AuthPage,
 });
 

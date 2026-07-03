@@ -100,7 +100,7 @@ export function ReportTablePdf({
 
           <View style={styles.footer} fixed>
             <Text>Generado por {generatedBy} · {new Date().toLocaleString("es-MX")}</Text>
-            <Text>HOPE Consulting · Página {pIdx + 1} / {total}</Text>
+            <Text>Zemgo · Página {pIdx + 1} / {total}</Text>
           </View>
         </Page>
       ))}

@@ -12,7 +12,7 @@ import {
 } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/finance")({
-  head: () => ({ meta: [{ title: "Finanzas — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Finanzas — Zemgo" }] }),
   component: FinancePage,
 });
 

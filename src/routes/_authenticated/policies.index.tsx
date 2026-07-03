@@ -12,7 +12,7 @@ import { useProgram } from "@/lib/program-context";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/policies/")({
-  head: () => ({ meta: [{ title: "Certificados — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Certificados — Zemgo" }] }),
   component: PoliciesList,
 });
 

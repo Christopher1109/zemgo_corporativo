@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createPolicy } from "@/lib/policies.functions";
 
 export const Route = createFileRoute("/_authenticated/policies/new")({
-  head: () => ({ meta: [{ title: "Nuevo certificado — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Nuevo certificado — Zemgo" }] }),
   component: NewPolicy,
 });
 

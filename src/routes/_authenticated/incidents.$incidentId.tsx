@@ -20,7 +20,7 @@ import { issueMedicalPass, rejectIncident, revokeMedicalPass, getMedicalPassSign
 import { INCIDENT_STATUS } from "./incidents.index";
 
 export const Route = createFileRoute("/_authenticated/incidents/$incidentId")({
-  head: () => ({ meta: [{ title: "Detalle de siniestro — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Detalle de siniestro — Zemgo" }] }),
   component: IncidentDetail,
 });
 

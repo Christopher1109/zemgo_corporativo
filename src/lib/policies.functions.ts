@@ -184,7 +184,7 @@ export const generateCertificatePdf = createServerFn({ method: "POST" })
     const b = parseInt(hex.slice(5, 7), 16) / 255;
 
     page.drawRectangle({ x: 0, y: 742, width: 612, height: 50, color: rgb(r, g, b) });
-    page.drawText("HOPE CONSULTING", { x: 40, y: 760, size: 18, font: bold, color: rgb(1, 1, 1) });
+    page.drawText("ZEMGO", { x: 40, y: 760, size: 18, font: bold, color: rgb(1, 1, 1) });
     page.drawText((pol as any).programs?.name ?? "", { x: 40, y: 746, size: 10, font, color: rgb(1, 1, 1) });
 
     let y = 700;

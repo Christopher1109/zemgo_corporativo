@@ -12,7 +12,7 @@ import { Settings as SettingsIcon, Bell, Save, X, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "Configuración — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Configuración — Zemgo" }] }),
   component: SettingsPage,
 });
 

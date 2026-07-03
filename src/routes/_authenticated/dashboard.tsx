@@ -26,7 +26,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — HOPE Consulting" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — Zemgo" }] }),
   component: Dashboard,
 });
 

@@ -72,6 +72,6 @@ export function programPalette(code: string): ProgramPalette {
 }
 
 export const HOPE_FOOTER =
-  "Programa administrado, operado y respaldado por: HOPE CONSULTING";
+  "Programa administrado, operado y respaldado por: ZEMGO";
 
 export const PAGE_SIZE_LETTER = { width: 612, height: 792 } as const;
