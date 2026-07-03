@@ -27,7 +27,7 @@ export function toCSV(spec: ReportSpec, rows: any[]): Uint8Array {
 export async function toXLSX(spec: ReportSpec, rows: any[], filters: ReportFilters, by: string, kpis?: Kpi[]): Promise<Uint8Array> {
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Zemgo"; wb.created = new Date();
+  wb.creator = "ZEMGO"; wb.created = new Date();
   const ws = wb.addWorksheet(spec.name.slice(0, 28));
 
   ws.mergeCells(1, 1, 1, spec.columns.length);

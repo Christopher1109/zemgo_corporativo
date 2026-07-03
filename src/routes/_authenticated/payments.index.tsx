@@ -14,7 +14,7 @@ import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
 import { MarkPaidDialog } from "@/components/payments/mark-paid-dialog";
 
 export const Route = createFileRoute("/_authenticated/payments/")({
-  head: () => ({ meta: [{ title: "Cobranza — Zemgo" }] }),
+  head: () => ({ meta: [{ title: "Cobranza — ZEMGO" }] }),
   component: PaymentsList,
 });
 

@@ -14,7 +14,7 @@ import { HopeLogo } from "@/components/hope-logo";
 const USERNAME_DOMAIN = "hope.local";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Iniciar sesión — Zemgo" }] }),
+  head: () => ({ meta: [{ title: "Iniciar sesión — ZEMGO" }] }),
   component: AuthPage,
 });
 
@@ -52,7 +52,7 @@ function AuthPage() {
           <div className="mx-auto rounded-xl bg-[#0a1628] px-5 py-3 inline-flex items-center gap-3">
             <HopeLogo variant="light" className="h-9 w-auto" />
             <div className="text-left leading-tight text-white">
-              <div className="text-sm font-semibold">Zemgo</div>
+              <div className="text-sm font-bold">ZEMGO</div>
               <div className="text-[10px] uppercase tracking-widest text-slate-300">
                 Agente de seguros y fianzas
               </div>

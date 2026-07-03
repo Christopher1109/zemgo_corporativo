@@ -15,7 +15,7 @@ import { MarkPaidDialog } from "@/components/payments/mark-paid-dialog";
 import { generateBankReference, cancelPayment, refundPayment } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/payments/$paymentId")({
-  head: () => ({ meta: [{ title: "Pago — Zemgo" }] }),
+  head: () => ({ meta: [{ title: "Pago — ZEMGO" }] }),
   component: PaymentDetail,
 });
 

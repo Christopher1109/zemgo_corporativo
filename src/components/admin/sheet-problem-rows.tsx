@@ -109,7 +109,7 @@ export function SheetProblemRowsCard() {
               )}
             </CardTitle>
             <CardDescription>
-              Filas que el sync no pudo procesar. Reintenta cuando Zemgo corrija el dato en
+              Filas que el sync no pudo procesar. Reintenta cuando ZEMGO corrija el dato en
               el Sheet, o ignora para capturar manualmente.
             </CardDescription>
           </div>

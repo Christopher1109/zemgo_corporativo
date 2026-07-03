@@ -10,7 +10,7 @@ const tabSchema = z.object({
 });
 
 export const Route = createFileRoute("/_authenticated/reports")({
-  head: () => ({ meta: [{ title: "Reportes — Zemgo" }] }),
+  head: () => ({ meta: [{ title: "Reportes — ZEMGO" }] }),
   validateSearch: tabSchema,
   component: ReportsPage,
 });

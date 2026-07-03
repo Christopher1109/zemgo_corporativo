@@ -77,7 +77,7 @@ function DashboardPage() {
         <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-yellow-400/20 blur-3xl" />
         <div className="relative flex items-start gap-4">
           <div className="flex-1 min-w-0">
-            <p className="text-xs uppercase tracking-widest text-yellow-400/90">Zemgo</p>
+            <p className="text-xs uppercase tracking-widest text-yellow-400/90">ZEMGO</p>
             <h1 className="mt-2 text-3xl md:text-4xl font-light">
               Hola, <span className="font-semibold">{firstName}</span>
             </h1>
@@ -128,7 +128,7 @@ function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-5">
             <p className="text-sm text-slate-700">
-              ¡Muchas gracias por contratar con Zemgo! Para emitir tu certificado y activar
+              ¡Muchas gracias por contratar con ZEMGO! Para emitir tu certificado y activar
               tu cobertura, necesitamos confirmar tu primer pago.
             </p>
 
