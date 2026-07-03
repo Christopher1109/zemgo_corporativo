@@ -44,13 +44,19 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a1628] p-4 relative overflow-hidden">
       <div className="absolute inset-0 opacity-[0.08] pointer-events-none"
            style={{ background: "radial-gradient(ellipse at top, #facc15 0%, transparent 55%)" }} />
       <Card className="w-full max-w-md relative z-10 border-slate-200 shadow-2xl">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto rounded-xl bg-slate-900 px-5 py-3 inline-block">
+          <div className="mx-auto rounded-xl bg-[#0a1628] px-5 py-3 inline-flex items-center gap-3">
             <HopeLogo variant="light" className="h-9 w-auto" />
+            <div className="text-left leading-tight text-white">
+              <div className="text-sm font-semibold">Zemgo</div>
+              <div className="text-[10px] uppercase tracking-widest text-slate-300">
+                Agente de seguros y fianzas
+              </div>
+            </div>
           </div>
           <div>
             <CardTitle className="text-xl">Acceso interno</CardTitle>

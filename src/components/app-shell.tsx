@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
-import { ZemgoLogo } from "@/components/zemgo-logo";
+
 import { ProgramLogo } from "@/components/program-logo";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,8 +71,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         style={{ backgroundColor: "var(--program-primary)" }}
       >
         <div className="p-4 border-b border-white/10">
-          <div className="rounded-md bg-black/25 px-3 py-2 flex items-center justify-center">
-            <ZemgoLogo className="h-8 w-auto" />
+          <div className="rounded-md bg-white/95 px-3 py-4 flex items-center justify-center h-24">
+            {activeProgram?.code ? (
+              <ProgramLogo
+                code={activeProgram.code}
+                className="max-h-full max-w-full object-contain"
+              />
+            ) : (
+              <span className="text-xs text-slate-500">Sin programa</span>
+            )}
           </div>
           <div className="mt-2 text-[10px] uppercase tracking-widest opacity-70 text-center">
             Administración
@@ -88,16 +95,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className="w-full flex items-center justify-between gap-2 rounded-md px-3 py-2 text-left hover:bg-white/10 transition border border-white/20"
                 style={{ backgroundColor: "var(--program-accent)" }}
               >
-                <div className="flex items-center gap-2 min-w-0">
-                  {activeProgram?.code && (
-                    <div className="h-9 w-9 shrink-0 rounded bg-white/95 flex items-center justify-center p-1">
-                      <ProgramLogo code={activeProgram.code} className="max-h-full max-w-full object-contain" />
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold truncate">{activeProgram?.name ?? "Selecciona…"}</div>
-                    <div className="text-xs opacity-80 truncate">{activeProgram?.insurance_branch}</div>
-                  </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold truncate">{activeProgram?.name ?? "Selecciona…"}</div>
+                  <div className="text-xs opacity-80 truncate">{activeProgram?.insurance_branch}</div>
                 </div>
                 <ChevronDown className="h-4 w-4 shrink-0" />
               </button>
