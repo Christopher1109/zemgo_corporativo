@@ -86,7 +86,7 @@ function PortalLanding() {
           </div>
         </div>
         <div className="relative z-10 text-xs text-slate-400">
-          © {new Date().getFullYear()} Zemgo · Portal del Asegurado
+          © {new Date().getFullYear()} ZEMGO · Portal del Asegurado
         </div>
       </div>
 
