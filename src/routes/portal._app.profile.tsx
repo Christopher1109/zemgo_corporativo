@@ -53,7 +53,7 @@ function ProfilePage() {
       setClient((c: any) =>
         c ? { ...c, ...form, address_full: buildAddressFull(form) } : c,
       );
-      toast.success("Datos actualizados. Notificaremos al equipo Zemgo.");
+      toast.success("Datos actualizados. Notificaremos al equipo ZEMGO.");
     } catch {
       toast.error("No fue posible actualizar");
     } finally {
@@ -87,7 +87,7 @@ function ProfilePage() {
               Completa tu dirección para finalizar tu registro
             </p>
             <p className="text-xs text-amber-800/80">
-              Es opcional pero ayuda a Zemgo a contactarte en caso de un siniestro.
+              Es opcional pero ayuda a ZEMGO a contactarte en caso de un siniestro.
             </p>
           </div>
           <Button

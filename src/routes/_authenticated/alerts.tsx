@@ -14,7 +14,7 @@ import { getAlertsOverview } from "@/lib/alerts.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
-  head: () => ({ meta: [{ title: "Alertas y renovaciones — Zemgo" }] }),
+  head: () => ({ meta: [{ title: "Alertas y renovaciones — ZEMGO" }] }),
   component: AlertsPage,
 });
 

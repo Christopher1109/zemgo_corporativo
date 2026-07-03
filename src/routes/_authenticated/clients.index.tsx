@@ -12,7 +12,7 @@ import { useProgram } from "@/lib/program-context";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/clients/")({
-  head: () => ({ meta: [{ title: "Clientes — Zemgo" }] }),
+  head: () => ({ meta: [{ title: "Clientes — ZEMGO" }] }),
   component: ClientsList,
 });
 
