@@ -16,6 +16,7 @@ import {
   Lock,
   Sparkles,
 } from "lucide-react";
+import { ProgramLogo } from "@/components/program-logo";
 
 export const Route = createFileRoute("/portal/_app/dashboard")({
   component: DashboardPage,
@@ -74,16 +75,23 @@ function DashboardPage() {
       {/* Hero / Greeting */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-6 md:p-8 shadow-sm">
         <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-yellow-400/20 blur-3xl" />
-        <div className="relative">
-          <p className="text-xs uppercase tracking-widest text-yellow-400/90">Zemgo</p>
-          <h1 className="mt-2 text-3xl md:text-4xl font-light">
-            Hola, <span className="font-semibold">{firstName}</span>
-          </h1>
-          <p className="mt-2 text-sm text-slate-300 max-w-lg">
-            {isNewClient
-              ? "Bienvenido. Tu contrato está casi listo: solo falta tu primer pago para activarlo."
-              : "Este es el resumen de tu protección. Aquí encuentras tus certificados y próximos pagos."}
-          </p>
+        <div className="relative flex items-start gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs uppercase tracking-widest text-yellow-400/90">Zemgo</p>
+            <h1 className="mt-2 text-3xl md:text-4xl font-light">
+              Hola, <span className="font-semibold">{firstName}</span>
+            </h1>
+            <p className="mt-2 text-sm text-slate-300 max-w-lg">
+              {isNewClient
+                ? "Bienvenido. Tu contrato está casi listo: solo falta tu primer pago para activarlo."
+                : "Este es el resumen de tu protección. Aquí encuentras tus certificados y próximos pagos."}
+            </p>
+          </div>
+          {primary?.programs?.code && (
+            <div className="hidden sm:flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-white/95 p-2 shadow">
+              <ProgramLogo code={primary.programs.code} className="max-h-full max-w-full object-contain" />
+            </div>
+          )}
         </div>
       </section>
 
