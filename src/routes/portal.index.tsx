@@ -5,51 +5,50 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, Lock } from "lucide-react";
-import { requestPortalAccess } from "@/lib/portal/portal.functions";
+import { ShieldCheck, Lock, MessageCircle } from "lucide-react";
+import { verifyPortalLogin } from "@/lib/portal/portal.functions";
 import { HopeLogo } from "@/components/hope-logo";
 
 export const Route = createFileRoute("/portal/")({
   component: PortalLanding,
 });
 
+const SUPPORT_WHATSAPP_URL = "https://wa.me/525651710563";
+
+// Formato oficial CURP mexicano (18 caracteres alfanuméricos).
+const CURP_REGEX =
+  /^[A-Z][AEIOUX][A-Z]{2}\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])[HM][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[0-9A-Z]\d$/;
+
 function PortalLanding() {
   const navigate = useNavigate();
-  const request = useServerFn(requestPortalAccess);
+  const login = useServerFn(verifyPortalLogin);
   const [curp, setCurp] = useState("");
-  const [name, setName] = useState("");
+  const [phone4, setPhone4] = useState("");
   const [loading, setLoading] = useState(false);
+  const [blocked, setBlocked] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (curp.length !== 18) {
-      toast.error("CURP debe tener 18 caracteres");
+    if (!CURP_REGEX.test(curp)) {
+      toast.error("Los datos no coinciden, verifica e intenta de nuevo.");
       return;
     }
-    if (name.trim().length < 3) {
-      toast.error("Ingresa tu nombre completo");
+    if (!/^\d{4}$/.test(phone4)) {
+      toast.error("Los datos no coinciden, verifica e intenta de nuevo.");
       return;
     }
     setLoading(true);
     try {
-      const res = await request({ data: { curp, full_name: name } });
-      sessionStorage.setItem(
-        "portal.pending",
-        JSON.stringify({ client_id: res.client_id, first_name: res.first_name, dev_code: res.dev_code }),
-      );
-      navigate({ to: "/portal/verify" });
+      await login({ data: { curp, phone_last4: phone4 } });
+      navigate({ to: "/portal/dashboard" });
     } catch (err: any) {
       const msg = err?.message ?? "";
-      if (msg.includes("cliente_no_encontrado")) {
-        toast.error("No encontramos tu registro. Verifica los datos o contacta soporte.");
-      } else if (msg.includes("datos_no_coinciden")) {
-        toast.error("Los datos no coinciden. Verifica e intenta de nuevo.");
-      } else if (msg.includes("demasiados_intentos")) {
-        toast.error("Demasiados intentos. Espera unos minutos.");
-      } else if (msg.includes("curp_invalido")) {
-        toast.error("CURP inválido.");
+      if (msg.includes("bloqueado_temporalmente")) {
+        setBlocked(true);
+        toast.error("Acceso temporalmente restringido por seguridad. Intenta más tarde.");
       } else {
-        toast.error("No fue posible procesar tu solicitud.");
+        // Mensaje genérico único para no revelar qué campo falló
+        toast.error("Los datos no coinciden, verifica e intenta de nuevo.");
       }
     } finally {
       setLoading(false);
@@ -77,12 +76,12 @@ function PortalLanding() {
             <span className="text-yellow-400 font-semibold">siempre a la mano.</span>
           </h2>
           <p className="text-sm text-slate-300 leading-relaxed">
-            Consulta tu certificado, descarga tu certificado, paga tu seguro y reporta un siniestro
+            Consulta tu certificado, descárgalo, paga tu seguro y reporta un siniestro
             desde cualquier dispositivo, las 24 horas.
           </p>
           <div className="flex gap-6 pt-4 text-xs text-slate-400">
             <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-yellow-400" /> Datos protegidos</div>
-            <div className="flex items-center gap-2"><Lock className="h-4 w-4 text-yellow-400" /> Acceso con OTP</div>
+            <div className="flex items-center gap-2"><Lock className="h-4 w-4 text-yellow-400" /> Acceso seguro</div>
           </div>
         </div>
         <div className="relative z-10 text-xs text-slate-400">
@@ -109,9 +108,15 @@ function PortalLanding() {
           <div className="mb-6">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">Portal del Asegurado</h1>
             <p className="mt-2 text-sm text-slate-600">
-              Ingresa tu CURP y nombre completo. Te enviaremos un código por WhatsApp.
+              Ingresa tu CURP y los últimos 4 dígitos del teléfono con el que te registraste.
             </p>
           </div>
+
+          {blocked ? (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+              Acceso temporalmente restringido por seguridad. Intenta más tarde.
+            </div>
+          ) : null}
 
           <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="space-y-2">
@@ -119,7 +124,7 @@ function PortalLanding() {
               <Input
                 id="curp"
                 value={curp}
-                onChange={(e) => setCurp(e.target.value.toUpperCase().slice(0, 18))}
+                onChange={(e) => setCurp(e.target.value.toUpperCase().replace(/\s/g, "").slice(0, 18))}
                 placeholder="18 caracteres"
                 maxLength={18}
                 autoComplete="off"
@@ -127,30 +132,38 @@ function PortalLanding() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre completo</Label>
+              <Label htmlFor="phone4">Últimos 4 dígitos del teléfono</Label>
               <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Como aparece en tu CURP"
+                id="phone4"
+                value={phone4}
+                onChange={(e) => setPhone4(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                placeholder="1234"
+                inputMode="numeric"
+                maxLength={4}
+                autoComplete="off"
+                className="font-mono tracking-widest text-center"
               />
             </div>
             <Button
               type="submit"
               className="w-full bg-slate-900 hover:bg-slate-800 text-white"
-              disabled={loading}
+              disabled={loading || blocked}
             >
-              {loading ? "Validando…" : "Continuar"}
+              {loading ? "Validando…" : "Ingresar"}
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-slate-500">
-            ¿No estás registrado? Visita{" "}
-            <a href="https://ZEMGO" className="font-medium text-slate-700 underline">
-              ZEMGO
-            </a>
-          </p>
-          <p className="mt-2 text-center text-xs text-slate-400">
+          <a
+            href={SUPPORT_WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+          >
+            <MessageCircle className="h-4 w-4 text-green-600" />
+            Contactar soporte por WhatsApp
+          </a>
+
+          <p className="mt-6 text-center text-xs text-slate-400">
             <Link to="/auth" className="hover:underline">
               Acceso para personal ZEMGO
             </Link>
