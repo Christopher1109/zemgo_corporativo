@@ -74,6 +74,28 @@ export const verifyPortalCode = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Nuevo flujo de acceso al Portal: CURP + últimos 4 dígitos del teléfono.
+// Reemplaza el OTP por WhatsApp para reducir costos de mensajería.
+export const verifyPortalLogin = createServerFn({ method: "POST" })
+  .inputValidator((d: { curp: string; phone_last4: string }) => d)
+  .handler(async ({ data }) => {
+    const sb = await admin();
+    let ip = "";
+    try { ip = getRequestIP({ xForwardedFor: true }) ?? ""; } catch {}
+    let ua = "";
+    try { ua = getRequestHeader("user-agent") ?? ""; } catch {}
+    const { data: res, error } = await sb.rpc("verify_portal_login" as any, {
+      _curp: data.curp.trim().toUpperCase(),
+      _phone_last4: data.phone_last4.trim(),
+      _ip: ip,
+      _ua: ua,
+    });
+    if (error) throw new Error(error.message);
+    const token = (res as { token: string }).token;
+    setCookie(COOKIE, token, getPortalCookieOptions(60 * 60 * 24));
+    return { ok: true };
+  });
+
 export const portalLogout = createServerFn({ method: "POST" }).handler(async () => {
   const token = getToken();
   if (token) {

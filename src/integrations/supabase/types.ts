@@ -971,6 +971,54 @@ export type Database = {
           },
         ]
       }
+      portal_login_attempts: {
+        Row: {
+          blocked_until: string | null
+          curp: string
+          failed_count: number
+          last_attempt_at: string
+          updated_at: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          curp: string
+          failed_count?: number
+          last_attempt_at?: string
+          updated_at?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          curp?: string
+          failed_count?: number
+          last_attempt_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      portal_login_attempts_by_ip: {
+        Row: {
+          blocked_until: string | null
+          failed_count: number
+          ip: unknown
+          last_attempt_at: string
+          updated_at: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          failed_count?: number
+          ip: unknown
+          last_attempt_at?: string
+          updated_at?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          failed_count?: number
+          ip?: unknown
+          last_attempt_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       portal_sessions: {
         Row: {
           client_id: string
@@ -1737,6 +1785,10 @@ export type Database = {
       upsert_sales_rep_by_name: { Args: { _name: string }; Returns: string }
       verify_portal_code: {
         Args: { _client_id: string; _code: string; _ip: string; _ua: string }
+        Returns: Json
+      }
+      verify_portal_login: {
+        Args: { _curp: string; _ip: string; _phone_last4: string; _ua: string }
         Returns: Json
       }
     }
