@@ -40,7 +40,8 @@ function PortalLanding() {
     }
     setLoading(true);
     try {
-      await login({ data: { curp, phone_last4: phone4 } });
+      const res: any = await login({ data: { curp, phone_last4: phone4 } });
+      if (res?.token) setPortalToken(res.token);
       navigate({ to: "/portal/dashboard" });
     } catch (err: any) {
       const msg = err?.message ?? "";
