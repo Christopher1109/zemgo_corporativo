@@ -378,7 +378,7 @@ export function CertificateABC(props: CertificateABCProps) {
             <Text style={s.footerMain}>{HOPE_FOOTER}</Text>
             <Text style={s.footerSmall}>*Documento informativo sin validez oficial.</Text>
           </View>
-          <Text style={s.footerRight}>https://www.zemgoseguros.com.mx/</Text>
+          <Link src="https://www.zemgoseguros.com.mx/" style={s.footerRight}>https://www.zemgoseguros.com.mx/</Link>
         </View>
       </Page>
     </Document>
