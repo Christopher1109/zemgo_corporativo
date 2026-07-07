@@ -141,7 +141,8 @@ const s = StyleSheet.create({
     marginTop: 14, flexDirection: "row",
   },
   footerLeft: { flex: 2 },
-  footerSmall: { fontSize: 7, fontStyle: "italic", color: M.textOnPrimary },
+  footerMain: { fontFamily: "Helvetica-Bold", fontSize: 8, color: M.textOnPrimary },
+  footerSmall: { fontSize: 7, fontStyle: "italic", color: M.textOnPrimary, marginTop: 2 },
   footerRight: { flex: 1, fontSize: 7.5, textAlign: "right", color: M.textOnPrimary },
 });
 
