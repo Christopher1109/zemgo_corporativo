@@ -2,8 +2,9 @@
 // Color scheme: green (ABC de Protección).
 // Page size: Letter, margins 12mm x 14mm ≈ 34 x 40 pt.
 
-import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, StyleSheet, Link } from "@react-pdf/renderer";
 import { PDF_THEME, HOPE_FOOTER } from "../theme";
+import programAbcLogo from "@/assets/program-abc.png.asset.json";
 import {
   formatDate, formatCurrency, formatGender, formatMaritalStatus,
   calcAge, formatBeneficiary, safe,
@@ -54,13 +55,7 @@ const s = StyleSheet.create({
     width: 110, padding: 8, alignItems: "center", justifyContent: "center",
     borderRightWidth: 1, borderColor: C.border,
   },
-  logoCircle: {
-    width: 62, height: 62, borderRadius: 31, backgroundColor: ABC.accent,
-    borderWidth: 2, borderColor: ABC.primary,
-    alignItems: "center", justifyContent: "center",
-  },
-  logoHeart: { color: ABC.primary, fontSize: 18, fontFamily: "Helvetica-Bold" },
-  logoLabel: { color: ABC.primary, fontSize: 7, marginTop: 2 },
+  logoImage: { width: 78, height: 78, objectFit: "contain" },
   hTitle: {
     flex: 1, padding: 8, fontSize: 12, fontFamily: "Helvetica-Bold",
     textAlign: "center", borderRightWidth: 1, borderColor: C.border,
@@ -191,10 +186,7 @@ export function CertificateABC(props: CertificateABCProps) {
         {/* HEADER */}
         <View style={s.header}>
           <View style={s.hLogo}>
-            <View style={s.logoCircle}>
-              <Text style={s.logoHeart}>♥</Text>
-              <Text style={s.logoLabel}>de protección</Text>
-            </View>
+            <Image src={programAbcLogo.url} style={s.logoImage} />
           </View>
           <View style={s.hTitle}><Text style={s.hTitleText}>CERTIFICADO DE COBERTURA</Text></View>
           <View style={s.hAddress}>
