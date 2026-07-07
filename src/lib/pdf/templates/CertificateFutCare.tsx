@@ -169,8 +169,7 @@ export function CertificateFutCare(props: CertificateFutCareProps) {
         {/* HEADER */}
         <View style={s.header}>
           <View style={s.hLogo}>
-            <Text style={s.brandMain}>FUT-CARE</Text>
-            <Text style={s.brandTagline}>TU SEGURO FUTBOLERO</Text>
+            <Image src={programFutcareLogo.url} style={s.logoImage} />
           </View>
           <View style={s.hTitle}><Text style={s.hTitleText}>CERTIFICADO DE COBERTURA</Text></View>
           <View style={s.hAddress}>
