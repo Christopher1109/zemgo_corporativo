@@ -239,14 +239,13 @@ export function CertificateABC(props: CertificateABCProps) {
           </View>
         </View>
 
-        {/* ===== RAMO / FECHA (indentado bajo el logo) ===== */}
-        <View style={s.ramoRow}>
-          <View style={s.ramoSpacer} />
-          <View style={s.ramoCell}>
+        {/* ===== RAMO / FECHA (alineado con las tablas de abajo) ===== */}
+        <View style={{ flexDirection: "row", marginTop: 6 }}>
+          <View style={{ flex: 1, flexDirection: "column" }}>
             <Text style={s.ramoLbl}>Ramo del seguro.</Text>
             <Text style={s.ramoVal}>AP, Vida y funerarios.</Text>
           </View>
-          <View style={s.ramoFecha}>
+          <View style={{ flex: 1, flexDirection: "column" }}>
             <Text style={s.ramoLblRight}>Fecha de Emisión del Certificado</Text>
             <Text style={s.ramoValRight}>{formatDate(props.issue_date)}</Text>
           </View>
