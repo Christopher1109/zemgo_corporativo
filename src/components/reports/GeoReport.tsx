@@ -155,14 +155,15 @@ function MxMap({ byCode, loading }: { byCode: Map<string, Row>; loading: boolean
         </div>
       </div>
 
-      <aside className="rounded-md border bg-card p-4 min-h-[260px]">
+      <aside className="rounded-md border bg-card p-4 min-h-[260px] space-y-3 max-h-[560px] overflow-y-auto">
         {!active && (
           <div className="text-sm text-muted-foreground">
-            Pasa el cursor sobre un estado para ver sus métricas. Haz clic para fijar la selección.
+            Pasa el cursor sobre un estado para ver sus métricas. Haz clic para fijar la selección
+            y ver el detalle completo.
           </div>
         )}
         {active && (
-          <div className="space-y-3">
+          <>
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Estado</div>
               <div className="text-lg font-semibold">{activeName}</div>
@@ -177,15 +178,123 @@ function MxMap({ byCode, loading }: { byCode: Map<string, Row>; loading: boolean
                 <Kpi label="Vencidos" value={Number(activeRow.expired)} tone="danger" />
               </div>
             )}
+
+            {selected && detailQ.isLoading && (
+              <div className="text-xs text-muted-foreground italic">Cargando detalle…</div>
+            )}
+
+            {selected && detailQ.data && (
+              <div className="space-y-4 pt-2 border-t">
+                {/* Financiero */}
+                <div>
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">
+                    Financiero
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="rounded border p-2">
+                      <div className="text-muted-foreground">Suma asegurada</div>
+                      <div className="font-semibold tabular-nums">
+                        ${Number(detailQ.data.totals.sum_insured).toLocaleString("es-MX")}
+                      </div>
+                    </div>
+                    <div className="rounded border p-2">
+                      <div className="text-muted-foreground">Primas (anuales)</div>
+                      <div className="font-semibold tabular-nums">
+                        ${Number(detailQ.data.totals.premium_year).toLocaleString("es-MX")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Distribución por programa */}
+                {detailQ.data.by_program.length > 0 && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">
+                      Distribución por programa
+                    </div>
+                    <div className="flex h-2 w-full overflow-hidden rounded-full">
+                      {detailQ.data.by_program.map((p: any) => (
+                        <div
+                          key={p.code}
+                          style={{
+                            backgroundColor: p.color || "#94a3b8",
+                            width: `${(p.count / detailQ.data.totals.policies) * 100}%`,
+                          }}
+                          title={`${p.name}: ${p.count}`}
+                        />
+                      ))}
+                    </div>
+                    <ul className="mt-2 space-y-1 text-xs">
+                      {detailQ.data.by_program.map((p: any) => (
+                        <li key={p.code} className="flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: p.color }} />
+                            {p.name}
+                          </span>
+                          <Badge variant="outline">{p.count}</Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Renovaciones */}
+                {detailQ.data.renewals.length > 0 && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">
+                      Próximas renovaciones (60 días)
+                    </div>
+                    <ul className="space-y-1 text-xs">
+                      {detailQ.data.renewals.map((r: any) => (
+                        <li key={r.id} className="flex justify-between rounded border px-2 py-1.5">
+                          <span className="truncate">{r.client || r.folio}</span>
+                          <span className="text-muted-foreground shrink-0 ml-2">
+                            {new Date(r.end_date).toLocaleDateString("es-MX", { day: "2-digit", month: "short" })}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Clientes */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      Clientes ({detailQ.data.totals.clients})
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-xs"
+                      onClick={() => setShowClients((v) => !v)}
+                    >
+                      {showClients ? "Ocultar" : "Ver"}
+                    </Button>
+                  </div>
+                  {showClients && (
+                    <ul className="space-y-1 text-xs max-h-48 overflow-y-auto">
+                      {detailQ.data.clients.map((c: any) => (
+                        <li key={c.id} className="flex items-center justify-between rounded border px-2 py-1.5 gap-2">
+                          <span className="truncate flex-1">{c.name || "(sin nombre)"}</span>
+                          <Badge variant="outline" className="shrink-0">{c.program}</Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
+
             {selected && (
               <button
-                onClick={() => setSelected(null)}
+                onClick={() => { setSelected(null); setShowClients(false); }}
                 className="text-xs text-muted-foreground hover:text-foreground underline"
               >
                 Quitar selección
               </button>
             )}
-          </div>
+          </>
         )}
       </aside>
     </div>
