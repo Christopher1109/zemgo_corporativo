@@ -58,6 +58,7 @@ function PortalAppLayout() {
 
   async function onLogout() {
     await logout();
+    clearPortalToken();
     sessionStorage.removeItem(PortalCtxKey);
     navigate({ to: "/portal" });
   }
