@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Program = {
@@ -24,6 +25,8 @@ const ProgramContext = createContext<ProgramContextValue | null>(null);
 const STORAGE_KEY = "hope.activeProgramId";
 
 export function ProgramProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const { data: programs = [], isLoading } = useQuery({
     queryKey: ["programs"],
     queryFn: async () => {
@@ -73,6 +76,30 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
   const setActiveProgramId = (id: string) => {
     setActiveId(id);
     if (typeof window !== "undefined") localStorage.setItem(STORAGE_KEY, id);
+
+    // Si el usuario está en un detalle específico (p.ej. /policies/:id,
+    // /clients/:id, /incidents/:id, /payments/:id), navegar a la lista
+    // raíz de esa sección para no seguir mostrando datos del programa
+    // anterior. Además invalidar todas las queries para forzar refetch
+    // con el nuevo programa activo.
+    try {
+      const pathname = router.state.location.pathname;
+      const sectionBases = [
+        "/policies", "/clients", "/incidents", "/payments",
+        "/finance", "/reports", "/alerts", "/settings",
+      ];
+      for (const base of sectionBases) {
+        // Detalle: /base/<algo> donde <algo> no es 'index', 'new', 'dashboard'.
+        const m = pathname.match(new RegExp(`^${base}/([^/]+)(?:/|$)`));
+        if (m && !["new", "dashboard", "index"].includes(m[1])) {
+          router.navigate({ to: base as any });
+          break;
+        }
+      }
+    } catch {
+      /* noop */
+    }
+    queryClient.invalidateQueries();
   };
 
   return (

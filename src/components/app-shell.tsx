@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
 import { ProgramLogo } from "@/components/program-logo";
+import { SidebarNotifications } from "@/components/sidebar-notifications";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -194,9 +195,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="font-medium">{activeProgram?.name}</span>
             <Badge variant="outline">{activeProgram?.insurance_branch}</Badge>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 mr-2" /> Salir
-          </Button>
+          <div className="flex items-center gap-2">
+            <SidebarNotifications />
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" /> Salir
+            </Button>
+          </div>
         </header>
         <main className="flex-1 p-6 overflow-y-auto">{children}</main>
       </div>

@@ -2,8 +2,9 @@
 // Color scheme: blue (#1565C0). Ramo: AP Deportivo.
 // Page size: Letter, margins ≈ 12mm x 14mm (34 x 40 pt).
 
-import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, StyleSheet, Link } from "@react-pdf/renderer";
 import { PDF_THEME, HOPE_FOOTER } from "../theme";
+import programFutcareLogo from "@/assets/program-futcare.png.asset.json";
 import { formatDate, formatGender, safe } from "../formatters";
 
 export interface CertificateFutCareProps {
@@ -44,18 +45,10 @@ const s = StyleSheet.create({
   // Header
   header: { flexDirection: "row", borderWidth: 1, borderColor: C.border, marginBottom: 12 },
   hLogo: {
-    width: 130, padding: 10, alignItems: "center", justifyContent: "center",
-    backgroundColor: F.primary, borderRightWidth: 1, borderColor: C.border,
+    width: 150, padding: 8, alignItems: "center", justifyContent: "center",
+    borderRightWidth: 1, borderColor: C.border,
   },
-  brandMain: {
-    color: F.textOnPrimary, fontSize: 15, fontFamily: "Helvetica-Bold",
-    letterSpacing: 1, textAlign: "center",
-  },
-  brandTagline: {
-    marginTop: 5, fontSize: 6.5, letterSpacing: 1.2,
-    backgroundColor: "#FFFFFF", color: F.primary, paddingVertical: 2, paddingHorizontal: 4,
-    fontFamily: "Helvetica-Bold", textAlign: "center",
-  },
+  logoImage: { width: 130, height: 60, objectFit: "contain" },
   hTitle: {
     flex: 1, padding: 8, fontSize: 12, fontFamily: "Helvetica-Bold",
     textAlign: "center", borderRightWidth: 1, borderColor: C.border,
@@ -176,8 +169,7 @@ export function CertificateFutCare(props: CertificateFutCareProps) {
         {/* HEADER */}
         <View style={s.header}>
           <View style={s.hLogo}>
-            <Text style={s.brandMain}>FUT-CARE</Text>
-            <Text style={s.brandTagline}>TU SEGURO FUTBOLERO</Text>
+            <Image src={programFutcareLogo.url} style={s.logoImage} />
           </View>
           <View style={s.hTitle}><Text style={s.hTitleText}>CERTIFICADO DE COBERTURA</Text></View>
           <View style={s.hAddress}>
@@ -356,7 +348,7 @@ export function CertificateFutCare(props: CertificateFutCareProps) {
             <Text style={s.footerMain}>{HOPE_FOOTER}</Text>
             <Text style={s.footerSmall}>*Documento informativo sin validez oficial.</Text>
           </View>
-          <Text style={s.footerRight}>https://www.zemgoseguros.com.mx/</Text>
+          <Link src="https://www.zemgoseguros.com.mx/" style={s.footerRight}>https://www.zemgoseguros.com.mx/</Link>
         </View>
       </Page>
     </Document>
