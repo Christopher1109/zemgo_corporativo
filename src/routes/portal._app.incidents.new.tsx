@@ -263,12 +263,86 @@ function NewIncidentPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Hospital al que te diriges</Label>
-              <Input
-                value={form.hospital}
-                onChange={(e) => setForm({ ...form, hospital: e.target.value })}
-              />
+              <div className="flex items-center justify-between">
+                <Label>Hospital al que te diriges</Label>
+                {geoState === "denied" || geoState === "unsupported" ? (
+                  <button
+                    type="button"
+                    onClick={requestLocation}
+                    className="text-xs text-slate-500 underline flex items-center gap-1"
+                  >
+                    <MapPin className="h-3 w-3" /> Usar mi ubicación
+                  </button>
+                ) : geoState === "granted" ? (
+                  <span className="text-xs text-emerald-700 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> Ordenados por cercanía
+                  </span>
+                ) : null}
+              </div>
+              {!form.policy_id ? (
+                <p className="text-xs text-slate-500">Selecciona primero un certificado.</p>
+              ) : sortedHospitals.length === 0 ? (
+                <>
+                  <p className="text-xs text-slate-500">
+                    No hay hospitales configurados para este programa. Escribe el nombre del hospital al que te dirigiste.
+                  </p>
+                  <Input
+                    value={form.hospital_other}
+                    onChange={(e) =>
+                      setForm({ ...form, hospital_id: "other", hospital_other: e.target.value })
+                    }
+                    placeholder="Nombre del hospital"
+                  />
+                </>
+              ) : (
+                <>
+                  <Select
+                    value={form.hospital_id || undefined}
+                    onValueChange={(v) => setForm({ ...form, hospital_id: v as any })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un hospital autorizado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortedHospitals.map((h: any) => (
+                        <SelectItem key={h.id} value={h.id}>
+                          <span className="flex flex-col">
+                            <span>
+                              {h.name}
+                              {h._distance != null && (
+                                <span className="text-xs text-slate-500 ml-2">
+                                  · {h._distance < 1 ? `${Math.round(h._distance * 1000)} m` : `${h._distance.toFixed(1)} km`}
+                                </span>
+                              )}
+                            </span>
+                            {(h.city || h.address) && (
+                              <span className="text-xs text-slate-500">
+                                {[h.address, h.city].filter(Boolean).join(", ")}
+                              </span>
+                            )}
+                          </span>
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="other">Otro (no está en la lista)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {form.hospital_id === "other" && (
+                    <Input
+                      className="mt-2"
+                      value={form.hospital_other}
+                      onChange={(e) => setForm({ ...form, hospital_other: e.target.value })}
+                      placeholder="Nombre del hospital"
+                    />
+                  )}
+                  {geoState === "denied" && (
+                    <p className="text-[11px] text-slate-500">
+                      Permite el acceso a tu ubicación para ordenar los hospitales por cercanía.
+                    </p>
+                  )}
+                </>
+              )}
             </div>
+
             <div className="space-y-2">
               <Label>Descripción detallada (mín. 20 caracteres)</Label>
               <Textarea
