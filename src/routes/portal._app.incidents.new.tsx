@@ -44,6 +44,7 @@ function NewIncidentPage() {
   const navigate = useNavigate();
   const dash = useServerFn(portalDashboard);
   const report = useServerFn(portalReportIncident);
+  const listHospitals = useServerFn(portalHospitals);
   const { data, isLoading } = useQuery({ queryKey: ["portal", "dashboard"], queryFn: () => dash() });
 
   const allPolicies = ((data as any)?.policies ?? []) as any[];
@@ -56,14 +57,78 @@ function NewIncidentPage() {
     location: "",
     description: "",
     hospital: "",
+    hospital_id: "" as string | "" | "other",
+    hospital_other: "",
   });
   const [saving, setSaving] = useState(false);
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoState, setGeoState] = useState<"idle" | "asking" | "granted" | "denied" | "unsupported">("idle");
+
+  function requestLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoState("unsupported");
+      return;
+    }
+    setGeoState("asking");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoState("granted");
+      },
+      () => setGeoState("denied"),
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 },
+    );
+  }
+
+  useEffect(() => {
+    requestLocation();
+  }, []);
+
+  const { data: hospitals = [] } = useQuery({
+    queryKey: ["portal", "hospitals", form.policy_id],
+    enabled: !!form.policy_id,
+    queryFn: () => listHospitals({ data: { policy_id: form.policy_id } }),
+  });
+
+  const sortedHospitals = useMemo(() => {
+    const list = [...(hospitals as any[])];
+    if (userLoc) {
+      list.forEach((h) => {
+        h._distance =
+          h.lat != null && h.lng != null
+            ? haversineKm(userLoc, { lat: Number(h.lat), lng: Number(h.lng) })
+            : null;
+      });
+      list.sort((a, b) => {
+        if (a._distance == null && b._distance == null) return a.name.localeCompare(b.name);
+        if (a._distance == null) return 1;
+        if (b._distance == null) return -1;
+        return a._distance - b._distance;
+      });
+    } else {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return list;
+  }, [hospitals, userLoc]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.policy_id) return toast.error("Selecciona un certificado");
     if (form.description.trim().length < 20)
       return toast.error("La descripción debe tener al menos 20 caracteres");
+    let hospitalName = form.hospital;
+    let hospitalId: string | null = null;
+    if (form.hospital_id && form.hospital_id !== "other") {
+      const h = (hospitals as any[]).find((x) => x.id === form.hospital_id);
+      if (!h) return toast.error("Selecciona un hospital válido");
+      hospitalId = h.id;
+      hospitalName = h.name;
+    } else if (form.hospital_id === "other") {
+      hospitalName = form.hospital_other.trim();
+      if (!hospitalName) return toast.error("Escribe el nombre del hospital");
+    } else if (sortedHospitals.length > 0) {
+      return toast.error("Selecciona el hospital al que te dirigiste");
+    }
     setSaving(true);
     try {
       await report({
@@ -73,7 +138,8 @@ function NewIncidentPage() {
           accident_time: form.accident_time || null,
           location: form.location,
           description: form.description,
-          hospital: form.hospital,
+          hospital: hospitalName,
+          hospital_id: hospitalId,
         },
       });
       toast.success("Reporte recibido. Tu siniestro está en revisión. Te contactaremos por WhatsApp.");
@@ -86,6 +152,7 @@ function NewIncidentPage() {
         poliza_inactiva: "El certificado no está vigente. Completa el pago para activarlo.",
         fecha_invalida: "La fecha del accidente no es válida.",
         descripcion_muy_corta: "La descripción debe tener al menos 20 caracteres.",
+        hospital_no_valido: "El hospital seleccionado no está autorizado.",
       };
       const key = Object.keys(map).find((k) => raw.includes(k));
       toast.error(key ? map[key] : `No fue posible reportar el siniestro: ${raw || "error desconocido"}`);
@@ -93,6 +160,7 @@ function NewIncidentPage() {
       setSaving(false);
     }
   }
+
 
   if (isLoading) {
     return <div className="text-slate-500">Cargando…</div>;
