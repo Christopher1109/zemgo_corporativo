@@ -27,6 +27,7 @@ const NAV = [
   { to: "/payments", label: "Pagos", icon: CreditCard, enabled: true },
   { to: "/finance", label: "Finanzas", icon: Wallet, enabled: true },
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, enabled: true },
+  { to: "/hospitals", label: "Hospitales", icon: Hospital, enabled: true },
   { to: "/alerts", label: "Alertas y renovaciones", icon: Bell, enabled: true },
   { to: "/reports", label: "Reportes", icon: BarChart3, enabled: true },
   { to: "/settings", label: "Configuración", icon: Settings, enabled: true },
