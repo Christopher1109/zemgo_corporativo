@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { portalDashboard } from "@/lib/portal/portal.functions";
+import { portalDashboard, portalDashboardExtras } from "@/lib/portal/portal.functions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,11 @@ import {
   CreditCard,
   Lock,
   Sparkles,
+  MessageCircle,
+  User,
+  Users,
+  Clock,
+  DollarSign,
 } from "lucide-react";
 import { ProgramLogo } from "@/components/program-logo";
 
@@ -47,7 +52,13 @@ function isActivated(policy: any): boolean {
 
 function DashboardPage() {
   const fn = useServerFn(portalDashboard);
+  const extrasFn = useServerFn(portalDashboardExtras);
   const { data, isLoading } = useQuery({ queryKey: ["portal", "dashboard"], queryFn: () => fn() });
+  const { data: extras } = useQuery({
+    queryKey: ["portal", "dashboard-extras"],
+    queryFn: () => extrasFn(),
+    staleTime: 60_000,
+  });
 
   if (isLoading) {
     return (
