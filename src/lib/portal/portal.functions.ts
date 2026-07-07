@@ -19,6 +19,14 @@ async function admin() {
 }
 
 function getToken(): string | null {
+  // 1) Header explícito enviado por el cliente (localStorage → x-portal-token).
+  //    Necesario cuando la app corre dentro de un iframe cross-site (preview),
+  //    donde las cookies httpOnly SameSite=None son descartadas por el navegador.
+  try {
+    const h = getRequestHeader("x-portal-token");
+    if (h && h.length >= 32) return h;
+  } catch {}
+  // 2) Fallback a cookie (localhost, publicación en dominio propio, etc.)
   try {
     const t = getCookie(COOKIE);
     return t ?? null;
@@ -93,7 +101,10 @@ export const verifyPortalLogin = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const token = (res as { token: string }).token;
     setCookie(COOKIE, token, getPortalCookieOptions(60 * 60 * 24));
-    return { ok: true };
+    // También devolvemos el token para que el cliente lo guarde en localStorage
+    // y lo mande como header x-portal-token (necesario en iframes cross-site
+    // donde las cookies SameSite=None son bloqueadas).
+    return { ok: true, token };
   });
 
 export const portalLogout = createServerFn({ method: "POST" }).handler(async () => {

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, Lock, MessageCircle } from "lucide-react";
 import { verifyPortalLogin } from "@/lib/portal/portal.functions";
+import { setPortalToken } from "@/lib/portal/portal-token";
 import { HopeLogo } from "@/components/hope-logo";
 
 export const Route = createFileRoute("/portal/")({
@@ -39,7 +40,8 @@ function PortalLanding() {
     }
     setLoading(true);
     try {
-      await login({ data: { curp, phone_last4: phone4 } });
+      const res: any = await login({ data: { curp, phone_last4: phone4 } });
+      if (res?.token) setPortalToken(res.token);
       navigate({ to: "/portal/dashboard" });
     } catch (err: any) {
       const msg = err?.message ?? "";

@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tan
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { portalMe, portalLogout } from "@/lib/portal/portal.functions";
+import { clearPortalToken } from "@/lib/portal/portal-token";
 import { Home, FileText, CreditCard, AlertTriangle, User, LogOut } from "lucide-react";
 import { HopeLogo } from "@/components/hope-logo";
 
@@ -57,6 +58,7 @@ function PortalAppLayout() {
 
   async function onLogout() {
     await logout();
+    clearPortalToken();
     sessionStorage.removeItem(PortalCtxKey);
     navigate({ to: "/portal" });
   }
