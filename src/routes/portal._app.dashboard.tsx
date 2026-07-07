@@ -271,7 +271,7 @@ function DashboardPage() {
             <CardContent className="flex items-center justify-between">
               <p className="text-sm text-slate-600">Repórtalo en línea y te contactamos.</p>
               <Button asChild variant="outline">
-                <Link to="/portal/incidents">Reportar</Link>
+                <Link to="/portal/incidents/new">Reportar</Link>
               </Button>
             </CardContent>
           </Card>
