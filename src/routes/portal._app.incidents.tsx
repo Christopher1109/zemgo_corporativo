@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { portalIncidents } from "@/lib/portal/portal.functions";
@@ -45,7 +45,12 @@ function statusBadge(status: string) {
 
 function IncidentsPage() {
   const fn = useServerFn(portalIncidents);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data, isLoading } = useQuery({ queryKey: ["portal", "incidents"], queryFn: () => fn() });
+
+  if (pathname !== "/portal/incidents") {
+    return <Outlet />;
+  }
 
   if (isLoading) {
     return (
