@@ -130,6 +130,57 @@ export const portalIncidents = createServerFn({ method: "GET" }).handler(async (
   return (await callPortal("get_portal_incidents")) as any;
 });
 
+// Info adicional para enriquecer el dashboard del portal:
+// beneficiarios + coberturas del programa activo + últimos 5 pagos.
+export const portalDashboardExtras = createServerFn({ method: "GET" }).handler(async () => {
+  const token = getToken();
+  if (!token) throw new Error("sesion_invalida");
+  const sb = await admin();
+  const { data: clientId, error: e0 } = await sb.rpc("resolve_portal_session", { _token: token });
+  if (e0 || !clientId) throw new Error("sesion_invalida");
+
+  // Póliza principal activa (más reciente).
+  const { data: polList } = await sb
+    .from("policies")
+    .select("id, program_id, sum_insured, premium, start_date, end_date, status")
+    .eq("client_id", clientId)
+    .order("created_at", { ascending: false });
+  const active = (polList ?? []).find((p) => p.status === "active") ?? (polList ?? [])[0];
+
+  if (!active) {
+    return {
+      beneficiaries: [] as any[],
+      coverages: [] as any[],
+      payments: [] as any[],
+      totals: { sum_insured: 0, active_policies: 0 },
+    };
+  }
+
+  const [{ data: beneficiaries }, { data: coverages }, { data: payments }] = await Promise.all([
+    sb.from("beneficiaries")
+      .select("full_name, relationship, percentage")
+      .eq("policy_id", active.id),
+    sb.from("program_coverages")
+      .select("coverage_name, sum_insured, notes")
+      .eq("program_id", active.program_id),
+    sb.from("payments")
+      .select("id, amount, due_date, paid_date, status")
+      .eq("policy_id", active.id)
+      .order("due_date", { ascending: false })
+      .limit(5),
+  ]);
+
+  const totalSum = (polList ?? []).reduce((acc, p) => acc + Number(p.sum_insured ?? 0), 0);
+  const activeCount = (polList ?? []).filter((p) => p.status === "active").length;
+
+  return {
+    beneficiaries: beneficiaries ?? [],
+    coverages: coverages ?? [],
+    payments: payments ?? [],
+    totals: { sum_insured: totalSum, active_policies: activeCount },
+  };
+});
+
 export const portalReportIncident = createServerFn({ method: "POST" })
   .inputValidator((d: {
     policy_id: string;
