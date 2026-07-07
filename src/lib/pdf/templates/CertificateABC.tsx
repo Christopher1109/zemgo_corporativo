@@ -50,7 +50,7 @@ const BORDER = "#B8B8B8";
 
 const s = StyleSheet.create({
   page: {
-    paddingTop: 34, paddingBottom: 20, paddingHorizontal: 54,
+    paddingTop: 30, paddingBottom: 14, paddingHorizontal: 54,
     fontSize: 8, color: C.text, fontFamily: "Helvetica",
     backgroundColor: C.pageBg, lineHeight: 1.15,
   },
@@ -143,9 +143,10 @@ const s = StyleSheet.create({
   // ============ ADVERTENCIA ============
   warning: {
     borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1,
-    borderColor: BORDER, padding: 5, fontSize: 7, lineHeight: 1.25,
+    borderColor: BORDER, padding: 4, fontSize: 6.8, lineHeight: 1.2,
   },
   warnTitle: { fontFamily: "Helvetica-Bold" },
+
 
   // ============ VIGENCIA + FIRMAS ============
   vigRow: { flexDirection: "row", marginTop: 4, marginBottom: 2 },
@@ -169,10 +170,10 @@ const s = StyleSheet.create({
     borderColor: BORDER,
   },
   sigBox: {
-    flex: 1, height: 55, alignItems: "center", justifyContent: "center",
+    flex: 1, height: 40, alignItems: "center", justifyContent: "center",
     borderRightWidth: 1, borderColor: BORDER,
   },
-  sigBoxLast: { flex: 1, height: 55, alignItems: "center", justifyContent: "center" },
+  sigBoxLast: { flex: 1, height: 40, alignItems: "center", justifyContent: "center" },
   sigImg: { maxHeight: 70, maxWidth: "80%", objectFit: "contain" },
 
   // ============ FOOTER ============
