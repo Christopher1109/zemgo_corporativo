@@ -168,17 +168,7 @@ export function CertificateMCV(props: CertificateMCVProps) {
         {/* HEADER */}
         <View style={s.header}>
           <View style={s.hLogo}>
-            {/* Placeholder logo until HOPE entrega el oficial: dos curvas
-                tipo "manos" formando un corazón abierto, en color de marca. */}
-            <Svg width={42} height={26} viewBox="0 0 60 36" style={{ marginBottom: 4 }}>
-              <Path
-                d="M30 32 C 14 22, 4 14, 12 6 C 18 0, 26 4, 30 12 C 34 4, 42 0, 48 6 C 56 14, 46 22, 30 32 Z"
-                fill={M.primary}
-              />
-              <Circle cx={20} cy={9} r={1.6} fill="#FFFFFF" />
-              <Circle cx={40} cy={9} r={1.6} fill="#FFFFFF" />
-            </Svg>
-            <Text style={s.brandMain}>MANOS{"\n"}CON VALOR</Text>
+            <Image src={programMcvLogo.url} style={s.logoImage} />
           </View>
           <View style={s.hTitle}><Text style={s.hTitleText}>CERTIFICADO DE COBERTURA</Text></View>
           <View style={s.hAddress}>
