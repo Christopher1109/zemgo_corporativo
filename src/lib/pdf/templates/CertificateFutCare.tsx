@@ -36,109 +36,111 @@ export interface CertificateFutCareProps {
 const F = PDF_THEME.programs.FUTCARE;
 const C = PDF_THEME.common;
 
+const BORDER = "#B8B8B8";
+
 const s = StyleSheet.create({
   page: {
-    paddingTop: 34, paddingBottom: 34, paddingHorizontal: 40,
-    fontSize: 9, color: C.text, fontFamily: "Helvetica", backgroundColor: C.pageBg,
+    paddingTop: 28, paddingBottom: 8, paddingHorizontal: 54,
+    fontSize: 8, color: C.text, fontFamily: "Helvetica",
+    backgroundColor: C.pageBg, lineHeight: 1.15,
   },
 
   // Header
-  header: { flexDirection: "row", borderWidth: 1, borderColor: C.border, marginBottom: 12 },
+  header: { flexDirection: "row", borderWidth: 1, borderColor: BORDER },
   hLogo: {
-    width: 150, padding: 8, alignItems: "center", justifyContent: "center",
-    borderRightWidth: 1, borderColor: C.border,
+    width: 114, padding: 4, alignItems: "center", justifyContent: "center",
+    borderRightWidth: 1, borderColor: BORDER,
   },
-  logoImage: { width: 130, height: 60, objectFit: "contain" },
+  logoImage: { width: 96, height: 44, objectFit: "contain" },
   hTitle: {
-    flex: 1, padding: 8, fontSize: 12, fontFamily: "Helvetica-Bold",
-    textAlign: "center", borderRightWidth: 1, borderColor: C.border,
+    flex: 1, padding: 4, fontSize: 11, fontFamily: "Helvetica-Bold",
+    textAlign: "center", borderRightWidth: 1, borderColor: BORDER,
     justifyContent: "center",
   },
   hTitleText: { textAlign: "center" },
-  hAddress: { width: 170, padding: 8, fontSize: 7, lineHeight: 1.3 },
+  hAddress: { width: 170, padding: 4, fontSize: 7.5, lineHeight: 1.2 },
 
   // Folio row
-  folioRow: { flexDirection: "row", marginBottom: 10 },
+  folioRow: { flexDirection: "row", marginTop: 4, marginBottom: 4 },
   folioSpacer: { flex: 1 },
   folioTag: {
     backgroundColor: F.primary, color: F.textOnPrimary,
-    paddingVertical: 6, paddingHorizontal: 10,
-    fontFamily: "Helvetica-Bold", textAlign: "center", fontSize: 10,
+    paddingVertical: 3, paddingHorizontal: 8,
+    fontFamily: "Helvetica-Bold", textAlign: "center", fontSize: 9,
   },
 
   // Tables
-  table: { borderWidth: 1, borderColor: C.border, borderBottomWidth: 0 },
+  table: { borderWidth: 1, borderColor: BORDER, borderBottomWidth: 0 },
   tableLast: { borderBottomWidth: 1 },
   row: { flexDirection: "row" },
   th: {
-    flex: 1, backgroundColor: C.rowHeader, padding: 5, textAlign: "center",
-    fontFamily: "Helvetica-Bold", borderRightWidth: 1, borderColor: C.border,
+    flex: 1, backgroundColor: C.rowHeader, padding: 3, textAlign: "center",
+    fontFamily: "Helvetica-Bold", borderRightWidth: 1, borderColor: BORDER,
     borderBottomWidth: 1,
   },
   thLast: { borderRightWidth: 0 },
   td: {
-    flex: 1, padding: 5, textAlign: "center",
-    borderRightWidth: 1, borderColor: C.border, borderBottomWidth: 1,
+    flex: 1, padding: 3, textAlign: "center",
+    borderRightWidth: 1, borderColor: BORDER, borderBottomWidth: 1,
   },
   tdLast: { borderRightWidth: 0 },
 
   // Section header (blue)
   section: {
     backgroundColor: F.sectionBg, borderWidth: 1, borderColor: F.primary,
-    paddingVertical: 5, textAlign: "center",
+    paddingVertical: 3, textAlign: "center",
     fontFamily: "Helvetica-Bold", color: F.sectionText,
-    letterSpacing: 0.5, marginTop: 8,
+    letterSpacing: 0.4, marginTop: 4, fontSize: 9,
   },
 
   // Data rows
   labelCell: {
-    flex: 1, padding: 5, backgroundColor: C.rowAlt,
+    flex: 1, padding: 3, backgroundColor: C.rowAlt,
     fontFamily: "Helvetica-Bold",
-    borderRightWidth: 1, borderBottomWidth: 1, borderColor: C.border,
+    borderRightWidth: 1, borderBottomWidth: 1, borderColor: BORDER,
   },
   valueCell: {
-    flex: 1, padding: 5,
-    borderRightWidth: 1, borderBottomWidth: 1, borderColor: C.border,
+    flex: 1, padding: 3,
+    borderRightWidth: 1, borderBottomWidth: 1, borderColor: BORDER,
   },
   cellLast: { borderRightWidth: 0 },
 
-  // Coverage amount
   amount: { textAlign: "right", fontFamily: "Helvetica-Bold" },
-  coverageNote: { fontSize: 7.5, color: C.muted, fontStyle: "italic", marginTop: 1 },
+  coverageNote: { fontSize: 7, color: C.muted, fontStyle: "italic", marginTop: 1 },
 
   // Warning
   warning: {
-    borderWidth: 1, borderTopWidth: 0, borderColor: C.border,
-    padding: 8, fontSize: 7.5, lineHeight: 1.35, textAlign: "justify",
+    borderWidth: 1, borderTopWidth: 0, borderColor: BORDER,
+    padding: 4, fontSize: 6.8, lineHeight: 1.2, textAlign: "justify",
   },
-  warningTitle: { fontFamily: "Helvetica-Bold", marginBottom: 3 },
+  warningTitle: { fontFamily: "Helvetica-Bold", marginBottom: 2 },
 
   // Validity & signatures
-  validityRow: { flexDirection: "row", marginTop: 10, marginBottom: 4 },
-  validityCell: { flex: 1, padding: 6 },
-  validityUnderline: { borderBottomWidth: 1, borderColor: C.text, paddingBottom: 2 },
+  validityRow: { flexDirection: "row", marginTop: 4, marginBottom: 2 },
+  validityCell: { flex: 1, padding: 3, textAlign: "center" },
+  validityUnderline: { textDecoration: "underline" },
 
-  signaturesRow: { flexDirection: "row", borderWidth: 1, borderColor: C.border },
+  signaturesRow: { flexDirection: "row", borderWidth: 1, borderColor: BORDER },
   signatureCell: {
-    flex: 1, padding: 8, alignItems: "center",
-    borderRightWidth: 1, borderColor: C.border,
+    flex: 1, padding: 4, alignItems: "center",
+    borderRightWidth: 1, borderColor: BORDER,
   },
   sigLabel: {
-    fontFamily: "Helvetica-Bold", backgroundColor: C.rowAlt,
-    padding: 4, marginBottom: 6, width: "100%", textAlign: "center",
+    fontFamily: "Helvetica-Bold", backgroundColor: C.rowHeader,
+    padding: 3, marginBottom: 3, width: "100%", textAlign: "center",
     borderBottomWidth: 1, borderColor: C.softBorder,
   },
-  sigArea: { height: 56, width: "100%", alignItems: "center", justifyContent: "center" },
-  sigImage: { maxHeight: 50, objectFit: "contain" },
+  sigArea: { height: 42, width: "100%", alignItems: "center", justifyContent: "center" },
+  sigImage: { maxHeight: 40, objectFit: "contain" },
 
   // Footer
   footer: {
-    backgroundColor: F.primary, color: F.textOnPrimary, padding: 8,
-    marginTop: 14, flexDirection: "row",
+    backgroundColor: F.primary, color: F.textOnPrimary, padding: 6,
+    marginTop: 6, flexDirection: "row", alignItems: "center",
   },
   footerLeft: { flex: 2 },
   footerMain: { fontFamily: "Helvetica-Bold", fontSize: 8, color: F.textOnPrimary },
-  footerSmall: { fontSize: 7, marginTop: 2, fontStyle: "italic", color: F.textOnPrimary },
+  footerSmall: { fontSize: 7, marginTop: 1, fontStyle: "italic", color: F.textOnPrimary },
   footerRight: { flex: 1, fontSize: 7.5, textAlign: "right", color: F.textOnPrimary },
 });
 
