@@ -200,6 +200,7 @@ export const portalReportIncident = createServerFn({ method: "POST" })
     location: string;
     description: string;
     hospital: string;
+    hospital_id?: string | null;
   }) => d)
   .handler(async ({ data }) => {
     const id = (await callPortal("report_portal_incident", {
@@ -209,9 +210,20 @@ export const portalReportIncident = createServerFn({ method: "POST" })
       _location: data.location,
       _description: data.description,
       _hospital: data.hospital,
+      _hospital_id: data.hospital_id ?? null,
     })) as string;
     return { id };
   });
+
+export const portalHospitals = createServerFn({ method: "POST" })
+  .inputValidator((d: { policy_id: string }) => d)
+  .handler(async ({ data }) => {
+    return (await callPortal("get_portal_hospitals", { _policy_id: data.policy_id })) as Array<{
+      id: string; name: string; address: string | null; city: string | null;
+      state: string | null; phone: string | null; lat: number | null; lng: number | null; notes: string | null;
+    }>;
+  });
+
 
 export const portalUpdateProfile = createServerFn({ method: "POST" })
   .inputValidator((d: { changes: Record<string, string> }) => d)
