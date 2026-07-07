@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { portalDashboard, portalReportIncident } from "@/lib/portal/portal.functions";
+import { portalDashboard, portalReportIncident, portalHospitals } from "@/lib/portal/portal.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Lock, CreditCard, AlertTriangle } from "lucide-react";
+import { Lock, CreditCard, AlertTriangle, MapPin } from "lucide-react";
+
+function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const R = 6371;
+  const toRad = (v: number) => (v * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
 
 export const Route = createFileRoute("/portal/_app/incidents/new")({
   component: NewIncidentPage,
@@ -33,6 +44,7 @@ function NewIncidentPage() {
   const navigate = useNavigate();
   const dash = useServerFn(portalDashboard);
   const report = useServerFn(portalReportIncident);
+  const listHospitals = useServerFn(portalHospitals);
   const { data, isLoading } = useQuery({ queryKey: ["portal", "dashboard"], queryFn: () => dash() });
 
   const allPolicies = ((data as any)?.policies ?? []) as any[];
@@ -45,14 +57,78 @@ function NewIncidentPage() {
     location: "",
     description: "",
     hospital: "",
+    hospital_id: "" as string | "" | "other",
+    hospital_other: "",
   });
   const [saving, setSaving] = useState(false);
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoState, setGeoState] = useState<"idle" | "asking" | "granted" | "denied" | "unsupported">("idle");
+
+  function requestLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoState("unsupported");
+      return;
+    }
+    setGeoState("asking");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoState("granted");
+      },
+      () => setGeoState("denied"),
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 },
+    );
+  }
+
+  useEffect(() => {
+    requestLocation();
+  }, []);
+
+  const { data: hospitals = [] } = useQuery({
+    queryKey: ["portal", "hospitals", form.policy_id],
+    enabled: !!form.policy_id,
+    queryFn: () => listHospitals({ data: { policy_id: form.policy_id } }),
+  });
+
+  const sortedHospitals = useMemo(() => {
+    const list = [...(hospitals as any[])];
+    if (userLoc) {
+      list.forEach((h) => {
+        h._distance =
+          h.lat != null && h.lng != null
+            ? haversineKm(userLoc, { lat: Number(h.lat), lng: Number(h.lng) })
+            : null;
+      });
+      list.sort((a, b) => {
+        if (a._distance == null && b._distance == null) return a.name.localeCompare(b.name);
+        if (a._distance == null) return 1;
+        if (b._distance == null) return -1;
+        return a._distance - b._distance;
+      });
+    } else {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return list;
+  }, [hospitals, userLoc]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.policy_id) return toast.error("Selecciona un certificado");
     if (form.description.trim().length < 20)
       return toast.error("La descripción debe tener al menos 20 caracteres");
+    let hospitalName = form.hospital;
+    let hospitalId: string | null = null;
+    if (form.hospital_id && form.hospital_id !== "other") {
+      const h = (hospitals as any[]).find((x) => x.id === form.hospital_id);
+      if (!h) return toast.error("Selecciona un hospital válido");
+      hospitalId = h.id;
+      hospitalName = h.name;
+    } else if (form.hospital_id === "other") {
+      hospitalName = form.hospital_other.trim();
+      if (!hospitalName) return toast.error("Escribe el nombre del hospital");
+    } else if (sortedHospitals.length > 0) {
+      return toast.error("Selecciona el hospital al que te dirigiste");
+    }
     setSaving(true);
     try {
       await report({
@@ -62,7 +138,8 @@ function NewIncidentPage() {
           accident_time: form.accident_time || null,
           location: form.location,
           description: form.description,
-          hospital: form.hospital,
+          hospital: hospitalName,
+          hospital_id: hospitalId,
         },
       });
       toast.success("Reporte recibido. Tu siniestro está en revisión. Te contactaremos por WhatsApp.");
@@ -75,6 +152,7 @@ function NewIncidentPage() {
         poliza_inactiva: "El certificado no está vigente. Completa el pago para activarlo.",
         fecha_invalida: "La fecha del accidente no es válida.",
         descripcion_muy_corta: "La descripción debe tener al menos 20 caracteres.",
+        hospital_no_valido: "El hospital seleccionado no está autorizado.",
       };
       const key = Object.keys(map).find((k) => raw.includes(k));
       toast.error(key ? map[key] : `No fue posible reportar el siniestro: ${raw || "error desconocido"}`);
@@ -82,6 +160,7 @@ function NewIncidentPage() {
       setSaving(false);
     }
   }
+
 
   if (isLoading) {
     return <div className="text-slate-500">Cargando…</div>;
@@ -184,12 +263,86 @@ function NewIncidentPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Hospital al que te diriges</Label>
-              <Input
-                value={form.hospital}
-                onChange={(e) => setForm({ ...form, hospital: e.target.value })}
-              />
+              <div className="flex items-center justify-between">
+                <Label>Hospital al que te diriges</Label>
+                {geoState === "denied" || geoState === "unsupported" ? (
+                  <button
+                    type="button"
+                    onClick={requestLocation}
+                    className="text-xs text-slate-500 underline flex items-center gap-1"
+                  >
+                    <MapPin className="h-3 w-3" /> Usar mi ubicación
+                  </button>
+                ) : geoState === "granted" ? (
+                  <span className="text-xs text-emerald-700 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> Ordenados por cercanía
+                  </span>
+                ) : null}
+              </div>
+              {!form.policy_id ? (
+                <p className="text-xs text-slate-500">Selecciona primero un certificado.</p>
+              ) : sortedHospitals.length === 0 ? (
+                <>
+                  <p className="text-xs text-slate-500">
+                    No hay hospitales configurados para este programa. Escribe el nombre del hospital al que te dirigiste.
+                  </p>
+                  <Input
+                    value={form.hospital_other}
+                    onChange={(e) =>
+                      setForm({ ...form, hospital_id: "other", hospital_other: e.target.value })
+                    }
+                    placeholder="Nombre del hospital"
+                  />
+                </>
+              ) : (
+                <>
+                  <Select
+                    value={form.hospital_id || undefined}
+                    onValueChange={(v) => setForm({ ...form, hospital_id: v as any })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un hospital autorizado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortedHospitals.map((h: any) => (
+                        <SelectItem key={h.id} value={h.id}>
+                          <span className="flex flex-col">
+                            <span>
+                              {h.name}
+                              {h._distance != null && (
+                                <span className="text-xs text-slate-500 ml-2">
+                                  · {h._distance < 1 ? `${Math.round(h._distance * 1000)} m` : `${h._distance.toFixed(1)} km`}
+                                </span>
+                              )}
+                            </span>
+                            {(h.city || h.address) && (
+                              <span className="text-xs text-slate-500">
+                                {[h.address, h.city].filter(Boolean).join(", ")}
+                              </span>
+                            )}
+                          </span>
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="other">Otro (no está en la lista)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {form.hospital_id === "other" && (
+                    <Input
+                      className="mt-2"
+                      value={form.hospital_other}
+                      onChange={(e) => setForm({ ...form, hospital_other: e.target.value })}
+                      placeholder="Nombre del hospital"
+                    />
+                  )}
+                  {geoState === "denied" && (
+                    <p className="text-[11px] text-slate-500">
+                      Permite el acceso a tu ubicación para ordenar los hospitales por cercanía.
+                    </p>
+                  )}
+                </>
+              )}
             </div>
+
             <div className="space-y-2">
               <Label>Descripción detallada (mín. 20 caracteres)</Label>
               <Textarea

@@ -372,6 +372,62 @@ export type Database = {
         }
         Relationships: []
       }
+      hospitals: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          lat: number | null
+          lng: number | null
+          name: string
+          notes: string | null
+          phone: string | null
+          program_id: string
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat?: number | null
+          lng?: number | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          program_id: string
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          program_id?: string
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hospitals_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incidents: {
         Row: {
           accident_date: string | null
@@ -383,6 +439,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           hospital: string | null
+          hospital_id: string | null
           id: string
           location_description: string | null
           metadata: Json
@@ -405,6 +462,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           hospital?: string | null
+          hospital_id?: string | null
           id?: string
           location_description?: string | null
           metadata?: Json
@@ -427,6 +485,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           hospital?: string | null
+          hospital_id?: string | null
           id?: string
           location_description?: string | null
           metadata?: Json
@@ -445,6 +504,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
             referencedColumns: ["id"]
           },
           {
@@ -1617,6 +1683,10 @@ export type Database = {
         }[]
       }
       get_portal_dashboard: { Args: { _token: string }; Returns: Json }
+      get_portal_hospitals: {
+        Args: { _policy_id: string; _token: string }
+        Returns: Json
+      }
       get_portal_incidents: { Args: { _token: string }; Returns: Json }
       get_portal_payments: { Args: { _token: string }; Returns: Json }
       get_portal_policies: { Args: { _token: string }; Returns: Json }
@@ -1735,6 +1805,7 @@ export type Database = {
           _accident_time: string
           _description: string
           _hospital: string
+          _hospital_id?: string
           _location: string
           _policy_id: string
           _token: string
