@@ -19,6 +19,14 @@ async function admin() {
 }
 
 function getToken(): string | null {
+  // 1) Header explícito enviado por el cliente (localStorage → x-portal-token).
+  //    Necesario cuando la app corre dentro de un iframe cross-site (preview),
+  //    donde las cookies httpOnly SameSite=None son descartadas por el navegador.
+  try {
+    const h = getRequestHeader("x-portal-token");
+    if (h && h.length >= 32) return h;
+  } catch {}
+  // 2) Fallback a cookie (localhost, publicación en dominio propio, etc.)
   try {
     const t = getCookie(COOKIE);
     return t ?? null;
