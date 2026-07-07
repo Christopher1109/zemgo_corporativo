@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { getPoliciesByState } from "@/lib/map.functions";
+import { getPoliciesByState, getStateDetail } from "@/lib/map.functions";
 import { matchState, MX_STATES } from "@/lib/mx-states";
 import { MX_VIEWBOX, MX_STATE_PATHS } from "@/lib/mx-paths";
 import { useProgram } from "@/lib/program-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type Row = { state: string; total: number; active: number; suspended: number; expired: number };
@@ -70,9 +71,27 @@ export function GeoReport() {
 }
 
 function MxMap({ byCode, loading }: { byCode: Map<string, Row>; loading: boolean }) {
+  const { activeProgram } = useProgram();
   const [hover, setHover] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [showClients, setShowClients] = useState(false);
   const active = selected ?? hover;
+
+  const detailFn = useServerFn(getStateDetail);
+  const stateNames = selected && MX_STATES[selected]
+    ? [MX_STATES[selected].name, ...MX_STATES[selected].aliases]
+    : [];
+  const detailQ = useQuery({
+    queryKey: ["state-detail", selected, activeProgram?.id ?? null],
+    enabled: !!selected,
+    staleTime: 30_000,
+    queryFn: () => detailFn({
+      data: {
+        state_names: stateNames,
+        program_id: activeProgram?.id ?? null,
+      },
+    }),
+  });
 
   const codes = Object.keys(MX_STATE_PATHS);
   const max = useMemo(() => {
