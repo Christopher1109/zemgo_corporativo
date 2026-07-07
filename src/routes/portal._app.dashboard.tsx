@@ -304,6 +304,183 @@ function DashboardPage() {
           </div>
         </div>
       ) : null}
+
+      {/* KPIs — sólo cuando hay póliza activa */}
+      {primary && activated && (
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+          <KpiTile
+            icon={<Clock className="h-4 w-4" />}
+            label="Días para vencer"
+            value={daysUntil(primary.end_date)}
+            hint="Cobertura vigente"
+          />
+          <KpiTile
+            icon={<DollarSign className="h-4 w-4" />}
+            label="Suma asegurada"
+            value={`$${Number(extras?.totals?.sum_insured ?? 0).toLocaleString("es-MX")}`}
+            hint="Total protegido"
+          />
+          <KpiTile
+            icon={<ShieldCheck className="h-4 w-4" />}
+            label="Certificados"
+            value={String(extras?.totals?.active_policies ?? activePolicies.length)}
+            hint="Activos a tu nombre"
+          />
+          <KpiTile
+            icon={<Users className="h-4 w-4" />}
+            label="Beneficiarios"
+            value={String(extras?.beneficiaries?.length ?? 0)}
+            hint="Registrados"
+          />
+        </div>
+      )}
+
+      {/* Coberturas + Beneficiarios */}
+      {primary && activated && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                Coberturas contratadas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(extras?.coverages?.length ?? 0) === 0 ? (
+                <p className="text-sm text-slate-500">Sin coberturas registradas.</p>
+              ) : (
+                <ul className="divide-y text-sm">
+                  {extras!.coverages.map((c: any, i: number) => (
+                    <li key={i} className="flex items-center justify-between py-2">
+                      <span className="text-slate-700">{c.coverage_name}</span>
+                      <span className="font-medium tabular-nums">
+                        {c.sum_insured
+                          ? `$${Number(c.sum_insured).toLocaleString("es-MX")}`
+                          : "Incluida"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="h-4 w-4 text-slate-700" />
+                Beneficiarios
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(extras?.beneficiaries?.length ?? 0) === 0 ? (
+                <p className="text-sm text-slate-500">Aún no has registrado beneficiarios.</p>
+              ) : (
+                <ul className="divide-y text-sm">
+                  {extras!.beneficiaries.map((b: any, i: number) => (
+                    <li key={i} className="flex items-center justify-between py-2">
+                      <div>
+                        <div className="font-medium">{b.full_name}</div>
+                        <div className="text-xs text-slate-500">{b.relationship}</div>
+                      </div>
+                      <Badge variant="outline">{b.percentage}%</Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Estado de pagos */}
+      {primary && activated && (extras?.payments?.length ?? 0) > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-slate-700" />
+              Estado de pagos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y text-sm">
+              {extras!.payments.map((p: any) => (
+                <li key={p.id} className="flex items-center justify-between py-2">
+                  <div>
+                    <div className="font-medium">
+                      ${Number(p.amount).toLocaleString("es-MX")}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      Vence {formatDate(p.due_date)}
+                      {p.paid_date ? ` · Pagado ${formatDate(p.paid_date)}` : ""}
+                    </div>
+                  </div>
+                  <Badge variant="outline" className={statusMeta(p.status).className}>
+                    {statusMeta(p.status).label}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Accesos rápidos */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Accesos rápidos</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/portal/policies">
+              <Download className="mr-2 h-4 w-4" /> Descargar certificado
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/portal/profile">
+              <User className="mr-2 h-4 w-4" /> Actualizar datos
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <a
+              href="https://wa.me/525651710563"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MessageCircle className="mr-2 h-4 w-4" /> Contactar soporte
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function daysUntil(iso?: string | null): string {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    const diff = Math.ceil((d.getTime() - Date.now()) / 86400000);
+    return diff >= 0 ? String(diff) : "0";
+  } catch {
+    return "—";
+  }
+}
+
+function KpiTile({
+  icon,
+  label,
+  value,
+  hint,
+}: { icon: React.ReactNode; label: string; value: string; hint?: string }) {
+  return (
+    <div className="rounded-xl border bg-white p-3">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500">
+        {icon}
+        {label}
+      </div>
+      <div className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">{value}</div>
+      {hint && <div className="text-[11px] text-slate-500 mt-0.5">{hint}</div>}
     </div>
   );
 }
