@@ -2,8 +2,9 @@
 // Color scheme: wine (#722F37). No "Ramo del seguro" column; only emission date.
 // Page size: Letter, margins ≈ 12mm x 14mm (34 x 40 pt).
 
-import { Document, Page, Text, View, Image, StyleSheet, Svg, Path, Circle } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, StyleSheet, Link } from "@react-pdf/renderer";
 import { PDF_THEME, HOPE_FOOTER } from "../theme";
+import programMcvLogo from "@/assets/program-mcv.png.asset.json";
 import { formatDate, formatGender, safe } from "../formatters";
 
 export interface CertificateMCVProps {
@@ -44,14 +45,10 @@ const s = StyleSheet.create({
   // Header
   header: { flexDirection: "row", borderWidth: 1, borderColor: C.border, marginBottom: 12 },
   hLogo: {
-    width: 130, padding: 8, alignItems: "center", justifyContent: "center",
+    width: 150, padding: 8, alignItems: "center", justifyContent: "center",
     borderRightWidth: 1, borderColor: C.border,
   },
-  logoIcon: { fontSize: 18, color: M.primary, marginBottom: 2 },
-  brandMain: {
-    color: M.primary, fontSize: 11, fontFamily: "Helvetica-Bold",
-    letterSpacing: 0.5, textAlign: "center", lineHeight: 1.15,
-  },
+  logoImage: { width: 130, height: 60, objectFit: "contain" },
   hTitle: {
     flex: 1, padding: 8, fontSize: 12, fontFamily: "Helvetica-Bold",
     textAlign: "center", borderRightWidth: 1, borderColor: C.border,
