@@ -109,7 +109,7 @@ const s = StyleSheet.create({
   section: {
     backgroundColor: ABC.primary, color: "#FFFFFF",
     fontFamily: "Helvetica-Bold", textAlign: "center",
-    padding: 4, marginTop: 6, fontSize: 9,
+    padding: 3, marginTop: 4, fontSize: 9,
     borderWidth: 1, borderColor: ABC.primary,
   },
 
@@ -148,7 +148,7 @@ const s = StyleSheet.create({
   warnTitle: { fontFamily: "Helvetica-Bold" },
 
   // ============ VIGENCIA + FIRMAS ============
-  vigRow: { flexDirection: "row", marginTop: 8, marginBottom: 4 },
+  vigRow: { flexDirection: "row", marginTop: 4, marginBottom: 2 },
   vigCell: { flex: 1, textAlign: "center", padding: 3 },
   vigLine: { textDecoration: "underline" },
 
@@ -169,15 +169,15 @@ const s = StyleSheet.create({
     borderColor: BORDER,
   },
   sigBox: {
-    flex: 1, height: 80, alignItems: "center", justifyContent: "center",
+    flex: 1, height: 55, alignItems: "center", justifyContent: "center",
     borderRightWidth: 1, borderColor: BORDER,
   },
-  sigBoxLast: { flex: 1, height: 80, alignItems: "center", justifyContent: "center" },
+  sigBoxLast: { flex: 1, height: 55, alignItems: "center", justifyContent: "center" },
   sigImg: { maxHeight: 70, maxWidth: "80%", objectFit: "contain" },
 
   // ============ FOOTER ============
   footer: {
-    backgroundColor: ABC.primary, marginTop: 8,
+    backgroundColor: ABC.primary, marginTop: 6,
     flexDirection: "row", padding: 6, alignItems: "center",
   },
   fLeft: { flex: 2 },
