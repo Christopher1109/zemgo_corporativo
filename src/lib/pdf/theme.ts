@@ -16,12 +16,12 @@ export const PDF_THEME: {
 } = {
   programs: {
     ABC: {
-      // Verde de la marca (logo circular ABC de Protección).
-      primary: "#6DBE45",
-      primaryDark: "#4E9E30",
-      accent: "#E4F3D9",
+      // Verde oscuro de la marca ABC de Protección (tono modelo).
+      primary: "#4E9E30",
+      primaryDark: "#3A7C22",
+      accent: "#D9EBCB",
       textOnPrimary: "#FFFFFF",
-      sectionBg: "#6DBE45",
+      sectionBg: "#4E9E30",
       sectionText: "#FFFFFF",
     },
     FUTCARE: {
