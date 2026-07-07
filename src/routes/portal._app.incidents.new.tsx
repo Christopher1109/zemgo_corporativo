@@ -23,8 +23,10 @@ export const Route = createFileRoute("/portal/_app/incidents/new")({
 });
 
 function isActivated(p: any) {
-  if (p.status === "active") return true;
-  return (p.payments ?? []).some((x: any) => x.status === "paid");
+  // El RPC report_portal_incident exige status = 'active'.
+  // Un pago 'paid' no basta si la póliza aún está suspendida/pendiente:
+  // el backend rechazaría con 'poliza_inactiva'.
+  return p.status === "active";
 }
 
 function NewIncidentPage() {
