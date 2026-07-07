@@ -1,0 +1,1 @@
+UPDATE public.programs SET color_primary = '#4E9E30' WHERE code = 'ABC';
