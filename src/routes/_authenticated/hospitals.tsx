@@ -60,7 +60,7 @@ function HospitalsPage() {
         .eq("program_id", programId!)
         .order("name");
       if (error) throw error;
-      return (data ?? []) as Hospital[];
+      return ((data ?? []) as unknown) as Hospital[];
     },
   });
 
