@@ -342,17 +342,15 @@ export function CertificateMCV(props: CertificateMCVProps) {
           </View>
         </View>
 
-        {/* FOOTER (sin HOPE en MCV) */}
+        {/* FOOTER */}
         <View style={s.footer}>
           <View style={s.footerLeft}>
+            <Text style={s.footerMain}>{HOPE_FOOTER}</Text>
             <Text style={s.footerSmall}>*Documento informativo sin validez oficial.</Text>
           </View>
-          <Text style={s.footerRight}>https://www.zemgoseguros.com.mx/</Text>
+          <Link src="https://www.zemgoseguros.com.mx/" style={s.footerRight}>https://www.zemgoseguros.com.mx/</Link>
         </View>
       </Page>
     </Document>
   );
 }
-
-// HOPE_FOOTER not used by MCV — the source HTML footer omits the HOPE line.
-void HOPE_FOOTER;
