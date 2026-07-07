@@ -16,30 +16,30 @@ export const PDF_THEME: {
 } = {
   programs: {
     ABC: {
-      // Matches certificate sample: bright leaf-green header/footer with pale green section bars.
-      primary: "#7CB342",
-      primaryDark: "#558B2F",
-      accent: "#DCEDC8",
+      // Verde de la marca (logo circular ABC de Protección).
+      primary: "#6DBE45",
+      primaryDark: "#4E9E30",
+      accent: "#E4F3D9",
       textOnPrimary: "#FFFFFF",
-      sectionBg: "#AED581",
-      sectionText: "#1B5E20",
+      sectionBg: "#6DBE45",
+      sectionText: "#FFFFFF",
     },
     FUTCARE: {
-      // Matches certificate sample: deep navy header/footer with white text on section bars.
-      primary: "#1B2A55",
-      primaryDark: "#101A39",
-      accent: "#E8ECF7",
+      // Azul marino oscuro (logo FUT-CARE).
+      primary: "#14284E",
+      primaryDark: "#0B1B38",
+      accent: "#E1E6F0",
       textOnPrimary: "#FFFFFF",
-      sectionBg: "#1B2A55",
+      sectionBg: "#14284E",
       sectionText: "#FFFFFF",
     },
     MCV: {
-      // Matches certificate sample: dusty maroon/rosewood, section bars filled with brand color.
-      primary: "#A23B5C",
-      primaryDark: "#7A2B45",
-      accent: "#F4E1E7",
+      // Vino/rosa oscuro (logo Manos con Valor).
+      primary: "#A85670",
+      primaryDark: "#823E56",
+      accent: "#F1DDE4",
       textOnPrimary: "#FFFFFF",
-      sectionBg: "#A23B5C",
+      sectionBg: "#A85670",
       sectionText: "#FFFFFF",
     },
   },
