@@ -6,7 +6,6 @@ import { Document, Page, Text, View, Image, StyleSheet, Link } from "@react-pdf/
 import { PDF_THEME, HOPE_FOOTER } from "../theme";
 import programFutcareLogo from "@/assets/program-futcare.png.asset.json";
 import { formatDate, formatGender, safe } from "../formatters";
-import { formatDate, formatGender, safe } from "../formatters";
 
 export interface CertificateFutCareProps {
   folio: string;
@@ -46,18 +45,10 @@ const s = StyleSheet.create({
   // Header
   header: { flexDirection: "row", borderWidth: 1, borderColor: C.border, marginBottom: 12 },
   hLogo: {
-    width: 130, padding: 10, alignItems: "center", justifyContent: "center",
-    backgroundColor: F.primary, borderRightWidth: 1, borderColor: C.border,
+    width: 150, padding: 8, alignItems: "center", justifyContent: "center",
+    borderRightWidth: 1, borderColor: C.border,
   },
-  brandMain: {
-    color: F.textOnPrimary, fontSize: 15, fontFamily: "Helvetica-Bold",
-    letterSpacing: 1, textAlign: "center",
-  },
-  brandTagline: {
-    marginTop: 5, fontSize: 6.5, letterSpacing: 1.2,
-    backgroundColor: "#FFFFFF", color: F.primary, paddingVertical: 2, paddingHorizontal: 4,
-    fontFamily: "Helvetica-Bold", textAlign: "center",
-  },
+  logoImage: { width: 130, height: 60, objectFit: "contain" },
   hTitle: {
     flex: 1, padding: 8, fontSize: 12, fontFamily: "Helvetica-Bold",
     textAlign: "center", borderRightWidth: 1, borderColor: C.border,
