@@ -178,7 +178,7 @@ const s = StyleSheet.create({
 
   // ============ FOOTER ============
   footer: {
-    backgroundColor: ABC.primary, marginTop: 6,
+    backgroundColor: ABC.primary, marginTop: 4,
     flexDirection: "row", padding: 6, alignItems: "center",
   },
   fLeft: { flex: 2 },
