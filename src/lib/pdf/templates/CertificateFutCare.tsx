@@ -2,8 +2,10 @@
 // Color scheme: blue (#1565C0). Ramo: AP Deportivo.
 // Page size: Letter, margins ≈ 12mm x 14mm (34 x 40 pt).
 
-import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, StyleSheet, Link } from "@react-pdf/renderer";
 import { PDF_THEME, HOPE_FOOTER } from "../theme";
+import programFutcareLogo from "@/assets/program-futcare.png.asset.json";
+import { formatDate, formatGender, safe } from "../formatters";
 import { formatDate, formatGender, safe } from "../formatters";
 
 export interface CertificateFutCareProps {
