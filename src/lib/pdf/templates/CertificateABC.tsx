@@ -50,7 +50,7 @@ const BORDER = "#B8B8B8";
 
 const s = StyleSheet.create({
   page: {
-    paddingTop: 30, paddingBottom: 14, paddingHorizontal: 54,
+    paddingTop: 28, paddingBottom: 8, paddingHorizontal: 54,
     fontSize: 8, color: C.text, fontFamily: "Helvetica",
     backgroundColor: C.pageBg, lineHeight: 1.15,
   },
