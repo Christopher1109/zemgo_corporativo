@@ -67,8 +67,17 @@ function NewIncidentPage() {
       });
       toast.success("Reporte recibido. Tu siniestro está en revisión. Te contactaremos por WhatsApp.");
       navigate({ to: "/portal/incidents" });
-    } catch {
-      toast.error("No fue posible reportar el siniestro");
+    } catch (err: any) {
+      const raw = String(err?.message ?? err ?? "");
+      const map: Record<string, string> = {
+        sesion_invalida: "Tu sesión expiró. Vuelve a iniciar sesión.",
+        poliza_no_encontrada: "El certificado seleccionado no está disponible.",
+        poliza_inactiva: "El certificado no está vigente. Completa el pago para activarlo.",
+        fecha_invalida: "La fecha del accidente no es válida.",
+        descripcion_muy_corta: "La descripción debe tener al menos 20 caracteres.",
+      };
+      const key = Object.keys(map).find((k) => raw.includes(k));
+      toast.error(key ? map[key] : `No fue posible reportar el siniestro: ${raw || "error desconocido"}`);
     } finally {
       setSaving(false);
     }
