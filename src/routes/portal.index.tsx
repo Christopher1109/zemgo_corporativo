@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, Lock, MessageCircle } from "lucide-react";
 import { verifyPortalLogin } from "@/lib/portal/portal.functions";
+import { setPortalToken } from "@/lib/portal/portal-token";
 import { HopeLogo } from "@/components/hope-logo";
 
 export const Route = createFileRoute("/portal/")({
