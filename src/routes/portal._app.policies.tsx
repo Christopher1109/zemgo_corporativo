@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { generateCertificateClient } from "@/lib/pdf/generateCertificate.browser";
+import { getProgramInfo } from "@/data/portal-program-info";
+import { Info, LifeBuoy } from "lucide-react";
 import {
   ChevronDown,
   ChevronUp,
@@ -283,6 +285,33 @@ function PoliciesPage() {
                       </ul>
                     </div>
                   )}
+
+                  {/* Alcance + Qué hacer en caso de siniestro */}
+                  {(() => {
+                    const info = getProgramInfo(p.program?.code);
+                    return (
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <details className="rounded-md border border-slate-200 bg-slate-50 p-3 group">
+                          <summary className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 select-none">
+                            <Info className="h-3.5 w-3.5" style={{ color }} />
+                            Alcance de tu cobertura
+                          </summary>
+                          <p className="mt-2 text-xs text-slate-600 leading-relaxed whitespace-pre-line">
+                            {info.alcance}
+                          </p>
+                        </details>
+                        <details className="rounded-md border border-slate-200 bg-slate-50 p-3 group">
+                          <summary className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 select-none">
+                            <LifeBuoy className="h-3.5 w-3.5 text-rose-600" />
+                            ¿Qué hacer en caso de siniestro?
+                          </summary>
+                          <p className="mt-2 text-xs text-slate-600 leading-relaxed whitespace-pre-line">
+                            {info.siniestro}
+                          </p>
+                        </details>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               )}
             </Card>
