@@ -72,35 +72,35 @@ const s = StyleSheet.create({
 
   // Bloque descripción (recuadro grande)
   descBox: {
-    backgroundColor: PILL_BG, borderRadius: 14,
-    paddingVertical: 10, paddingHorizontal: 14, marginBottom: 8,
+    backgroundColor: PILL_BG, borderRadius: 12,
+    paddingVertical: 8, paddingHorizontal: 12, marginBottom: 6,
   },
-  descLabel: { color: PILL_LABEL, fontFamily: "Helvetica-Bold", fontSize: 9.5, marginBottom: 8 },
-  descText: { fontSize: 10, lineHeight: 1.45, minHeight: 96 },
+  descLabel: { color: PILL_LABEL, fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 6 },
+  descText: { fontSize: 9.5, lineHeight: 1.4, minHeight: 60 },
 
   // Texto de responsabilidad
   declaration: {
-    marginTop: 6, paddingHorizontal: 30, marginBottom: 12,
-    fontSize: 9.5, lineHeight: 1.5, textAlign: "justify",
+    marginTop: 4, paddingHorizontal: 30, marginBottom: 8,
+    fontSize: 9, lineHeight: 1.4, textAlign: "justify",
   },
 
   // Firma
   signatureBlock: {
-    alignItems: "center", marginTop: 8, marginBottom: 6, paddingHorizontal: 30,
+    alignItems: "center", marginTop: 2, marginBottom: 2, paddingHorizontal: 30,
   },
-  signatureArea: { height: 58, alignItems: "center", justifyContent: "center" },
-  signatureImg: { maxHeight: 52, maxWidth: 180, objectFit: "contain" },
-  signatureName: { fontSize: 11, marginTop: 2 },
+  signatureArea: { height: 42, alignItems: "center", justifyContent: "center" },
+  signatureImg: { maxHeight: 40, maxWidth: 160, objectFit: "contain" },
+  signatureName: { fontSize: 10.5, marginTop: 0 },
   signatureCaptionBar: {
-    marginTop: 8, backgroundColor: PILL_BG, borderRadius: 22,
-    paddingVertical: 7, paddingHorizontal: 20, alignSelf: "stretch",
+    marginTop: 4, backgroundColor: PILL_BG, borderRadius: 20,
+    paddingVertical: 5, paddingHorizontal: 20, alignSelf: "stretch",
     marginHorizontal: 30, alignItems: "center",
   },
-  signatureCaption: { fontSize: 10, color: PILL_LABEL, fontFamily: "Helvetica-Bold" },
+  signatureCaption: { fontSize: 9.5, color: PILL_LABEL, fontFamily: "Helvetica-Bold" },
 
   // Aviso importante
   importantNote: {
-    paddingHorizontal: 30, marginTop: 10, fontSize: 9.5, lineHeight: 1.4,
+    paddingHorizontal: 30, marginTop: 6, fontSize: 9, lineHeight: 1.35,
     fontFamily: "Helvetica-Bold",
   },
   importantNoteBody: {
@@ -109,10 +109,10 @@ const s = StyleSheet.create({
 
   // Franja naranja 48 hrs
   highlight: {
-    marginTop: 10, marginHorizontal: 0,
+    marginTop: 6, marginHorizontal: 0,
     color: ORANGE, textAlign: "center",
-    fontFamily: "Helvetica-Bold", fontSize: 13,
-    paddingHorizontal: 30, lineHeight: 1.25,
+    fontFamily: "Helvetica-Bold", fontSize: 11.5,
+    paddingHorizontal: 30, lineHeight: 1.2,
   },
 
   // Aviso privacidad
