@@ -1682,6 +1682,10 @@ export type Database = {
           program_id: string
         }[]
       }
+      get_portal_accident_notice: {
+        Args: { _incident_id: string; _token: string }
+        Returns: Json
+      }
       get_portal_dashboard: { Args: { _token: string }; Returns: Json }
       get_portal_hospitals: {
         Args: { _policy_id: string; _token: string }
