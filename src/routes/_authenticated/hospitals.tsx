@@ -70,6 +70,34 @@ function HospitalsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Hospital> | null>(null);
 
+  // Filtros
+  const [qName, setQName] = useState("");
+  const [qCity, setQCity] = useState<string>("__all__");
+  const [qStatus, setQStatus] = useState<"all" | "active" | "inactive">("all");
+
+  const cityOptions = useMemo(() => {
+    const set = new Set<string>();
+    hospitals.forEach((h) => { if (h.city) set.add(h.city); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [hospitals]);
+
+  const filtered = useMemo(() => {
+    const term = qName.trim().toLowerCase();
+    return hospitals.filter((h) => {
+      if (term && !(
+        h.name?.toLowerCase().includes(term) ||
+        h.address?.toLowerCase().includes(term) ||
+        h.city?.toLowerCase().includes(term)
+      )) return false;
+      if (qCity !== "__all__" && (h.city ?? "") !== qCity) return false;
+      if (qStatus === "active" && !h.is_active) return false;
+      if (qStatus === "inactive" && h.is_active) return false;
+      return true;
+    });
+  }, [hospitals, qName, qCity, qStatus]);
+
+  const anyFilterActive = qName.trim() !== "" || qCity !== "__all__" || qStatus !== "all";
+
   function openNew() {
     if (!programId) return;
     setEditing(emptyForm(programId));
