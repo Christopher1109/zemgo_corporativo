@@ -197,21 +197,8 @@ function IncidentDetail() {
             </span>
           </div>
         </div>
-        {canDecide && ["reported", "pending_review"].includes(incident.status) && (
-          <div className="flex gap-2">
-            <Button
-              size="lg"
-              onClick={() => setApproveOpen(true)}
-              disabled={!canApprove}
-              title={hasActivePass ? "Ya existe un pase médico activo para este siniestro" : undefined}
-            >
-              <Check className="h-4 w-4 mr-1" /> Aprobar y emitir pase
-            </Button>
-            <Button size="lg" variant="destructive" onClick={() => setRejectOpen(true)}>
-              <X className="h-4 w-4 mr-1" /> Rechazar
-            </Button>
-          </div>
-        )}
+        {/* Los siniestros ahora se autorizan automáticamente al ser reportados.
+            El despacho tiene visibilidad de solo-lectura. */}
       </div>
 
       <Tabs defaultValue="info">
