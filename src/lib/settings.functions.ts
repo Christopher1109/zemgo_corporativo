@@ -7,10 +7,25 @@ export const listProgramAlertConfig = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("programs")
-      .select("id, code, name, color_primary, payment_alert_offsets, is_active")
+      .select("id, code, name, color_primary, payment_alert_offsets, is_active, policy_number")
       .order("code");
     if (error) throw new Error(error.message);
     return data ?? [];
+  });
+
+export const updateProgramPolicyNumber = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    program_id: z.string().uuid(),
+    policy_number: z.string().max(80).nullable(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("update_program_policy_number", {
+      _program_id: data.program_id,
+      _policy_number: data.policy_number ?? "",
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 export const updateProgramAlertOffsets = createServerFn({ method: "POST" })

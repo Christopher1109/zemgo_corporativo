@@ -1,19 +1,18 @@
-// MedicalPassHIR — React-PDF translation of carta-aviso-hir.html.
-// HIR Seguros: orange (#F37021) + blue (#1976D2) decorative circles,
-// 48hr validity highlight, privacy notice, director signature block.
-// Page size: Letter. Page padding handled per-section (header has 0 padding
-// so the decorative circles can bleed to the edges).
+// MedicalPassHIR — Carta Aviso de Accidente (HIR Seguros)
+// Diseño replicado del PDF oficial: fondo blanco, círculos decorativos
+// (naranja + azul), campos con "píldoras" de fondo gris muy claro y
+// franja azul marino en el pie con datos de contacto.
 
 import { Document, Page, Text, View, Image, StyleSheet, Svg, Circle } from "@react-pdf/renderer";
 import { PDF_THEME } from "../theme";
 import { formatDate, formatCurrency, safe } from "../formatters";
 
 export interface MedicalPassHIRProps {
-  pass_id: string;
-  valid_from: string;
-  valid_until: string;
-  director_name: string | null;
-  director_signature_url: string | null;
+  pass_id?: string;
+  valid_from?: string;
+  valid_until?: string;
+  director_name?: string | null;
+  director_signature_url?: string | null;
   snapshot: {
     program_code?: string;
     contracting_party?: string | null;
@@ -28,234 +27,194 @@ export interface MedicalPassHIRProps {
     incident_time?: string | null;
     incident_description?: string | null;
     hospital_name?: string | null;
-    [k: string]: any;
+    [k: string]: unknown;
   };
 }
 
 const H = PDF_THEME.hir;
+const ORANGE = H.accent;                  // #F58220
+const NAVY = "#0B2E63";                   // franja de pie
+const PILL_BG = "#EEF2F5";                // fondo de campos
+const PILL_LABEL = "#0B2E63";
+const TEAL = "#1CA398";                    // círculo decorativo derecho medio
 
 const s = StyleSheet.create({
   page: {
-    fontSize: 10, color: "#1a1a1a", fontFamily: "Helvetica",
-    backgroundColor: "#FFFFFF",
+    fontSize: 9.5, color: "#1a1a1a", fontFamily: "Helvetica",
+    backgroundColor: "#FFFFFF", paddingBottom: 40,
   },
 
-  // HEADER (no padding so SVG circles can bleed to edges)
-  header: { position: "relative", height: 90, marginBottom: 8 },
+  // ---- HEADER ----
+  headerWrap: { position: "relative", height: 90 },
   headerSvg: { position: "absolute", top: 0, left: 0 },
-  headerContent: {
-    position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-    paddingTop: 28, paddingHorizontal: 40,
-    flexDirection: "row", alignItems: "center",
-  },
   logoBox: {
-    width: 62, height: 62, backgroundColor: H.accent, borderRadius: 6,
-    alignItems: "center", justifyContent: "center", padding: 4,
+    position: "absolute", top: 18, left: 30,
+    width: 52, height: 52, backgroundColor: ORANGE, borderRadius: 4,
+    alignItems: "center", justifyContent: "center",
   },
-  logoIcon: { color: "#FFFFFF", fontSize: 16, fontFamily: "Helvetica-Bold", lineHeight: 1 },
-  logoLabel: {
-    color: "#FFFFFF", fontSize: 6, marginTop: 3,
-    letterSpacing: 1, fontFamily: "Helvetica-Bold",
-  },
-  titleCell: { flex: 1, paddingLeft: 14, justifyContent: "center" },
-  title: {
-    fontSize: 22, fontFamily: "Helvetica-Bold", color: H.accent, letterSpacing: 0.5,
+  logoTxt: { color: "#fff", fontFamily: "Helvetica-Bold", fontSize: 18, lineHeight: 1 },
+  logoSub: { color: "#fff", fontFamily: "Helvetica-Bold", fontSize: 5.5, letterSpacing: 1, marginTop: 3 },
+  headerTitle: {
+    position: "absolute", top: 32, left: 100, right: 140,
+    fontSize: 22, fontFamily: "Helvetica-Bold", color: ORANGE,
   },
 
-  // BODY
-  body: { paddingHorizontal: 40, paddingBottom: 6 },
-  fieldRow: { flexDirection: "row", marginBottom: 8 },
-  field: { flex: 1, paddingRight: 8 },
-  fieldLast: { paddingRight: 0 },
-  pillLabel: {
-    backgroundColor: "#D9EAFA", color: "#0D47A1",
-    borderRadius: 14, paddingVertical: 4, paddingHorizontal: 10,
-    fontFamily: "Helvetica-Bold", fontSize: 8.5,
-    alignSelf: "flex-start", marginBottom: 4,
+  // ---- BODY ----
+  body: { paddingHorizontal: 30, paddingTop: 2 },
+  row: { flexDirection: "row", gap: 8, marginBottom: 6 },
+  pill: {
+    backgroundColor: PILL_BG, borderRadius: 20,
+    paddingVertical: 5, paddingHorizontal: 12,
+    flexDirection: "row", alignItems: "center", flex: 1, minHeight: 22,
   },
-  pillLabelCenter: { alignSelf: "center" },
-  fieldValue: {
-    paddingHorizontal: 10, fontSize: 10, color: "#1a1a1a", minHeight: 14,
-  },
-  fieldValueLarge: {
-    paddingHorizontal: 10, paddingVertical: 5, fontSize: 10, color: "#1a1a1a",
-    minHeight: 75, borderBottomWidth: 1, borderBottomColor: "#c0c0c0",
-    borderStyle: "dashed", lineHeight: 1.5,
-  },
+  pillLabel: { color: PILL_LABEL, fontFamily: "Helvetica-Bold", fontSize: 9, marginRight: 5 },
+  pillValue: { color: "#1a1a1a", fontSize: 9.5, flex: 1 },
 
-  // Declaration
+  // Bloque descripción (recuadro grande)
+  descBox: {
+    backgroundColor: PILL_BG, borderRadius: 12,
+    paddingVertical: 8, paddingHorizontal: 12, marginBottom: 6,
+  },
+  descLabel: { color: PILL_LABEL, fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 6 },
+  descText: { fontSize: 9.5, lineHeight: 1.4, minHeight: 60 },
+
+  // Texto de responsabilidad
   declaration: {
-    marginTop: 18, paddingHorizontal: 40,
-    fontSize: 9, lineHeight: 1.45, textAlign: "justify",
+    marginTop: 4, paddingHorizontal: 30, marginBottom: 8,
+    fontSize: 9, lineHeight: 1.4, textAlign: "justify",
   },
 
-  // Signature
-  signatureSection: {
-    alignItems: "center", marginTop: 28, marginBottom: 14,
-    paddingHorizontal: 40,
+  // Firma
+  signatureBlock: {
+    alignItems: "center", marginTop: 2, marginBottom: 2, paddingHorizontal: 30,
   },
-  signatureArea: {
-    height: 56, alignItems: "center", justifyContent: "center", marginBottom: 4,
+  signatureArea: { height: 42, alignItems: "center", justifyContent: "center" },
+  signatureImg: { maxHeight: 40, maxWidth: 160, objectFit: "contain" },
+  signatureName: { fontSize: 10.5, marginTop: 0 },
+  signatureCaptionBar: {
+    marginTop: 4, backgroundColor: PILL_BG, borderRadius: 20,
+    paddingVertical: 5, paddingHorizontal: 20, alignSelf: "stretch",
+    marginHorizontal: 30, alignItems: "center",
   },
-  signatureImg: { maxHeight: 50, maxWidth: 180, objectFit: "contain" },
-  signatureName: {
-    borderTopWidth: 1, borderTopColor: "#1a1a1a", paddingTop: 4,
-    minWidth: 200, textAlign: "center", fontSize: 10,
+  signatureCaption: { fontSize: 9.5, color: PILL_LABEL, fontFamily: "Helvetica-Bold" },
+
+  // Aviso importante
+  importantNote: {
+    paddingHorizontal: 30, marginTop: 6, fontSize: 9, lineHeight: 1.35,
+    fontFamily: "Helvetica-Bold",
   },
-  signatureCaption: {
-    textAlign: "center", fontSize: 9, marginTop: 3, color: "#1a1a1a",
+  importantNoteBody: {
+    fontFamily: "Helvetica",
   },
 
-  // Notices
-  notice: {
-    paddingHorizontal: 40, marginTop: 12, fontSize: 8.5, lineHeight: 1.4,
-  },
-  noticeTitle: { fontFamily: "Helvetica-Bold" },
-
+  // Franja naranja 48 hrs
   highlight: {
-    backgroundColor: H.accent, color: "#FFFFFF",
-    textAlign: "center", fontFamily: "Helvetica-Bold",
-    fontSize: 11, paddingVertical: 8, paddingHorizontal: 20,
-    marginVertical: 12, marginHorizontal: 40, borderRadius: 2,
+    marginTop: 6, marginHorizontal: 0,
+    color: ORANGE, textAlign: "center",
+    fontFamily: "Helvetica-Bold", fontSize: 11.5,
+    paddingHorizontal: 30, lineHeight: 1.2,
   },
 
+  // Aviso privacidad
   privacy: {
-    paddingHorizontal: 40, marginTop: 12,
-    fontSize: 7, lineHeight: 1.35, textAlign: "justify", color: "#444",
+    paddingHorizontal: 30, marginTop: 10,
+    fontSize: 7.5, lineHeight: 1.4, textAlign: "justify", color: "#333",
   },
-  privacyTitle: { fontFamily: "Helvetica-Bold", color: "#1a1a1a" },
+  privacyBold: { fontFamily: "Helvetica-Bold" },
 
-  // Footer (single-line plain text, no glyph icons)
-  footer: {
-    marginTop: 18, paddingTop: 10, paddingHorizontal: 40, paddingBottom: 30,
-    borderTopWidth: 1, borderTopColor: "#e0e0e0",
-    fontSize: 8, color: "#555", textAlign: "center",
+  // Footer azul
+  footerBar: {
+    position: "absolute", bottom: 0, left: 0, right: 0,
+    backgroundColor: NAVY, paddingVertical: 10, paddingHorizontal: 30,
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
+  footerCol: { color: "#FFFFFF", fontSize: 8.5, flex: 1, textAlign: "center" },
+  footerColLeft: { color: "#FFFFFF", fontSize: 8.5, flex: 1, textAlign: "left" },
+  footerColRight: { color: "#FFFFFF", fontSize: 8.5, flex: 1.4, textAlign: "right" },
 
-  // Footer decorative circles (SVG, bottom-left bleed)
-  footerSvg: { position: "absolute", bottom: 0, left: 0 },
+  footerSvg: { position: "absolute", bottom: 34, left: 0 },
+  rightMidSvg: { position: "absolute", right: 0, top: 340 },
 });
 
-function joinIncidentDateTime(date?: string | null, time?: string | null): string {
-  if (!date) return "—";
-  return time ? `${formatDate(date)} · ${time}` : formatDate(date);
-}
-
-function PillField({
-  label, value, center,
-}: { label: string; value: string; center?: boolean }) {
+function Pill({ label, value }: { label: string; value: string }) {
   return (
-    <View>
-      <Text style={[s.pillLabel, center ? s.pillLabelCenter : {}]}>{label}</Text>
-      <Text style={s.fieldValue}>{value}</Text>
+    <View style={s.pill}>
+      <Text style={s.pillLabel}>{label}</Text>
+      <Text style={s.pillValue}>{value}</Text>
     </View>
   );
 }
 
 export function MedicalPassHIR(props: MedicalPassHIRProps) {
   const snap = props.snapshot ?? {};
-  const sum = snap.sum_insured != null && snap.sum_insured !== ""
-    ? formatCurrency(snap.sum_insured) : "—";
-  const ded = snap.deductible != null && snap.deductible !== ""
-    ? formatCurrency(snap.deductible) : "—";
+  const sum = snap.sum_insured != null && snap.sum_insured !== "" ? formatCurrency(snap.sum_insured as any) : "—";
+  const ded = snap.deductible != null && snap.deductible !== "" ? formatCurrency(snap.deductible as any) : "—";
+  const directorName = props.director_name || "Graciela Rivera Bersoza";
 
   return (
     <Document>
       <Page size="LETTER" style={s.page}>
-        {/* HEADER with decorative circles (SVG so they bleed to edges) */}
-        <View style={s.header}>
-          <Svg width={612} height={90} style={s.headerSvg}>
-            {/* big orange */}
-            <Circle cx={585} cy={-15} r={100} fill={H.accent} />
-            {/* small blue */}
-            <Circle cx={470} cy={28} r={28} fill="#1976D2" />
-            {/* tiny orange ghost */}
-            <Circle cx={400} cy={10} r={21} fill={H.accent} fillOpacity={0.6} />
+
+        {/* ---- HEADER decorativo ---- */}
+        <View style={s.headerWrap}>
+          <Svg width={612} height={110} style={s.headerSvg}>
+            {/* círculo naranja grande esquina sup-derecha */}
+            <Circle cx={612} cy={0} r={92} fill={ORANGE} />
+            {/* azul pequeño */}
+            <Circle cx={505} cy={38} r={22} fill="#1E4A8A" />
+            {/* naranja más pequeño ghost */}
+            <Circle cx={452} cy={18} r={16} fill={ORANGE} fillOpacity={0.85} />
           </Svg>
-          <View style={s.headerContent}>
-            <View style={s.logoBox}>
-              <Text style={s.logoIcon}>HIR</Text>
-              <Text style={s.logoLabel}>SEGUROS</Text>
-            </View>
-            <View style={s.titleCell}>
-              <Text style={s.title}>CARTA AVISO DE ACCIDENTE</Text>
-            </View>
+          <View style={s.logoBox}>
+            <Text style={s.logoTxt}>HIR</Text>
+            <Text style={s.logoSub}>SEGUROS</Text>
           </View>
+          <Text style={s.headerTitle}>CARTA AVISO DE ACCIDENTE</Text>
         </View>
 
-        {/* BODY */}
+        {/* círculo teal medio-derecha */}
+        <Svg width={40} height={90} style={s.rightMidSvg}>
+          <Circle cx={40} cy={45} r={28} fill={TEAL} />
+        </Svg>
+
+        {/* ---- BODY ---- */}
         <View style={s.body}>
-          <View style={s.fieldRow}>
-            <View style={[s.field, s.fieldLast]}>
-              <Text style={s.pillLabel}>Nombre del Contratante:</Text>
-              <Text style={s.fieldValue}>{safe(snap.contracting_party)}</Text>
-            </View>
+          <View style={s.row}>
+            <Pill label="Nombre del Contratante:" value={safe(snap.contracting_party)} />
           </View>
 
-          <View style={s.fieldRow}>
-            <View style={s.field}>
-              <Text style={s.pillLabel}>N° de Certificado:</Text>
-              <Text style={s.fieldValue}>{safe(snap.policy_number)}</Text>
-            </View>
-            <View style={[s.field, s.fieldLast]}>
-              <Text style={s.pillLabel}>Nombre del asegurado:</Text>
-              <Text style={s.fieldValue}>{safe(snap.insured_name)}</Text>
-            </View>
+          <View style={s.row}>
+            <Pill label="N° de Póliza:" value={safe(snap.policy_number)} />
+            <Pill label="Nombre del asegurado:" value={safe(snap.insured_name)} />
           </View>
 
-          <View style={s.fieldRow}>
-            <View style={s.field}>
-              <Text style={s.pillLabel}>Fecha de nacimiento:</Text>
-              <Text style={s.fieldValue}>{formatDate(snap.date_of_birth)}</Text>
-            </View>
-            <View style={[s.field, s.fieldLast]}>
-              <Text style={s.pillLabel}>CURP:</Text>
-              <Text style={s.fieldValue}>{safe(snap.curp)}</Text>
-            </View>
+          <View style={s.row}>
+            <Pill label="Fecha de nacimiento:" value={formatDate(snap.date_of_birth)} />
+            <Pill label="CURP:" value={safe(snap.curp)} />
           </View>
 
-          <View style={s.fieldRow}>
-            <View style={s.field}>
-              <Text style={s.pillLabel}>N° de Certificado:</Text>
-              <Text style={s.fieldValue}>{safe(snap.certificate_number)}</Text>
-            </View>
-            <View style={[s.field, s.fieldLast]}>
-              <Text style={s.pillLabel}>Suma Asegurada:</Text>
-              <Text style={s.fieldValue}>{sum}</Text>
-            </View>
+          <View style={s.row}>
+            <Pill label="N° de Certificado:" value={safe(snap.certificate_number)} />
+            <Pill label="Suma Asegurada:" value={sum} />
           </View>
 
-          <View style={s.fieldRow}>
-            <View style={s.field}>
-              <Text style={s.pillLabel}>Deducible:</Text>
-              <Text style={s.fieldValue}>{ded}</Text>
-            </View>
-            <View style={s.field}>
-              <Text style={s.pillLabel}>Fecha del accidente:</Text>
-              <Text style={s.fieldValue}>{formatDate(snap.incident_date)}</Text>
-            </View>
-            <View style={[s.field, s.fieldLast]}>
-              <Text style={s.pillLabel}>Hora:</Text>
-              <Text style={s.fieldValue}>{safe(snap.incident_time)}</Text>
-            </View>
+          <View style={s.row}>
+            <Pill label="Deducible:" value={ded} />
+            <Pill label="Fecha del accidente:" value={formatDate(snap.incident_date)} />
+            <Pill label="Hora:" value={safe(snap.incident_time)} />
           </View>
 
-          <View style={s.fieldRow}>
-            <View style={[s.field, s.fieldLast]}>
-              <Text style={s.pillLabel}>Descripción detallada del accidente (lugar y cómo ocurrió):</Text>
-              <Text style={s.fieldValueLarge}>{safe(snap.incident_description)}</Text>
-            </View>
+          <View style={s.descBox}>
+            <Text style={s.descLabel}>Descripción detallada del accidente (lugar y cómo ocurrió):</Text>
+            <Text style={s.descText}>{safe(snap.incident_description)}</Text>
           </View>
 
-          <View style={s.fieldRow}>
-            <View style={[s.field, s.fieldLast]}>
-              <Text style={s.pillLabel}>Hospital al que se dirige:</Text>
-              <Text style={s.fieldValue}>{safe(snap.hospital_name)}</Text>
-            </View>
+          <View style={s.row}>
+            <Pill label="Hospital al que se dirige:" value={safe(snap.hospital_name)} />
           </View>
         </View>
 
-        {/* DECLARATION */}
+        {/* ---- Declaración ---- */}
         <Text style={s.declaration}>
           Hacemos constar que el accidente mencionado ocurrió dentro de la cobertura de
           actividades y/o horarios laborales/escolares; así mismo hacemos constar que la
@@ -264,63 +223,71 @@ export function MedicalPassHIR(props: MedicalPassHIRProps) {
           cubiertos por HIR Seguros.
         </Text>
 
-        {/* SIGNATURE */}
-        <View style={s.signatureSection}>
+        {/* ---- Firma ---- */}
+        <View style={s.signatureBlock}>
           <View style={s.signatureArea}>
             {props.director_signature_url ? (
               <Image src={props.director_signature_url} style={s.signatureImg} />
             ) : null}
           </View>
-          <Text style={s.signatureName}>{safe(props.director_name)}</Text>
+          <Text style={s.signatureName}>{directorName}</Text>
+        </View>
+        <View style={s.signatureCaptionBar}>
           <Text style={s.signatureCaption}>
             Nombre y firma del Director o Autoridad (correspondiente) (Sello)
           </Text>
         </View>
 
-        {/* IMPORTANT NOTICE */}
-        <Text style={s.notice}>
-          <Text style={s.noticeTitle}>Importante: </Text>
-          La presente no implica la aceptación de la reclamación y/o autorización para
-          atención en Pago Directo por parte de HIR Seguros, solo es de carácter informativo.
+        {/* ---- Aviso importante ---- */}
+        <Text style={s.importantNote}>
+          Importante: <Text style={s.importantNoteBody}>
+            La presente no implica la aceptación de la reclamación y/o autorización
+            para atención en Pago Directo por parte de HIR Seguros, solo es de
+            carácter informativo.
+          </Text>
         </Text>
 
-        {/* 48HR HIGHLIGHT */}
+        {/* ---- 48 hrs ---- */}
         <Text style={s.highlight}>
-          ESTE PASE TIENE UNA VIGENCIA DE ATENCIÓN HASTA 48 HRS DESPUÉS DE OCURRIDO EL ACCIDENTE
+          ESTE PASE TIENE UNA VIGENCIA DE ATENCIÓN HASTA 48 HRS DESPUÉS DE
+          OCURRIDO EL ACCIDENTE
         </Text>
 
-        {/* PRIVACY */}
+        {/* ---- Aviso privacidad ---- */}
         <Text style={s.privacy}>
-          <Text style={s.privacyTitle}>AVISO DE PRIVACIDAD: </Text>
+          <Text style={s.privacyBold}>AVISO DE PRIVACIDAD: </Text>
           HIR Compañía de Seguros S.A. de C.V. es responsable del tratamiento de sus
-          datos personales, sensibles y patrimoniales, con domicilio en Hermes 28, colonia
-          Crédito Constructor, Alcaldía Benito Juárez, C.P. 03940, Ciudad de México y
-          utilizará sus datos personales aquí recabados para contacto, evaluación de
-          solicitud de seguro, asesoría durante la relación del seguro, dictaminar, tramitar
-          solicitudes de siniestros, prevención de operaciones ilícitas, así como la remisión
-          de dichos datos a otras instituciones de seguros.
+          datos personales, sensibles y patrimoniales, con domicilio en
+          <Text style={s.privacyBold}> Hermes 28, colonia Crédito Constructor,
+          Alcaldía Benito Juárez, C.P. 03940, Ciudad de México</Text> y utilizará
+          sus datos personales aquí recabados para contacto, evaluación de solicitud
+          de seguro, asesoría durante la relación del seguro, dictaminar, tramitar
+          solicitudes de siniestros, prevención de operaciones ilícitas, así como la
+          remisión de dichos datos a otras instituciones de seguros.
         </Text>
         <Text style={[s.privacy, { marginTop: 4 }]}>
-          Para mayor información acerca del tratamiento y de los derechos que puede hacer
-          valer, usted puede acceder al Aviso de Privacidad completo a través de la página
-          web www.hirseguros.mx, al teléfono 800 7348 447 o a través del correo
-          contacto@hirseguros.com.mx
+          Para mayor información acerca del tratamiento y de los derechos que puede
+          hacer valer, usted puede acceder al Aviso de Privacidad completo a través
+          de la página web <Text style={s.privacyBold}>www.hirseguros.mx</Text>, al
+          teléfono <Text style={s.privacyBold}>800 7348 447</Text> o a través del
+          correo <Text style={s.privacyBold}>contacto@hirseguros.com.mx</Text>
         </Text>
 
-        {/* FOOTER */}
-        <Text style={s.footer}>
-          www.hirseguros.mx  |  5262 1780  |  800 7348 447  |  Hermes 28, Col. Crédito Constructor, Alc. Benito Juárez, CDMX, C.P. 3940
-        </Text>
-
-        {/* Footer decorative circles (bottom-left bleed) */}
-        <Svg width={120} height={120} style={s.footerSvg}>
-          <Circle cx={5} cy={115} r={45} fill={H.accent} fillOpacity={0.9} />
-          <Circle cx={50} cy={75} r={18} fill="#1976D2" fillOpacity={0.8} />
+        {/* círculos naranja/teal esquina inferior izquierda */}
+        <Svg width={130} height={90} style={s.footerSvg}>
+          <Circle cx={0} cy={90} r={45} fill={ORANGE} />
+          <Circle cx={55} cy={65} r={16} fill={TEAL} />
         </Svg>
+
+        {/* ---- Franja azul ---- */}
+        <View style={s.footerBar} fixed>
+          <Text style={s.footerColLeft}>✉  www.hirseguros.mx</Text>
+          <Text style={s.footerCol}>☎  5262 1780  |  800 7348 447</Text>
+          <Text style={s.footerColRight}>
+            ⌖  Hermes 28, Col. Crédito Constructor,{"\n"}Alc. Benito Juárez, CDMX, C.P. 3940
+          </Text>
+        </View>
       </Page>
     </Document>
   );
 }
-
-void joinIncidentDateTime;
-void PillField;

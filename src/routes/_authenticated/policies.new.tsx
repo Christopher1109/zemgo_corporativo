@@ -2,17 +2,28 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { ArrowLeft, Plus, X, User, Check, Search as SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useProgram } from "@/lib/program-context";
 import { supabase } from "@/integrations/supabase/client";
 import { createPolicy } from "@/lib/policies.functions";
+import {
+  searchContractors, createContractor, createContractorFromClient,
+} from "@/lib/contractors.functions";
 
 export const Route = createFileRoute("/_authenticated/policies/new")({
   head: () => ({ meta: [{ title: "Nuevo certificado — ZEMGO" }] }),
@@ -21,11 +32,26 @@ export const Route = createFileRoute("/_authenticated/policies/new")({
 
 type Beneficiary = { full_name: string; relationship: string; percentage: number };
 type Dependent = { full_name: string; relationship: string; date_of_birth: string };
+type ContractorRow = {
+  id: string; full_name: string; curp?: string | null;
+  phone?: string | null; email?: string | null;
+  city?: string | null; state?: string | null;
+};
+
+function emptyContractorForm() {
+  return {
+    full_name: "", curp: "", email: "", phone: "",
+    street: "", number: "", colonia: "", city: "", state: "", zip: "",
+  };
+}
 
 function NewPolicy() {
   const { activeProgram, programs } = useProgram();
   const navigate = useNavigate();
   const createFn = useServerFn(createPolicy);
+  const searchContractorFn = useServerFn(searchContractors);
+  const createContractorFn = useServerFn(createContractor);
+  const fromClientFn = useServerFn(createContractorFromClient);
 
   const [programId, setProgramId] = useState<string>(activeProgram?.id ?? "");
   useEffect(() => {
@@ -35,6 +61,7 @@ function NewPolicy() {
   const selectedProgram = programs.find((p) => p.id === programId);
   const isABC = selectedProgram?.code?.toUpperCase() === "ABC";
 
+  // -------- CLIENTE TITULAR --------
   const [clientSearch, setClientSearch] = useState("");
   const [clientId, setClientId] = useState<string>("");
   const [clientLabel, setClientLabel] = useState<string>("");
@@ -55,6 +82,72 @@ function NewPolicy() {
     enabled: clientSearch.length >= 2,
   });
 
+  // -------- CONTRATANTE --------
+  const [contractorSame, setContractorSame] = useState(true);
+  const [contractor, setContractor] = useState<ContractorRow | null>(null);
+  const [contractorSearch, setContractorSearch] = useState("");
+  const [contractorPickerOpen, setContractorPickerOpen] = useState(false);
+  const [creatorOpen, setCreatorOpen] = useState(false);
+  const [creatorForm, setCreatorForm] = useState(emptyContractorForm());
+  const [creatorSaving, setCreatorSaving] = useState(false);
+  const [duplicateConfirm, setDuplicateConfirm] = useState<null | ContractorRow>(null);
+
+  const { data: contractorResults = [] } = useQuery({
+    queryKey: ["contractor-search", contractorSearch],
+    queryFn: () => searchContractorFn({ data: { term: contractorSearch } }),
+    enabled: contractorPickerOpen && contractorSearch.length >= 2,
+  });
+
+  // Reset contratante cuando cambia el titular o el toggle
+  useEffect(() => {
+    if (contractorSame) setContractor(null);
+  }, [contractorSame, clientId]);
+
+  async function ensureContractor(): Promise<string | null> {
+    if (contractorSame) {
+      if (!clientId) return null;
+      try {
+        const row = await fromClientFn({ data: { client_id: clientId } });
+        return (row as any)?.id ?? null;
+      } catch (e: any) {
+        toast.error(e?.message ?? "No se pudo enlazar el contratante");
+        return null;
+      }
+    }
+    return contractor?.id ?? null;
+  }
+
+  async function submitCreator(force = false) {
+    if (!creatorForm.full_name.trim()) return toast.error("Nombre requerido");
+    setCreatorSaving(true);
+    try {
+      const res = (await createContractorFn({
+        data: { ...creatorForm, confirm_duplicate: force },
+      })) as unknown as { duplicate: ContractorRow | null; created: ContractorRow | null };
+      if (res.duplicate && !force) {
+        setDuplicateConfirm(res.duplicate);
+        return;
+      }
+      if (res.created) {
+        setContractor(res.created);
+        setContractorSame(false);
+        setCreatorOpen(false);
+        setCreatorForm(emptyContractorForm());
+        toast.success("Contratante creado");
+      }
+    } catch (e: any) {
+      const raw = String(e?.message ?? "");
+      if (raw.includes("propio_contacto")) {
+        toast.error("El número/correo coincide con tu propio contacto. Ingresa el contacto real del cliente.");
+      } else {
+        toast.error(raw || "No se pudo crear el contratante");
+      }
+    } finally {
+      setCreatorSaving(false);
+    }
+  }
+
+  // -------- COBERTURAS --------
   const { data: coverages = [] } = useQuery({
     queryKey: ["coverages", programId],
     queryFn: async () => {
@@ -83,7 +176,6 @@ function NewPolicy() {
     issue_date: today,
     start_date: today,
     end_date: oneYearFromToday,
-    contracting_party: "",
     premium: "",
     sum_insured: "",
   });
@@ -96,8 +188,9 @@ function NewPolicy() {
   const sumPct = beneficiaries.reduce((s, b) => s + (Number(b.percentage) || 0), 0);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      createFn({
+    mutationFn: async () => {
+      const contractorId = await ensureContractor();
+      return createFn({
         data: {
           client_id: clientId,
           program_id: programId,
@@ -106,7 +199,10 @@ function NewPolicy() {
           issue_date: form.issue_date,
           start_date: form.start_date,
           end_date: form.end_date,
-          contracting_party: form.contracting_party || null,
+          contracting_party: (contractorSame
+            ? clientLabel.split("—")[0]?.trim()
+            : contractor?.full_name) || null,
+          contractor_id: contractorId,
           premium: form.premium ? Number(form.premium) : null,
           sum_insured: form.sum_insured ? Number(form.sum_insured) : null,
           beneficiaries: beneficiaries.map((b) => ({
@@ -122,7 +218,8 @@ function NewPolicy() {
               }))
             : [],
         },
-      }),
+      });
+    },
     onSuccess: (res) => {
       toast.success(`Certificado creado: ${res.folio}`);
       navigate({ to: "/policies/$policyId", params: { policyId: res.id } });
@@ -135,6 +232,7 @@ function NewPolicy() {
     !!programId &&
     form.start_date &&
     form.end_date &&
+    (contractorSame || !!contractor) &&
     beneficiaries.every((b) => b.full_name && b.relationship && b.percentage > 0) &&
     Math.round(sumPct) === 100;
 
@@ -192,6 +290,101 @@ function NewPolicy() {
                 ))}
               </div>
             )}
+            {!clientId && clientSearch.length >= 2 && clientResults.length === 0 && (
+              <div className="mt-1">
+                <Button
+                  type="button" variant="outline" size="sm"
+                  onClick={() => navigate({ to: "/clients/new" })}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Crear nuevo cliente titular
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* ---- Contratante ---- */}
+          <div className="md:col-span-2 rounded-lg border p-3 bg-muted/20 space-y-3">
+            <div className="flex items-center gap-3">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <div className="flex-1">
+                <div className="text-sm font-medium">Contratante</div>
+                <div className="text-xs text-muted-foreground">
+                  Persona que paga el certificado (puede diferir del asegurado).
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="contractor-same"
+                  checked={contractorSame}
+                  onCheckedChange={setContractorSame}
+                />
+                <Label htmlFor="contractor-same" className="text-sm cursor-pointer">
+                  Mismo que el cliente titular
+                </Label>
+              </div>
+            </div>
+
+            {!contractorSame && (
+              <div className="space-y-2">
+                {contractor ? (
+                  <div className="flex items-center justify-between rounded-md border bg-background p-2 text-sm">
+                    <div>
+                      <div className="font-medium">{contractor.full_name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {contractor.phone || contractor.email || contractor.curp || "—"}
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => setContractor(null)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          className="pl-8"
+                          placeholder="Buscar contratante por nombre, CURP, tel o email…"
+                          value={contractorSearch}
+                          onChange={(e) => setContractorSearch(e.target.value)}
+                          onFocus={() => setContractorPickerOpen(true)}
+                        />
+                      </div>
+                      <Button
+                        type="button" variant="outline"
+                        onClick={() => setCreatorOpen(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Crear nuevo
+                      </Button>
+                    </div>
+                    {contractorSearch.length >= 2 && (
+                      <div className="border rounded-md max-h-52 overflow-auto bg-popover">
+                        {(contractorResults as ContractorRow[]).length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">
+                            Sin resultados. Puedes crearlo desde “Crear nuevo”.
+                          </div>
+                        ) : (
+                          (contractorResults as ContractorRow[]).map((c) => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
+                              onClick={() => { setContractor(c); setContractorSearch(""); }}
+                            >
+                              <div className="font-medium">{c.full_name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {[c.phone, c.email, c.curp].filter(Boolean).join(" · ")}
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
@@ -205,10 +398,6 @@ function NewPolicy() {
           <div>
             <Label>Fecha de emisión</Label>
             <Input type="date" value={form.issue_date} onChange={(e) => setForm({ ...form, issue_date: e.target.value })} />
-          </div>
-          <div>
-            <Label>Contratante</Label>
-            <Input value={form.contracting_party} onChange={(e) => setForm({ ...form, contracting_party: e.target.value })} />
           </div>
           <div>
             <Label>Vigencia desde</Label>
@@ -335,6 +524,93 @@ function NewPolicy() {
           {mutation.isPending ? "Creando…" : "Crear certificado"}
         </Button>
       </div>
+
+      {/* ---- Modal: crear contratante ---- */}
+      <Dialog open={creatorOpen} onOpenChange={setCreatorOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Nuevo contratante</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Nombre completo *</Label>
+              <Input value={creatorForm.full_name} onChange={(e) => setCreatorForm({ ...creatorForm, full_name: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>CURP</Label>
+                <Input value={creatorForm.curp} onChange={(e) => setCreatorForm({ ...creatorForm, curp: e.target.value.toUpperCase() })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Teléfono</Label>
+                <Input value={creatorForm.phone} onChange={(e) => setCreatorForm({ ...creatorForm, phone: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Correo</Label>
+              <Input type="email" value={creatorForm.email} onChange={(e) => setCreatorForm({ ...creatorForm, email: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Calle</Label>
+                <Input value={creatorForm.street} onChange={(e) => setCreatorForm({ ...creatorForm, street: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Número</Label>
+                <Input value={creatorForm.number} onChange={(e) => setCreatorForm({ ...creatorForm, number: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Colonia</Label>
+                <Input value={creatorForm.colonia} onChange={(e) => setCreatorForm({ ...creatorForm, colonia: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>CP</Label>
+                <Input value={creatorForm.zip} onChange={(e) => setCreatorForm({ ...creatorForm, zip: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Ciudad</Label>
+                <Input value={creatorForm.city} onChange={(e) => setCreatorForm({ ...creatorForm, city: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Estado</Label>
+                <Input value={creatorForm.state} onChange={(e) => setCreatorForm({ ...creatorForm, state: e.target.value })} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreatorOpen(false)}>Cancelar</Button>
+            <Button disabled={creatorSaving} onClick={() => submitCreator(false)}>
+              <Check className="h-4 w-4 mr-1" /> Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ---- Confirmación de duplicado ---- */}
+      <AlertDialog
+        open={!!duplicateConfirm}
+        onOpenChange={(v) => { if (!v) setDuplicateConfirm(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Contacto ya registrado</AlertDialogTitle>
+            <AlertDialogDescription>
+              Este número/correo ya está registrado con el contratante{" "}
+              <strong>{duplicateConfirm?.full_name}</strong>. ¿Confirmas que es correcto?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDuplicateConfirm(null)}>
+              Corregir datos
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { setDuplicateConfirm(null); submitCreator(true); }}
+            >
+              Confirmar y guardar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

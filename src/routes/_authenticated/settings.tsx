@@ -2,14 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState, useEffect } from "react";
-import { listProgramAlertConfig, updateProgramAlertOffsets } from "@/lib/settings.functions";
+import { listProgramAlertConfig, updateProgramAlertOffsets, updateProgramPolicyNumber } from "@/lib/settings.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, Bell, Save, X, Plus, Users as UsersIcon } from "lucide-react";
+import { Settings as SettingsIcon, Bell, Save, X, Plus, Users as UsersIcon, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { UsersSettingsTab } from "@/components/settings/users-settings-tab";
 
@@ -23,6 +23,7 @@ type Program = {
   color_primary: string | null;
   payment_alert_offsets: number[];
   is_active: boolean;
+  policy_number: string | null;
 };
 
 function SettingsPage() {
@@ -44,6 +45,7 @@ function SettingsPage() {
       <Tabs defaultValue="alerts" className="w-full">
         <TabsList>
           <TabsTrigger value="alerts"><Bell className="h-4 w-4 mr-1.5" /> Alertas</TabsTrigger>
+          <TabsTrigger value="policy"><FileText className="h-4 w-4 mr-1.5" /> Póliza</TabsTrigger>
           <TabsTrigger value="users"><UsersIcon className="h-4 w-4 mr-1.5" /> Usuarios</TabsTrigger>
         </TabsList>
 
@@ -61,6 +63,25 @@ function SettingsPage() {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {(q.data as Program[] ?? []).map((p) => <ProgramAlertsCard key={p.id} program={p} />)}
+              </div>
+            )}
+          </section>
+        </TabsContent>
+
+        <TabsContent value="policy" className="mt-5">
+          <section className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Número de póliza vigente por programa. Este dato se utiliza para llenar automáticamente
+              el campo <em>N° de Póliza</em> en la Carta Aviso de Accidente. Actualízalo cuando la
+              aseguradora emita un nuevo número.
+            </p>
+            {q.isLoading ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-lg bg-muted/40 animate-pulse" />)}
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {(q.data as Program[] ?? []).map((p) => <ProgramPolicyCard key={p.id} program={p} />)}
               </div>
             )}
           </section>
@@ -158,6 +179,61 @@ function ProgramAlertsCard({ program }: { program: Program }) {
           className="w-full"
           size="sm"
           disabled={!dirty || m.isPending || offsets.length === 0}
+          onClick={() => m.mutate()}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {m.isPending ? "Guardando…" : "Guardar"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProgramPolicyCard({ program }: { program: Program }) {
+  const qc = useQueryClient();
+  const updateFn = useServerFn(updateProgramPolicyNumber);
+  const [value, setValue] = useState<string>(program.policy_number ?? "");
+  useEffect(() => { setValue(program.policy_number ?? ""); }, [program.policy_number]);
+
+  const m = useMutation({
+    mutationFn: async () => updateFn({ data: { program_id: program.id, policy_number: value.trim() || null } }),
+    onSuccess: () => {
+      toast.success(`Póliza actualizada para ${program.code}`);
+      qc.invalidateQueries({ queryKey: ["programs-alert-config"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Error al guardar"),
+  });
+
+  const dirty = (value.trim() || null) !== (program.policy_number ?? null);
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div
+            className="h-8 w-8 rounded-md grid place-items-center text-white text-xs font-bold"
+            style={{ backgroundColor: program.color_primary ?? "var(--program-primary)" }}
+          >
+            {program.code.slice(0, 3).toUpperCase()}
+          </div>
+          {!program.is_active && <Badge variant="outline">Inactivo</Badge>}
+        </div>
+        <CardTitle className="text-base mt-2">{program.name}</CardTitle>
+        <CardDescription className="text-xs">Código: {program.code}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">N° de Póliza vigente</Label>
+          <Input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="Ej. HIR-2026-000123"
+            className="font-mono text-sm"
+          />
+        </div>
+        <Button
+          className="w-full" size="sm"
+          disabled={!dirty || m.isPending}
           onClick={() => m.mutate()}
         >
           <Save className="h-4 w-4 mr-2" />
