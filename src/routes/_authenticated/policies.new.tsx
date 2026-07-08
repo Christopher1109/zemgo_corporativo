@@ -121,9 +121,9 @@ function NewPolicy() {
     if (!creatorForm.full_name.trim()) return toast.error("Nombre requerido");
     setCreatorSaving(true);
     try {
-      const res = await createContractorFn({
+      const res = (await createContractorFn({
         data: { ...creatorForm, confirm_duplicate: force },
-      }) as { duplicate: ContractorRow | null; created: ContractorRow | null };
+      })) as unknown as { duplicate: ContractorRow | null; created: ContractorRow | null };
       if (res.duplicate && !force) {
         setDuplicateConfirm(res.duplicate);
         return;
