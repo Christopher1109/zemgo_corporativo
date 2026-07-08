@@ -213,6 +213,52 @@ export const inviteUser = createServerFn({ method: "POST" })
   });
 
 // --------------------------------------------------------------
+// Mutate: create user directly with email + password (admin only)
+// No invitation email — admin sets the password and hands it to the user.
+// --------------------------------------------------------------
+const CreateDirectSchema = z.object({
+  email: z.string().email().max(255),
+  password: z.string().min(8).max(72),
+  full_name: z.string().trim().min(2).max(120),
+  phone: z.string().trim().max(40).optional().nullable(),
+  access: z.array(z.object({
+    program_id: z.string().uuid(),
+    role: z.enum(["none", "admin", "manager", "operator", "claims", "sales", "viewer"]),
+  })).max(50),
+});
+
+export const createUserDirect = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => CreateDirectSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertCallerIsAdmin(context.supabase);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: created, error } = await (supabaseAdmin as any).auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { full_name: data.full_name },
+    });
+    if (error) {
+      const msg = String(error.message ?? "");
+      if (msg.toLowerCase().includes("already")) throw new Error("email_already_exists");
+      throw new Error(msg || "create_failed");
+    }
+    const userId = created?.user?.id;
+    if (!userId) throw new Error("create_no_user_id");
+
+    const { error: rpcErr } = await context.supabase.rpc("apply_invite_access_matrix" as any, {
+      _user_id: userId,
+      _phone: data.phone ?? null,
+      _access: data.access.filter((a) => a.role !== "none") as any,
+    });
+    if (rpcErr) throw new Error(rpcErr.message);
+
+    return { ok: true, user_id: userId, email: data.email };
+  });
+
+// --------------------------------------------------------------
 // Mutate: update a single user's access to one program
 // --------------------------------------------------------------
 export const updateUserAccess = createServerFn({ method: "POST" })
