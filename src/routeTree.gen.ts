@@ -26,6 +26,7 @@ import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
+import { Route as AuthenticatedSalesRepsIndexRouteImport } from './routes/_authenticated/sales-reps.index'
 import { Route as AuthenticatedPoliciesIndexRouteImport } from './routes/_authenticated/policies.index'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments.index'
 import { Route as AuthenticatedIncidentsIndexRouteImport } from './routes/_authenticated/incidents.index'
@@ -37,6 +38,7 @@ import { Route as PortalAppIncidentsRouteImport } from './routes/portal._app.inc
 import { Route as PortalAppDashboardRouteImport } from './routes/portal._app.dashboard'
 import { Route as ApiPublicPdfSmokeRouteImport } from './routes/api/public/pdf-smoke'
 import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
+import { Route as AuthenticatedSalesRepsRepIdRouteImport } from './routes/_authenticated/sales-reps.$repId'
 import { Route as AuthenticatedPoliciesNewRouteImport } from './routes/_authenticated/policies.new'
 import { Route as AuthenticatedPoliciesPolicyIdRouteImport } from './routes/_authenticated/policies.$policyId'
 import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
@@ -134,6 +136,12 @@ const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
   path: '/alerts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSalesRepsIndexRoute =
+  AuthenticatedSalesRepsIndexRouteImport.update({
+    id: '/sales-reps/',
+    path: '/sales-reps/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPoliciesIndexRoute =
   AuthenticatedPoliciesIndexRouteImport.update({
     id: '/',
@@ -193,6 +201,12 @@ const ApiPublicBootstrapRoute = ApiPublicBootstrapRouteImport.update({
   path: '/api/public/bootstrap',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSalesRepsRepIdRoute =
+  AuthenticatedSalesRepsRepIdRouteImport.update({
+    id: '/sales-reps/$repId',
+    path: '/sales-reps/$repId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPoliciesNewRoute =
   AuthenticatedPoliciesNewRouteImport.update({
     id: '/new',
@@ -293,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
+  '/sales-reps/$repId': typeof AuthenticatedSalesRepsRepIdRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/portal/dashboard': typeof PortalAppDashboardRoute
@@ -304,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
+  '/sales-reps/': typeof AuthenticatedSalesRepsIndexRoute
   '/admin/integrations/google-sheets': typeof AuthenticatedAdminIntegrationsGoogleSheetsRoute
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
@@ -329,6 +345,7 @@ export interface FileRoutesByTo {
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
+  '/sales-reps/$repId': typeof AuthenticatedSalesRepsRepIdRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/portal/dashboard': typeof PortalAppDashboardRoute
@@ -340,6 +357,7 @@ export interface FileRoutesByTo {
   '/incidents': typeof AuthenticatedIncidentsIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
+  '/sales-reps': typeof AuthenticatedSalesRepsIndexRoute
   '/admin/integrations/google-sheets': typeof AuthenticatedAdminIntegrationsGoogleSheetsRoute
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
@@ -373,6 +391,7 @@ export interface FileRoutesById {
   '/_authenticated/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/_authenticated/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/_authenticated/policies/new': typeof AuthenticatedPoliciesNewRoute
+  '/_authenticated/sales-reps/$repId': typeof AuthenticatedSalesRepsRepIdRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/portal/_app/dashboard': typeof PortalAppDashboardRoute
@@ -384,6 +403,7 @@ export interface FileRoutesById {
   '/_authenticated/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
+  '/_authenticated/sales-reps/': typeof AuthenticatedSalesRepsIndexRoute
   '/_authenticated/admin/integrations/google-sheets': typeof AuthenticatedAdminIntegrationsGoogleSheetsRoute
   '/api/public/hooks/bank-reconciliation': typeof ApiPublicHooksBankReconciliationRoute
   '/api/public/hooks/pass-expiration': typeof ApiPublicHooksPassExpirationRoute
@@ -416,6 +436,7 @@ export interface FileRouteTypes {
     | '/payments/$paymentId'
     | '/policies/$policyId'
     | '/policies/new'
+    | '/sales-reps/$repId'
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/portal/dashboard'
@@ -427,6 +448,7 @@ export interface FileRouteTypes {
     | '/incidents/'
     | '/payments/'
     | '/policies/'
+    | '/sales-reps/'
     | '/admin/integrations/google-sheets'
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
@@ -452,6 +474,7 @@ export interface FileRouteTypes {
     | '/payments/$paymentId'
     | '/policies/$policyId'
     | '/policies/new'
+    | '/sales-reps/$repId'
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/portal/dashboard'
@@ -463,6 +486,7 @@ export interface FileRouteTypes {
     | '/incidents'
     | '/payments'
     | '/policies'
+    | '/sales-reps'
     | '/admin/integrations/google-sheets'
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
@@ -495,6 +519,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payments/$paymentId'
     | '/_authenticated/policies/$policyId'
     | '/_authenticated/policies/new'
+    | '/_authenticated/sales-reps/$repId'
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/portal/_app/dashboard'
@@ -506,6 +531,7 @@ export interface FileRouteTypes {
     | '/_authenticated/incidents/'
     | '/_authenticated/payments/'
     | '/_authenticated/policies/'
+    | '/_authenticated/sales-reps/'
     | '/_authenticated/admin/integrations/google-sheets'
     | '/api/public/hooks/bank-reconciliation'
     | '/api/public/hooks/pass-expiration'
@@ -648,6 +674,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAlertsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sales-reps/': {
+      id: '/_authenticated/sales-reps/'
+      path: '/sales-reps'
+      fullPath: '/sales-reps/'
+      preLoaderRoute: typeof AuthenticatedSalesRepsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/policies/': {
       id: '/_authenticated/policies/'
       path: '/'
@@ -724,6 +757,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/bootstrap'
       preLoaderRoute: typeof ApiPublicBootstrapRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/sales-reps/$repId': {
+      id: '/_authenticated/sales-reps/$repId'
+      path: '/sales-reps/$repId'
+      fullPath: '/sales-reps/$repId'
+      preLoaderRoute: typeof AuthenticatedSalesRepsRepIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/policies/new': {
       id: '/_authenticated/policies/new'
@@ -896,6 +936,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSalesRepsRepIdRoute: typeof AuthenticatedSalesRepsRepIdRoute
+  AuthenticatedSalesRepsIndexRoute: typeof AuthenticatedSalesRepsIndexRoute
   AuthenticatedAdminIntegrationsGoogleSheetsRoute: typeof AuthenticatedAdminIntegrationsGoogleSheetsRoute
 }
 
@@ -910,6 +952,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSalesRepsRepIdRoute: AuthenticatedSalesRepsRepIdRoute,
+  AuthenticatedSalesRepsIndexRoute: AuthenticatedSalesRepsIndexRoute,
   AuthenticatedAdminIntegrationsGoogleSheetsRoute:
     AuthenticatedAdminIntegrationsGoogleSheetsRoute,
 }

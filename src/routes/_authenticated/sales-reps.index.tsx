@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, DollarSign, TrendingUp, Award, ArrowRight } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/sales-reps")({
+export const Route = createFileRoute("/_authenticated/sales-reps/")({
   head: () => ({ meta: [{ title: "Vendedores — ZEMGO" }] }),
   component: SalesRepsPage,
 });
