@@ -77,7 +77,7 @@ function NewPolicy() {
         .eq("program_id", programId)
         .neq("status", "cancelled")
         .or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,curp.ilike.%${term}%`, {
-          foreignTable: "clients",
+          referencedTable: "clients",
         })
         .limit(8);
       if (error) throw error;
