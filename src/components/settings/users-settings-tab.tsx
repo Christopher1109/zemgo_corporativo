@@ -4,13 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   listUsers,
-  inviteUser,
+  createUserDirect,
   updateUserAccess,
   deactivateUser,
   reactivateUser,
   forcePasswordReset,
 } from "@/lib/users.functions";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { UserPlus, KeyRound, UserX, UserCheck, ShieldCheck, Mail } from "lucide-react";
+import { UserPlus, KeyRound, UserX, UserCheck, ShieldCheck, Copy, Eye, EyeOff, RefreshCw } from "lucide-react";
 
 const ROLE_OPTIONS = [
   { value: "none", label: "Sin acceso" },
