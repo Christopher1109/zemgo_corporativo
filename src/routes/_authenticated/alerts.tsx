@@ -327,8 +327,10 @@ function RenewalsList({ rows }: { rows: any[] }) {
                   {isOverdue
                     ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Venció hace {Math.abs(d)}d</Badge>
                     : d <= 15
-                      ? <Badge className="bg-orange-500 text-white text-[10px]">Vence en {d}d</Badge>
-                      : <Badge variant="secondary" className="text-[10px]">{d}d</Badge>
+                      ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vence en {d}d</Badge>
+                      : d <= 30
+                        ? <Badge className="bg-orange-500 text-white text-[10px]">Vence en {d}d</Badge>
+                        : <Badge variant="secondary" className="text-[10px]">{d}d</Badge>
                   }
                 </div>
                 <ContactBits c={c} />
