@@ -42,10 +42,16 @@ function matchBucket(days: number, isOverdue: boolean, bucket: Bucket): boolean 
   return true;
 }
 
-/** Colored card per semáforo: vencido=rojo, ≤15d=naranja, resto=sin color */
-function semaforo(days: number, isOverdue: boolean): string {
-  if (isOverdue) return "bg-destructive/10 border-l-4 border-l-destructive";
-  if (days <= 15) return "bg-orange-500/10 border-l-4 border-l-orange-500";
+/**
+ * Semáforo por periodicidad:
+ *  - Mensual (recordatorios de pago): naranja ≤15d, rojo ≤10d o vencido
+ *  - Anual   (renovaciones):          naranja ≤30d, rojo ≤15d o vencido
+ */
+function semaforo(days: number, isOverdue: boolean, freq: "monthly" | "annual" = "monthly"): string {
+  const redThreshold = freq === "annual" ? 15 : 10;
+  const orangeThreshold = freq === "annual" ? 30 : 15;
+  if (isOverdue || days <= redThreshold) return "bg-destructive/10 border-l-4 border-l-destructive";
+  if (days <= orangeThreshold) return "bg-orange-500/10 border-l-4 border-l-orange-500";
   return "";
 }
 
@@ -311,7 +317,7 @@ function RenewalsList({ rows }: { rows: any[] }) {
         const isOverdue = d < 0;
         const c = r.clients;
         return (
-          <Card key={r.id} className={cn(semaforo(d, isOverdue))}>
+          <Card key={r.id} className={cn(semaforo(d, isOverdue, "annual"))}>
             <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
