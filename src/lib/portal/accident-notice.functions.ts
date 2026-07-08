@@ -112,20 +112,24 @@ export const portalAccidentNotice = createServerFn({ method: "POST" })
     const pdf = await PDFDocument.create();
     const page = pdf.addPage([612, 792]);
 
-    // Fondo: plantilla oficial HIR.
-    const bgBytes = await fetch(new URL(bgAsset.url, "https://l").href.replace("https://l", "https://colorado-guardian.lovable.app") ).then((r) => r.arrayBuffer()).catch(() => null);
-    // Fallback: intentar URL relativa via el host actual. Si falla, dejar página en blanco.
-    let bgUrl = bgAsset.url;
-    let bytes: ArrayBuffer | null = bgBytes;
-    if (!bytes) {
-      try {
-        const host = getRequestHeader("host") ?? "";
-        const proto = (getRequestHeader("x-forwarded-proto") ?? "https").split(",")[0].trim();
-        bgUrl = `${proto}://${host}${bgAsset.url}`;
-        bytes = await fetch(bgUrl).then((r) => r.arrayBuffer());
-      } catch {
-        bytes = null;
-      }
+    // Fondo: plantilla oficial HIR. El asset se sirve como URL absoluta
+    // en producción (CDN) y como ruta relativa en dev — construimos la URL
+    // absoluta a partir del host actual para poder hacer fetch dentro del Worker.
+    let bytes: ArrayBuffer | null = null;
+    try {
+      const raw = bgAsset.url;
+      const absUrl = raw.startsWith("http")
+        ? raw
+        : (() => {
+            const host = getRequestHeader("host") ?? "localhost:8080";
+            const proto = (getRequestHeader("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https"))
+              .split(",")[0]
+              .trim();
+            return `${proto}://${host}${raw}`;
+          })();
+      bytes = await fetch(absUrl).then((r) => r.arrayBuffer());
+    } catch {
+      bytes = null;
     }
     if (bytes) {
       const img = await pdf.embedJpg(bytes);
