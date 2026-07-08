@@ -56,11 +56,12 @@ export const createContractor = createServerFn({ method: "POST" })
 
     // 1) Bloqueo contra contacto del propio usuario en sesión.
     if (phoneNorm || emailNorm) {
-      const { data: me } = await supabase
+      const { data: meRow } = await supabase
         .from("profiles" as any)
         .select("email, phone")
         .eq("id", userId)
         .maybeSingle();
+      const me = (meRow as { email?: string | null; phone?: string | null } | null) ?? null;
       const myPhone = me?.phone ? contactRegex.digits(me.phone) : "";
       const myEmail = me?.email ? contactRegex.email(me.email) : "";
       if ((phoneNorm && phoneNorm === myPhone) || (emailNorm && emailNorm === myEmail)) {
