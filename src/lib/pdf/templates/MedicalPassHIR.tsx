@@ -40,8 +40,8 @@ const TEAL = "#1CA398";                    // círculo decorativo derecho medio
 
 const s = StyleSheet.create({
   page: {
-    fontSize: 10, color: "#1a1a1a", fontFamily: "Helvetica",
-    backgroundColor: "#FFFFFF", paddingBottom: 44,
+    fontSize: 9.5, color: "#1a1a1a", fontFamily: "Helvetica",
+    backgroundColor: "#FFFFFF", paddingBottom: 40,
   },
 
   // ---- HEADER ----
