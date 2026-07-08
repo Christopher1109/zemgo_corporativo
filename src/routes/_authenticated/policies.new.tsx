@@ -76,19 +76,18 @@ function NewPolicy() {
         .select("clients!inner(id, first_name, last_name, curp)")
         .eq("program_id", programId)
         .neq("status", "cancelled")
-        .limit(200);
+        .or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,curp.ilike.%${term}%`, {
+          foreignTable: "clients",
+        })
+        .limit(8);
       if (error) throw error;
-      const needle = term.toLowerCase();
       const seen = new Set<string>();
       return (data ?? [])
         .map((r: any) => r.clients)
         .filter((c: any) => {
           if (!c || seen.has(c.id)) return false;
           seen.add(c.id);
-          return (
-            `${c.first_name ?? ""} ${c.last_name ?? ""}`.toLowerCase().includes(needle) ||
-            (c.curp ?? "").toLowerCase().includes(needle)
-          );
+          return true;
         })
         .slice(0, 8);
     },
