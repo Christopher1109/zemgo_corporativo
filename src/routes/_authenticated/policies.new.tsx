@@ -171,8 +171,6 @@ function NewPolicy() {
   }, []);
 
   const [form, setForm] = useState({
-    policy_number: "",
-    certificate_number: "",
     issue_date: today,
     start_date: today,
     end_date: oneYearFromToday,
@@ -194,8 +192,6 @@ function NewPolicy() {
         data: {
           client_id: clientId,
           program_id: programId,
-          policy_number: form.policy_number || null,
-          certificate_number: form.certificate_number || null,
           issue_date: form.issue_date,
           start_date: form.start_date,
           end_date: form.end_date,
@@ -387,13 +383,8 @@ function NewPolicy() {
             )}
           </div>
 
-          <div>
-            <Label>No. Certificado HIR</Label>
-            <Input value={form.policy_number} onChange={(e) => setForm({ ...form, policy_number: e.target.value })} />
-          </div>
-          <div>
-            <Label>No. Certificado</Label>
-            <Input value={form.certificate_number} onChange={(e) => setForm({ ...form, certificate_number: e.target.value })} />
+          <div className="md:col-span-2 rounded-md border border-dashed p-3 bg-muted/10 text-xs text-muted-foreground">
+            El <strong>N° de Certificado</strong> se genera automáticamente en secuencia consecutiva por programa. El <strong>N° de Póliza HIR</strong> se toma de la configuración del programa (Configuración → Póliza).
           </div>
           <div>
             <Label>Fecha de emisión</Label>
