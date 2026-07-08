@@ -56,6 +56,7 @@ export const createPolicy = createServerFn({ method: "POST" })
         start_date: data.start_date,
         end_date: data.end_date,
         contracting_party: data.contracting_party ?? null,
+        contractor_id: data.contractor_id ?? null,
         premium: data.premium ?? null,
         sum_insured: data.sum_insured ?? null,
         status: "draft",
