@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings as SettingsIcon, Bell, Save, X, Plus } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Settings as SettingsIcon, Bell, Save, X, Plus, Users as UsersIcon } from "lucide-react";
 import { toast } from "sonner";
+import { UsersSettingsTab } from "@/components/settings/users-settings-tab";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Configuración — ZEMGO" }] }),
@@ -35,30 +37,39 @@ function SettingsPage() {
           Configuración
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Personaliza alertas y comportamiento por programa.
+          Personaliza alertas, usuarios y comportamiento por programa.
         </p>
       </div>
 
-      <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">Alertas de pago por programa</h2>
-        </div>
-        <p className="text-sm text-muted-foreground -mt-2">
-          Define cuántos días antes del vencimiento se generan recordatorios automáticos.
-          Se acepta una lista de offsets (ej. <code>15, 30, 60</code>).
-        </p>
+      <Tabs defaultValue="alerts" className="w-full">
+        <TabsList>
+          <TabsTrigger value="alerts"><Bell className="h-4 w-4 mr-1.5" /> Alertas</TabsTrigger>
+          <TabsTrigger value="users"><UsersIcon className="h-4 w-4 mr-1.5" /> Usuarios</TabsTrigger>
+        </TabsList>
 
-        {q.isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(3)].map((_, i) => <div key={i} className="h-44 rounded-lg bg-muted/40 animate-pulse" />)}
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {(q.data as Program[] ?? []).map((p) => <ProgramAlertsCard key={p.id} program={p} />)}
-          </div>
-        )}
-      </section>
+        <TabsContent value="alerts" className="mt-5">
+          <section className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Define cuántos días antes del vencimiento se generan recordatorios automáticos.
+              Se acepta una lista de offsets (ej. <code>15, 30, 60</code>).
+            </p>
+
+            {q.isLoading ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(3)].map((_, i) => <div key={i} className="h-44 rounded-lg bg-muted/40 animate-pulse" />)}
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {(q.data as Program[] ?? []).map((p) => <ProgramAlertsCard key={p.id} program={p} />)}
+              </div>
+            )}
+          </section>
+        </TabsContent>
+
+        <TabsContent value="users" className="mt-5">
+          <UsersSettingsTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
