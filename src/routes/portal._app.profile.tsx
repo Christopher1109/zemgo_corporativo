@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { PortalInstallButton } from "@/components/portal-install-button";
 
 export const Route = createFileRoute("/portal/_app/profile")({
   component: ProfilePage,
@@ -138,7 +139,20 @@ function ProfilePage() {
           </form>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardContent className="p-6 space-y-3">
+          <div>
+            <h2 className="text-sm font-semibold uppercase text-slate-500">Acceso rápido</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Instala el portal en tu teléfono para abrirlo desde un ícono como si fuera una app.
+            </p>
+          </div>
+          <PortalInstallButton />
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
 
