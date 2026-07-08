@@ -83,9 +83,9 @@ export function UsersSettingsTab() {
         </div>
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
           <DialogTrigger asChild>
-            <Button size="sm"><UserPlus className="h-4 w-4 mr-2" /> Invitar usuario</Button>
+            <Button size="sm"><UserPlus className="h-4 w-4 mr-2" /> Crear usuario</Button>
           </DialogTrigger>
-          <InviteDialog programs={programs} onDone={() => { setInviteOpen(false); invalidate(); }} />
+          <CreateUserDialog programs={programs} onDone={() => { setInviteOpen(false); invalidate(); }} />
         </Dialog>
       </div>
 
@@ -98,44 +98,114 @@ export function UsersSettingsTab() {
   );
 }
 
-function InviteDialog({ programs, onDone }: { programs: any[]; onDone: () => void }) {
-  const inviteFn = useServerFn(inviteUser);
+function generatePassword(len = 12) {
+  const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%";
+  let out = "";
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  for (let i = 0; i < len; i++) out += chars[arr[i] % chars.length];
+  return out;
+}
+
+function CreateUserDialog({ programs, onDone }: { programs: any[]; onDone: () => void }) {
+  const createFn = useServerFn(createUserDirect);
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState(() => generatePassword());
+  const [showPw, setShowPw] = useState(true);
   const [access, setAccess] = useState<Record<string, Role>>({});
+  const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
 
   const m = useMutation({
     mutationFn: async () =>
-      inviteFn({
+      createFn({
         data: {
           email: email.trim(),
+          password,
           full_name: fullName.trim(),
           phone: phone.trim() || null,
           access: programs.map((p) => ({ program_id: p.id, role: access[p.id] ?? "none" })),
         },
       }),
-    onSuccess: () => { toast.success("Invitación enviada"); onDone(); },
-    onError: (e: any) => toast.error(e.message || "Error al invitar"),
+    onSuccess: () => {
+      toast.success("Usuario creado");
+      setCreated({ email: email.trim(), password });
+    },
+    onError: (e: any) => {
+      if (e.message === "email_already_exists") toast.error("Este email ya está registrado");
+      else toast.error(e.message || "Error al crear usuario");
+    },
   });
 
-  const canSubmit = email.includes("@") && fullName.trim().length >= 2;
+  const canSubmit = email.includes("@") && fullName.trim().length >= 2 && password.length >= 8;
+
+  if (created) {
+    const copy = async () => {
+      await navigator.clipboard.writeText(`Usuario: ${created.email}\nContraseña: ${created.password}`);
+      toast.success("Credenciales copiadas");
+    };
+    return (
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Usuario creado</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Entrega estas credenciales al usuario. No podrás volver a ver la contraseña.
+          </p>
+          <div className="rounded-md border bg-muted/30 p-3 space-y-2 text-sm font-mono">
+            <div><span className="text-muted-foreground">Usuario:</span> {created.email}</div>
+            <div><span className="text-muted-foreground">Contraseña:</span> {created.password}</div>
+          </div>
+          <Button variant="outline" size="sm" onClick={copy}>
+            <Copy className="h-4 w-4 mr-2" /> Copiar credenciales
+          </Button>
+        </div>
+        <DialogFooter>
+          <Button onClick={onDone}>Listo</Button>
+        </DialogFooter>
+      </DialogContent>
+    );
+  }
 
   return (
     <DialogContent className="max-w-lg">
-      <DialogHeader><DialogTitle>Invitar nuevo usuario</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>Crear nuevo usuario</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div>
           <Label className="text-xs">Nombre completo</Label>
           <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
         </div>
         <div>
-          <Label className="text-xs">Email</Label>
+          <Label className="text-xs">Email (será el usuario para iniciar sesión)</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div>
           <Label className="text-xs">Teléfono (opcional)</Label>
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs">Contraseña inicial</Label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Input
+                type={showPw ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-9 font-mono"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+              >
+                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <Button type="button" variant="outline" size="icon" onClick={() => setPassword(generatePassword())}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">Mín. 8 caracteres. Cópiala antes de cerrar.</p>
         </div>
         <div>
           <Label className="text-xs">Acceso por programa</Label>
@@ -162,8 +232,8 @@ function InviteDialog({ programs, onDone }: { programs: any[]; onDone: () => voi
       </div>
       <DialogFooter>
         <Button disabled={!canSubmit || m.isPending} onClick={() => m.mutate()}>
-          <Mail className="h-4 w-4 mr-2" />
-          {m.isPending ? "Enviando…" : "Enviar invitación"}
+          <UserPlus className="h-4 w-4 mr-2" />
+          {m.isPending ? "Creando…" : "Crear usuario"}
         </Button>
       </DialogFooter>
     </DialogContent>
