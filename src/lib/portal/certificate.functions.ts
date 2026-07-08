@@ -19,7 +19,16 @@ function getToken(): string | null {
 export const portalCertificatePdf = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ policy_id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
-    const token = getToken();
+    let token: string | null = null;
+    try {
+      const h = getRequestHeader("x-portal-token");
+      if (h && h.length >= 32) token = h;
+    } catch {}
+    if (!token) {
+      try {
+        token = getCookie(COOKIE) ?? null;
+      } catch {}
+    }
     if (!token) throw new Error("sesion_invalida");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

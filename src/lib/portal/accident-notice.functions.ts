@@ -29,7 +29,16 @@ const inputSchema = z.object({
 export const portalAccidentNotice = createServerFn({ method: "POST" })
   .inputValidator((d) => inputSchema.parse(d))
   .handler(async ({ data }) => {
-    const token = getToken();
+    let token: string | null = null;
+    try {
+      const h = getRequestHeader("x-portal-token");
+      if (h && h.length >= 32) token = h;
+    } catch {}
+    if (!token) {
+      try {
+        token = getCookie(COOKIE) ?? null;
+      } catch {}
+    }
     if (!token) throw new Error("sesion_invalida");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
