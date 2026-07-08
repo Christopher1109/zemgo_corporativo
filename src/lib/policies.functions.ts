@@ -23,6 +23,7 @@ const createPolicySchema = z.object({
   start_date: z.string(),
   end_date: z.string(),
   contracting_party: z.string().optional().nullable(),
+  contractor_id: z.string().uuid().optional().nullable(),
   premium: z.number().optional().nullable(),
   sum_insured: z.number().optional().nullable(),
   beneficiaries: z.array(beneficiarySchema).min(1).max(2),
