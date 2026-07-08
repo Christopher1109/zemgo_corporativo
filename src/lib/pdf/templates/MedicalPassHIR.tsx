@@ -45,30 +45,30 @@ const s = StyleSheet.create({
   },
 
   // ---- HEADER ----
-  headerWrap: { position: "relative", height: 110 },
+  headerWrap: { position: "relative", height: 90 },
   headerSvg: { position: "absolute", top: 0, left: 0 },
   logoBox: {
-    position: "absolute", top: 22, left: 30,
-    width: 58, height: 58, backgroundColor: ORANGE, borderRadius: 4,
+    position: "absolute", top: 18, left: 30,
+    width: 52, height: 52, backgroundColor: ORANGE, borderRadius: 4,
     alignItems: "center", justifyContent: "center",
   },
-  logoTxt: { color: "#fff", fontFamily: "Helvetica-Bold", fontSize: 20, lineHeight: 1 },
-  logoSub: { color: "#fff", fontFamily: "Helvetica-Bold", fontSize: 6, letterSpacing: 1, marginTop: 3 },
+  logoTxt: { color: "#fff", fontFamily: "Helvetica-Bold", fontSize: 18, lineHeight: 1 },
+  logoSub: { color: "#fff", fontFamily: "Helvetica-Bold", fontSize: 5.5, letterSpacing: 1, marginTop: 3 },
   headerTitle: {
-    position: "absolute", top: 40, left: 110, right: 130,
-    fontSize: 26, fontFamily: "Helvetica-Bold", color: ORANGE, letterSpacing: 0.4,
+    position: "absolute", top: 32, left: 100, right: 140,
+    fontSize: 22, fontFamily: "Helvetica-Bold", color: ORANGE,
   },
 
   // ---- BODY ----
-  body: { paddingHorizontal: 30, paddingTop: 4 },
-  row: { flexDirection: "row", gap: 8, marginBottom: 8 },
+  body: { paddingHorizontal: 30, paddingTop: 2 },
+  row: { flexDirection: "row", gap: 8, marginBottom: 6 },
   pill: {
-    backgroundColor: PILL_BG, borderRadius: 22,
-    paddingVertical: 7, paddingHorizontal: 14,
-    flexDirection: "row", alignItems: "center", flex: 1, minHeight: 26,
+    backgroundColor: PILL_BG, borderRadius: 20,
+    paddingVertical: 5, paddingHorizontal: 12,
+    flexDirection: "row", alignItems: "center", flex: 1, minHeight: 22,
   },
-  pillLabel: { color: PILL_LABEL, fontFamily: "Helvetica-Bold", fontSize: 9.5, marginRight: 6 },
-  pillValue: { color: "#1a1a1a", fontSize: 10, flex: 1 },
+  pillLabel: { color: PILL_LABEL, fontFamily: "Helvetica-Bold", fontSize: 9, marginRight: 5 },
+  pillValue: { color: "#1a1a1a", fontSize: 9.5, flex: 1 },
 
   // Bloque descripción (recuadro grande)
   descBox: {
