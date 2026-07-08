@@ -81,7 +81,6 @@ function NewClient() {
       rfc: rest.rfc ? rest.rfc.trim().toUpperCase() : null,
       date_of_birth: rest.date_of_birth || null,
       created_by: user?.id,
-      sales_rep_id: user?.id,
       metadata: isABC && dependents_text.trim()
         ? { dependents_text: dependents_text.trim() }
         : {},
