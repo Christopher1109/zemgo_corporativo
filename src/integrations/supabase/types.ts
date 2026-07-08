@@ -339,6 +339,77 @@ export type Database = {
           },
         ]
       }
+      contractors: {
+        Row: {
+          address_full: string | null
+          city: string | null
+          colonia: string | null
+          created_at: string
+          created_by: string | null
+          curp: string | null
+          email: string | null
+          full_name: string
+          id: string
+          linked_client_id: string | null
+          number: string | null
+          phone: string | null
+          phone_alt: string | null
+          rfc: string | null
+          state: string | null
+          street: string | null
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          address_full?: string | null
+          city?: string | null
+          colonia?: string | null
+          created_at?: string
+          created_by?: string | null
+          curp?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          linked_client_id?: string | null
+          number?: string | null
+          phone?: string | null
+          phone_alt?: string | null
+          rfc?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          address_full?: string | null
+          city?: string | null
+          colonia?: string | null
+          created_at?: string
+          created_by?: string | null
+          curp?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          linked_client_id?: string | null
+          number?: string | null
+          phone?: string | null
+          phone_alt?: string | null
+          rfc?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractors_linked_client_id_fkey"
+            columns: ["linked_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dependents: {
         Row: {
           created_at: string
@@ -882,6 +953,7 @@ export type Database = {
           certificate_pdf_url: string | null
           client_id: string
           contracting_party: string | null
+          contractor_id: string | null
           created_at: string
           created_by: string | null
           deductible: number | null
@@ -905,6 +977,7 @@ export type Database = {
           certificate_pdf_url?: string | null
           client_id: string
           contracting_party?: string | null
+          contractor_id?: string | null
           created_at?: string
           created_by?: string | null
           deductible?: number | null
@@ -928,6 +1001,7 @@ export type Database = {
           certificate_pdf_url?: string | null
           client_id?: string
           contracting_party?: string | null
+          contractor_id?: string | null
           created_at?: string
           created_by?: string | null
           deductible?: number | null
@@ -952,6 +1026,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policies_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
             referencedColumns: ["id"]
           },
           {
@@ -1264,6 +1345,7 @@ export type Database = {
           is_active: boolean
           name: string
           payment_alert_offsets: number[]
+          policy_number: string | null
         }
         Insert: {
           billing_note?: string | null
@@ -1277,6 +1359,7 @@ export type Database = {
           is_active?: boolean
           name: string
           payment_alert_offsets?: number[]
+          policy_number?: string | null
         }
         Update: {
           billing_note?: string | null
@@ -1290,6 +1373,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           payment_alert_offsets?: number[]
+          policy_number?: string | null
         }
         Relationships: []
       }
@@ -1903,6 +1987,10 @@ export type Database = {
       update_program_alert_offsets: {
         Args: { _offsets: number[]; _program_id: string }
         Returns: Json
+      }
+      update_program_policy_number: {
+        Args: { _policy_number: string; _program_id: string }
+        Returns: undefined
       }
       update_user_program_access: {
         Args: { _program_id: string; _role_text: string; _user_id: string }
