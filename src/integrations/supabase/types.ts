@@ -298,6 +298,47 @@ export type Database = {
           },
         ]
       }
+      commission_tiers: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          max_clients: number | null
+          min_clients: number
+          percentage: number
+          program_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          max_clients?: number | null
+          min_clients?: number
+          percentage: number
+          program_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          max_clients?: number | null
+          min_clients?: number
+          percentage?: number
+          program_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_tiers_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dependents: {
         Row: {
           created_at: string
@@ -853,6 +894,7 @@ export type Database = {
           premium: number | null
           program_id: string
           renewed_from_id: string | null
+          sales_rep_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["policy_status"]
           sum_insured: number | null
@@ -875,6 +917,7 @@ export type Database = {
           premium?: number | null
           program_id: string
           renewed_from_id?: string | null
+          sales_rep_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["policy_status"]
           sum_insured?: number | null
@@ -897,6 +940,7 @@ export type Database = {
           premium?: number | null
           program_id?: string
           renewed_from_id?: string | null
+          sales_rep_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["policy_status"]
           sum_insured?: number | null
@@ -922,6 +966,13 @@ export type Database = {
             columns: ["renewed_from_id"]
             isOneToOne: false
             referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policies_sales_rep_id_fkey"
+            columns: ["sales_rep_id"]
+            isOneToOne: false
+            referencedRelation: "sales_reps"
             referencedColumns: ["id"]
           },
         ]
