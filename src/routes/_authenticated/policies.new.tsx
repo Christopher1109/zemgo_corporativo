@@ -70,17 +70,35 @@ function NewPolicy() {
     queryKey: ["client-search", clientSearch, programId],
     queryFn: async () => {
       const term = clientSearch.trim();
-      if (term.length < 2) return [];
+      if (term.length < 2 || !programId) return [];
       const { data, error } = await supabase
-        .from("clients")
-        .select("id, first_name, last_name, curp")
-        .or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,curp.ilike.%${term}%`)
+        .from("client_programs")
+        .select("clients!inner(id, first_name, last_name, curp)")
+        .eq("program_id", programId)
+        .neq("status", "cancelled")
+        .or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,curp.ilike.%${term}%`, {
+          referencedTable: "clients",
+        })
         .limit(8);
       if (error) throw error;
-      return data ?? [];
+      const seen = new Set<string>();
+      return (data ?? [])
+        .map((r: any) => r.clients)
+        .filter((c: any) => {
+          if (!c || seen.has(c.id)) return false;
+          seen.add(c.id);
+          return true;
+        })
+        .slice(0, 8);
     },
-    enabled: clientSearch.length >= 2,
+    enabled: clientSearch.length >= 2 && !!programId,
   });
+
+  useEffect(() => {
+    setClientId("");
+    setClientLabel("");
+    setClientSearch("");
+  }, [programId]);
 
   // -------- CONTRATANTE --------
   const [contractorSame, setContractorSame] = useState(true);
@@ -294,6 +312,9 @@ function NewPolicy() {
                 >
                   <Plus className="h-4 w-4 mr-1" /> Crear nuevo cliente titular
                 </Button>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Solo puedes emitir certificados a clientes afiliados al programa seleccionado.
+                </p>
               </div>
             )}
           </div>

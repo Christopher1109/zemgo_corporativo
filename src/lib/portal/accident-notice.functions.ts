@@ -1,5 +1,5 @@
 // Generador de la "Carta Aviso de Accidente" (HIR Seguros) para el portal.
-// Devuelve el PDF en base64 usando la plantilla React-PDF `MedicalPassHIR`.
+// Devuelve el PDF en base64 usando pdf-lib para evitar WebAssembly en preview/producción.
 
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader, getCookie } from "@tanstack/react-start/server";
@@ -29,7 +29,16 @@ const inputSchema = z.object({
 export const portalAccidentNotice = createServerFn({ method: "POST" })
   .inputValidator((d) => inputSchema.parse(d))
   .handler(async ({ data }) => {
-    const token = getToken();
+    let token: string | null = null;
+    try {
+      const h = getRequestHeader("x-portal-token");
+      if (h && h.length >= 32) token = h;
+    } catch {}
+    if (!token) {
+      try {
+        token = getCookie("portal_token") ?? null;
+      } catch {}
+    }
     if (!token) throw new Error("sesion_invalida");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -59,34 +68,14 @@ export const portalAccidentNotice = createServerFn({ method: "POST" })
       program: { code?: string; name?: string; policy_number?: string | null };
     };
 
-    const { MedicalPassHIR } = await import("@/lib/pdf/templates/MedicalPassHIR");
-    const { renderPdfToBytes } = await import("@/lib/pdf/render");
-    const React = (await import("react")).default;
-
-    const doc = React.createElement(MedicalPassHIR, {
-      director_name: "Graciela Rivera Bersoza",
-      director_signature_url: null,
-      snapshot: {
-        program_code: program?.code,
-        contracting_party: policy.contracting_party ?? client.full_name ?? "",
-        // Nº de póliza global del programa (editable en Configuración)
-        policy_number: program?.policy_number ?? policy.policy_number ?? "",
-        certificate_number: policy.certificate_number ?? policy.folio ?? "",
-        insured_name: client.full_name ?? "",
-        date_of_birth: client.date_of_birth ?? null,
-        curp: client.curp ?? "",
-        sum_insured: policy.sum_insured ?? null,
-        deductible: data.deductible ?? policy.deductible ?? null,
-        incident_date: incident.accident_date ?? null,
-        incident_time: incident.accident_time
-          ? String(incident.accident_time).slice(0, 5)
-          : null,
-        incident_description: incident.description ?? "",
-        hospital_name: incident.hospital ?? "",
-      },
+    const { renderAccidentNoticeWithPdfLib } = await import("@/lib/pdf/pdf-lib-renderers.server");
+    const bytes = await renderAccidentNoticeWithPdfLib({
+      incident,
+      policy,
+      client,
+      program,
+      deductibleOverride: data.deductible ?? null,
     });
-
-    const bytes = await renderPdfToBytes(doc as any);
     const b64 = Buffer.from(bytes).toString("base64");
     return {
       pdf_base64: b64,

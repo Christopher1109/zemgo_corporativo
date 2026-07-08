@@ -4,12 +4,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { portalPolicies } from "@/lib/portal/portal.functions";
+import { portalCertificatePdf } from "@/lib/portal/certificate.functions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { generateCertificateClient } from "@/lib/pdf/generateCertificate.browser";
 import { getProgramInfo } from "@/data/portal-program-info";
-import { Info, LifeBuoy } from "lucide-react";
 import {
   ChevronDown,
   ChevronUp,
@@ -22,6 +21,8 @@ import {
   CreditCard,
   Lock,
   AlertTriangle,
+  Info,
+  LifeBuoy,
 } from "lucide-react";
 
 export const Route = createFileRoute("/portal/_app/policies")({
@@ -51,6 +52,7 @@ function isActivated(policy: any) {
 
 function PoliciesPage() {
   const fn = useServerFn(portalPolicies);
+  const certFn = useServerFn(portalCertificatePdf);
   const { data, isLoading } = useQuery({ queryKey: ["portal", "policies"], queryFn: () => fn() });
   const [openId, setOpenId] = useState<string | null>(null);
   const [genId, setGenId] = useState<string | null>(null);
@@ -58,10 +60,21 @@ function PoliciesPage() {
   async function downloadCert(policyId: string) {
     setGenId(policyId);
     try {
-      const { url } = await generateCertificateClient(policyId);
-      window.open(url, "_blank");
-    } catch {
-      toast.error("No se pudo generar el certificado");
+      const { pdf_base64, filename } = await certFn({ data: { policy_id: policyId } });
+      const bin = atob(pdf_base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      toast.error(`No se pudo generar el certificado: ${e?.message ?? "error"}`);
     } finally {
       setGenId(null);
     }

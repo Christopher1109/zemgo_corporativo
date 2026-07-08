@@ -44,7 +44,7 @@ async function issueMedicalPassImpl(
   line("Pase #:", pass.id);
   line("Programa:", `${programCode} — ${snap.program_name ?? ""}`);
   line("Folio certificado:", snap.folio ?? "—");
-  line("No. Certificado HIR:", snap.policy_number ?? "—");
+  line("No. de póliza:", snap.policy_number ?? "—");
   line("No. Certificado:", snap.certificate_number ?? "—");
   line("Contratante:", snap.contracting_party ?? "—");
   y -= 6;

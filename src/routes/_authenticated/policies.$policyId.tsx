@@ -13,8 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { changePolicyStatus } from "@/lib/policies.functions";
-import { generateCertificateClient } from "@/lib/pdf/generateCertificate.browser";
+import { changePolicyStatus, generateCertificatePdf } from "@/lib/policies.functions";
 import { listPolicyRevisions } from "@/lib/policies-edit.functions";
 import { PolicyPaymentsTab } from "@/components/payments/policy-payments-tab";
 import { EditPolicyDialog } from "@/components/policies/EditPolicyDialog";
@@ -45,6 +44,7 @@ function PolicyDetail() {
   const { policyId } = Route.useParams();
   const qc = useQueryClient();
   const changeFn = useServerFn(changePolicyStatus);
+  const generatePdfFn = useServerFn(generateCertificatePdf);
   const revisionsFn = useServerFn(listPolicyRevisions);
 
   const [statusDialog, setStatusDialog] = useState(false);
@@ -143,7 +143,7 @@ function PolicyDetail() {
   });
 
   const pdfMutation = useMutation({
-    mutationFn: () => generateCertificateClient(policyId),
+    mutationFn: () => generatePdfFn({ data: { policy_id: policyId } }),
     onSuccess: (res) => {
       toast.success("Certificado generado");
       window.open(res.url, "_blank");
@@ -210,7 +210,7 @@ function PolicyDetail() {
           <Card className="p-5 grid md:grid-cols-2 gap-4 text-sm">
             <Field label="Folio" value={policy.folio} />
             <Field label="Programa" value={policy.programs?.name} />
-            <Field label="No. Certificado HIR" value={policy.policy_number ?? "—"} />
+            <Field label="No. de póliza" value={policy.policy_number ?? "—"} />
             <Field label="No. Certificado" value={policy.certificate_number ?? "—"} />
             <Field label="Titular" value={`${policy.clients?.first_name} ${policy.clients?.last_name}`} />
             <Field label="CURP" value={policy.clients?.curp} />

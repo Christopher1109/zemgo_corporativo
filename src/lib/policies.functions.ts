@@ -37,6 +37,18 @@ export const createPolicy = createServerFn({ method: "POST" })
     const sum = data.beneficiaries.reduce((s, b) => s + b.percentage, 0);
     if (Math.round(sum) !== 100) throw new Error("Los porcentajes de beneficiarios deben sumar 100%");
 
+    const { data: enrollment, error: enrollmentErr } = await supabase
+      .from("client_programs")
+      .select("id")
+      .eq("client_id", data.client_id)
+      .eq("program_id", data.program_id)
+      .neq("status", "cancelled")
+      .maybeSingle();
+    if (enrollmentErr) throw enrollmentErr;
+    if (!enrollment) {
+      throw new Error("Este cliente no está afiliado al programa seleccionado. Guárdalo primero en este programa.");
+    }
+
     const { data: folio, error: folioErr } = await supabase.rpc("next_policy_folio", {
       _program_id: data.program_id,
     });
@@ -179,56 +191,13 @@ export const generateCertificatePdf = createServerFn({ method: "POST" })
       .single();
     if (error) throw error;
 
-    const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
-    const pdf = await PDFDocument.create();
-    const page = pdf.addPage([612, 792]);
-    const font = await pdf.embedFont(StandardFonts.Helvetica);
-    const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-
-    const hex = (pol as any).programs?.color_primary ?? "#333333";
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
-
-    page.drawRectangle({ x: 0, y: 742, width: 612, height: 50, color: rgb(r, g, b) });
-    page.drawText("ZEMGO", { x: 40, y: 760, size: 18, font: bold, color: rgb(1, 1, 1) });
-    page.drawText((pol as any).programs?.name ?? "", { x: 40, y: 746, size: 10, font, color: rgb(1, 1, 1) });
-
-    let y = 700;
-    const line = (label: string, value: string) => {
-      page.drawText(label, { x: 40, y, size: 10, font: bold });
-      page.drawText(value, { x: 200, y, size: 10, font });
-      y -= 18;
-    };
-    page.drawText("CERTIFICADO DE COBERTURA", { x: 40, y, size: 14, font: bold });
-    y -= 28;
-    line("Folio:", pol.folio);
-    line("No. Certificado HIR:", pol.policy_number ?? "—");
-    line("No. Certificado:", pol.certificate_number ?? "—");
-    line("Titular:", `${(pol as any).clients?.first_name ?? ""} ${(pol as any).clients?.last_name ?? ""}`);
-    line("CURP:", (pol as any).clients?.curp ?? "—");
-    line("Contratante:", pol.contracting_party ?? "—");
-    line("Emisión:", pol.issue_date ?? "—");
-    line("Vigencia:", `${pol.start_date ?? "—"}  al  ${pol.end_date ?? "—"}`);
-    line("Prima:", pol.premium ? `$${pol.premium}` : "—");
-    line("Suma asegurada:", pol.sum_insured ? `$${pol.sum_insured}` : "—");
-
-    y -= 10;
-    page.drawText("BENEFICIARIOS", { x: 40, y, size: 12, font: bold });
-    y -= 18;
-    for (const ben of ((pol as any).beneficiaries ?? []) as any[]) {
-      page.drawText(`• ${ben.full_name}  (${ben.relationship})  —  ${ben.percentage}%`, {
-        x: 50, y, size: 10, font,
-      });
-      y -= 14;
-    }
-
-    y -= 20;
-    page.drawText("[Placeholder] El layout definitivo del certificado se aplicará cuando se entregue el HTML oficial.", {
-      x: 40, y, size: 8, font, color: rgb(0.5, 0.5, 0.5),
+    const { renderCertificateWithPdfLib } = await import("@/lib/pdf/pdf-lib-renderers.server");
+    const bytes = await renderCertificateWithPdfLib({
+      policy: pol as any,
+      program: (pol as any).programs,
+      client: (pol as any).clients,
+      beneficiaries: ((pol as any).beneficiaries ?? []) as any[],
     });
-
-    const bytes = await pdf.save();
 
     // Upload via service role to a path that program-members can read.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

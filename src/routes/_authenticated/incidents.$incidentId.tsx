@@ -235,7 +235,7 @@ function IncidentDetail() {
             <Field label="Fecha nacimiento" value={incident.clients.date_of_birth ?? "—"} />
             <Field label="Contratante" value={incident.policies.contracting_party ?? "—"} />
             <Field label="Folio certificado" value={incident.policies.folio} />
-            <Field label="No. Certificado HIR" value={incident.policies.policy_number ?? "—"} />
+            <Field label="No. de póliza" value={incident.policies.policy_number ?? "—"} />
             <Field label="No. Certificado" value={incident.policies.certificate_number ?? "—"} />
             <Field label="Vigencia" value={`${incident.policies.start_date ?? "—"} → ${incident.policies.end_date ?? "—"}`} />
             <Field label="Suma asegurada" value={incident.policies.sum_insured ? `$${incident.policies.sum_insured}` : "—"} />
