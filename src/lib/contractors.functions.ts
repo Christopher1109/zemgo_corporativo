@@ -58,12 +58,14 @@ export const createContractor = createServerFn({ method: "POST" })
     if (phoneNorm || emailNorm) {
       const { data: meRow } = await supabase
         .from("profiles" as any)
-        .select("email, phone")
+        .select("phone")
         .eq("id", userId)
         .maybeSingle();
-      const me = (meRow as { email?: string | null; phone?: string | null } | null) ?? null;
+      const me = (meRow as { phone?: string | null } | null) ?? null;
       const myPhone = me?.phone ? contactRegex.digits(me.phone) : "";
-      const myEmail = me?.email ? contactRegex.email(me.email) : "";
+      const myEmail = (context.claims as any)?.email
+        ? contactRegex.email(String((context.claims as any).email))
+        : "";
       if ((phoneNorm && phoneNorm === myPhone) || (emailNorm && emailNorm === myEmail)) {
         throw new Error("propio_contacto");
       }
