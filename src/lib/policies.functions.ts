@@ -17,8 +17,6 @@ const dependentSchema = z.object({
 const createPolicySchema = z.object({
   client_id: z.string().uuid(),
   program_id: z.string().uuid(),
-  policy_number: z.string().optional().nullable(),
-  certificate_number: z.string().optional().nullable(),
   issue_date: z.string(),
   start_date: z.string(),
   end_date: z.string(),
@@ -44,14 +42,21 @@ export const createPolicy = createServerFn({ method: "POST" })
     });
     if (folioErr) throw folioErr;
 
+    // Fetch the program's configured HIR policy number (may be null until set in Settings → Póliza)
+    const { data: prog } = await supabase
+      .from("programs")
+      .select("policy_number")
+      .eq("id", data.program_id)
+      .maybeSingle();
+
     const { data: policy, error: insErr } = await supabase
       .from("policies")
       .insert({
         client_id: data.client_id,
         program_id: data.program_id,
         folio: folio as string,
-        policy_number: data.policy_number ?? null,
-        certificate_number: data.certificate_number ?? null,
+        policy_number: prog?.policy_number ?? null,
+        certificate_number: folio as string,
         issue_date: data.issue_date,
         start_date: data.start_date,
         end_date: data.end_date,
