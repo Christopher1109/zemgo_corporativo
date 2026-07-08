@@ -6,6 +6,10 @@
 
 import { createElement } from "react";
 import { getCertificatePayload, saveCertificatePdf } from "@/lib/certificate.functions";
+import {
+  getPortalCertificatePayload,
+  savePortalCertificatePdf,
+} from "@/lib/portal/certificate.functions";
 import { CertificateABC } from "./templates/CertificateABC";
 import { CertificateFutCare } from "./templates/CertificateFutCare";
 import { CertificateMCV } from "./templates/CertificateMCV";
@@ -49,12 +53,19 @@ async function blobToBase64(blob: Blob): Promise<string> {
   return btoa(binary);
 }
 
-export async function generateCertificateClient(policyId: string): Promise<{ url: string }> {
-  const { programCode, payload } = await getCertificatePayload({ data: { policy_id: policyId } });
+export async function generateCertificateClient(
+  policyId: string,
+  opts?: { portal?: boolean },
+): Promise<{ url: string }> {
+  const portal = opts?.portal === true;
+  const payloadFn = portal ? getPortalCertificatePayload : getCertificatePayload;
+  const saveFn = portal ? savePortalCertificatePdf : saveCertificatePdf;
+
+  const { programCode, payload } = await payloadFn({ data: { policy_id: policyId } });
   const { pdf } = await import("@react-pdf/renderer");
   const blob = await pdf(buildDoc(programCode, payload) as any).toBlob();
   const pdf_base64 = await blobToBase64(blob);
-  const res = await saveCertificatePdf({
+  const res = await saveFn({
     data: {
       policy_id: policyId,
       folio: payload.policy.folio,
@@ -65,3 +76,4 @@ export async function generateCertificateClient(policyId: string): Promise<{ url
   });
   return { url: res.url };
 }
+

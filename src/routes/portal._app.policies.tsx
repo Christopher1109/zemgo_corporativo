@@ -59,7 +59,7 @@ function PoliciesPage() {
   async function downloadCert(policyId: string) {
     setGenId(policyId);
     try {
-      const { url } = await generateCertificateClient(policyId);
+      const { url } = await generateCertificateClient(policyId, { portal: true });
       window.open(url, "_blank");
     } catch (e: any) {
       toast.error(`No se pudo generar el certificado: ${e?.message ?? "error"}`);
