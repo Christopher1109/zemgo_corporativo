@@ -36,7 +36,7 @@ export const portalAccidentNotice = createServerFn({ method: "POST" })
     } catch {}
     if (!token) {
       try {
-        token = getCookie(COOKIE) ?? null;
+        token = getCookie("portal_token") ?? null;
       } catch {}
     }
     if (!token) throw new Error("sesion_invalida");
