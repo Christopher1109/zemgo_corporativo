@@ -45,6 +45,7 @@ function SettingsPage() {
       <Tabs defaultValue="alerts" className="w-full">
         <TabsList>
           <TabsTrigger value="alerts"><Bell className="h-4 w-4 mr-1.5" /> Alertas</TabsTrigger>
+          <TabsTrigger value="policy"><FileText className="h-4 w-4 mr-1.5" /> Póliza</TabsTrigger>
           <TabsTrigger value="users"><UsersIcon className="h-4 w-4 mr-1.5" /> Usuarios</TabsTrigger>
         </TabsList>
 
