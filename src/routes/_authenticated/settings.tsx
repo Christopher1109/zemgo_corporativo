@@ -23,6 +23,7 @@ type Program = {
   color_primary: string | null;
   payment_alert_offsets: number[];
   is_active: boolean;
+  policy_number: string | null;
 };
 
 function SettingsPage() {
