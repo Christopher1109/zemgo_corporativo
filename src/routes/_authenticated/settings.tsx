@@ -68,6 +68,25 @@ function SettingsPage() {
           </section>
         </TabsContent>
 
+        <TabsContent value="policy" className="mt-5">
+          <section className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Número de póliza vigente por programa. Este dato se utiliza para llenar automáticamente
+              el campo <em>N° de Póliza</em> en la Carta Aviso de Accidente. Actualízalo cuando la
+              aseguradora emita un nuevo número.
+            </p>
+            {q.isLoading ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-lg bg-muted/40 animate-pulse" />)}
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {(q.data as Program[] ?? []).map((p) => <ProgramPolicyCard key={p.id} program={p} />)}
+              </div>
+            )}
+          </section>
+        </TabsContent>
+
         <TabsContent value="users" className="mt-5">
           <UsersSettingsTab />
         </TabsContent>
