@@ -177,6 +177,50 @@ function HospitalsPage() {
         </Button>
       </div>
 
+      <Card className="p-3 flex flex-col md:flex-row md:items-end gap-3">
+        <div className="flex-1 space-y-1">
+          <Label className="text-xs">Buscar</Label>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-8"
+              placeholder="Nombre, dirección o ciudad…"
+              value={qName}
+              onChange={(e) => setQName(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="w-full md:w-52 space-y-1">
+          <Label className="text-xs">Ciudad</Label>
+          <Select value={qCity} onValueChange={setQCity}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Todas</SelectItem>
+              {cityOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-full md:w-44 space-y-1">
+          <Label className="text-xs">Estatus</Label>
+          <Select value={qStatus} onValueChange={(v) => setQStatus(v as any)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Activo</SelectItem>
+              <SelectItem value="inactive">Inactivo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {anyFilterActive && (
+          <Button
+            variant="ghost" size="sm"
+            onClick={() => { setQName(""); setQCity("__all__"); setQStatus("all"); }}
+          >
+            <XIcon className="h-4 w-4 mr-1" /> Limpiar
+          </Button>
+        )}
+      </Card>
+
       <Card className="p-0 overflow-hidden">
         <Table>
           <TableHeader>
@@ -194,7 +238,9 @@ function HospitalsPage() {
               <TableRow><TableCell colSpan={6} className="text-center py-6 text-muted-foreground">Cargando…</TableCell></TableRow>
             ) : hospitals.length === 0 ? (
               <TableRow><TableCell colSpan={6} className="text-center py-6 text-muted-foreground">Aún no hay hospitales. Agrega el primero.</TableCell></TableRow>
-            ) : hospitals.map((h) => (
+            ) : filtered.length === 0 ? (
+              <TableRow><TableCell colSpan={6} className="text-center py-6 text-muted-foreground">Ningún hospital coincide con los filtros.</TableCell></TableRow>
+            ) : filtered.map((h) => (
               <TableRow key={h.id}>
                 <TableCell>
                   <div className="font-medium">{h.name}</div>
@@ -219,6 +265,11 @@ function HospitalsPage() {
           </TableBody>
         </Table>
       </Card>
+      {!isLoading && hospitals.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Mostrando {filtered.length} de {hospitals.length} hospitales.
+        </p>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg">
