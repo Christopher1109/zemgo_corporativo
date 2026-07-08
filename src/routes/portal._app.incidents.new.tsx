@@ -142,7 +142,7 @@ function NewIncidentPage() {
           hospital_id: hospitalId,
         },
       });
-      toast.success("Reporte recibido. Tu siniestro está en revisión. Te contactaremos por WhatsApp.");
+      toast.success("Reporte recibido. Tu Aviso de Accidente está listo para descargar.");
       navigate({ to: "/portal/incidents" });
     } catch (err: any) {
       const raw = String(err?.message ?? err ?? "");
