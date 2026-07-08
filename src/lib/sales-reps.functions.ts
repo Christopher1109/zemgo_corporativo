@@ -35,7 +35,7 @@ export const listSalesReps = createServerFn({ method: "GET" })
 
     const repsQ = await sb
       .from("sales_reps")
-      .select("id, full_name, phone, code, commission_rate, is_active")
+      .select("id, full_name, referral_source, code, commission_rate, is_active")
       .order("full_name");
     if (repsQ.error) throw new Error(repsQ.error.message);
     const reps = repsQ.data ?? [];
@@ -123,7 +123,7 @@ export const getSalesRepDetail = createServerFn({ method: "GET" })
     const sb = context.supabase;
     const repQ = await sb
       .from("sales_reps")
-      .select("id, full_name, phone, code, commission_rate, is_active, metadata")
+      .select("id, full_name, referral_source, code, commission_rate, is_active, metadata")
       .eq("id", data.sales_rep_id)
       .maybeSingle();
     if (repQ.error) throw new Error(repQ.error.message);

@@ -62,7 +62,7 @@ function SalesRepDetailPage() {
           <h1 className="text-2xl font-bold">{rep.full_name}</h1>
           <div className="mt-1 flex flex-wrap gap-2 items-center text-sm text-muted-foreground">
             {rep.code && <Badge variant="outline" className="font-mono">{rep.code}</Badge>}
-            {rep.phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{rep.phone}</span>}
+            {rep.referral_source && <span className="text-xs">Fuente: {rep.referral_source}</span>}
             {!rep.is_active && <Badge variant="secondary">inactivo</Badge>}
           </div>
         </div>
