@@ -1,24 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader, getCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
-
-const COOKIE = "portal_token";
-
-function getToken(): string | null {
-  try {
-    const h = getRequestHeader("x-portal-token");
-    if (h && h.length >= 32) return h;
-  } catch {}
-  try {
-    return getCookie(COOKIE) ?? null;
-  } catch {
-    return null;
-  }
-}
 
 export const portalCertificatePdf = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ policy_id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
+    const { getRequestHeader, getCookie } = await import("@tanstack/react-start/server");
     let token: string | null = null;
     try {
       const h = getRequestHeader("x-portal-token");
@@ -30,6 +16,7 @@ export const portalCertificatePdf = createServerFn({ method: "POST" })
       } catch {}
     }
     if (!token) throw new Error("sesion_invalida");
+
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: clientId, error: sessionError } = await supabaseAdmin.rpc("resolve_portal_session", { _token: token });
