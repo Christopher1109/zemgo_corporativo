@@ -5,6 +5,7 @@ import { portalMe, portalLogout } from "@/lib/portal/portal.functions";
 import { clearPortalToken } from "@/lib/portal/portal-token";
 import { Home, FileText, CreditCard, AlertTriangle, User, LogOut } from "lucide-react";
 import { HopeLogo } from "@/components/hope-logo";
+import { PortalChatbot } from "@/components/portal-chatbot";
 
 export const Route = createFileRoute("/portal/_app")({
   component: PortalAppLayout,
@@ -143,6 +144,8 @@ function PortalAppLayout() {
           );
         })}
       </nav>
+
+      <PortalChatbot />
     </div>
   );
 }
