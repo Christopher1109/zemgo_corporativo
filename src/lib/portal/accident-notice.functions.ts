@@ -180,12 +180,6 @@ export const portalAccidentNotice = createServerFn({ method: "POST" })
     });
 
     const bytesOut = await pdf.save();
-    // Devolver base64 para descargar desde el navegador.
-    let bin = "";
-    for (let i = 0; i < bytesOut.length; i++) bin += String.fromCharCode(bytesOut[i]);
-    // Buffer está disponible en el Worker con nodejs_compat.
     const b64 = Buffer.from(bytesOut).toString("base64");
-    void bin;
-
     return { pdf_base64: b64, filename: `Aviso-Accidente-${policy.folio ?? "SIN-FOLIO"}.pdf` };
   });
