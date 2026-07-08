@@ -188,3 +188,58 @@ function ProgramAlertsCard({ program }: { program: Program }) {
     </Card>
   );
 }
+
+function ProgramPolicyCard({ program }: { program: Program }) {
+  const qc = useQueryClient();
+  const updateFn = useServerFn(updateProgramPolicyNumber);
+  const [value, setValue] = useState<string>(program.policy_number ?? "");
+  useEffect(() => { setValue(program.policy_number ?? ""); }, [program.policy_number]);
+
+  const m = useMutation({
+    mutationFn: async () => updateFn({ data: { program_id: program.id, policy_number: value.trim() || null } }),
+    onSuccess: () => {
+      toast.success(`Póliza actualizada para ${program.code}`);
+      qc.invalidateQueries({ queryKey: ["programs-alert-config"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Error al guardar"),
+  });
+
+  const dirty = (value.trim() || null) !== (program.policy_number ?? null);
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div
+            className="h-8 w-8 rounded-md grid place-items-center text-white text-xs font-bold"
+            style={{ backgroundColor: program.color_primary ?? "var(--program-primary)" }}
+          >
+            {program.code.slice(0, 3).toUpperCase()}
+          </div>
+          {!program.is_active && <Badge variant="outline">Inactivo</Badge>}
+        </div>
+        <CardTitle className="text-base mt-2">{program.name}</CardTitle>
+        <CardDescription className="text-xs">Código: {program.code}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">N° de Póliza vigente</Label>
+          <Input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="Ej. HIR-2026-000123"
+            className="font-mono text-sm"
+          />
+        </div>
+        <Button
+          className="w-full" size="sm"
+          disabled={!dirty || m.isPending}
+          onClick={() => m.mutate()}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {m.isPending ? "Guardando…" : "Guardar"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
