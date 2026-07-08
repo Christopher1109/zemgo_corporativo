@@ -2,22 +2,7 @@
 // Devuelve el PDF en base64 usando pdf-lib para evitar WebAssembly en preview/producción.
 
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader, getCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
-
-const COOKIE = "portal_token";
-
-function getToken(): string | null {
-  try {
-    const h = getRequestHeader("x-portal-token");
-    if (h && h.length >= 32) return h;
-  } catch {}
-  try {
-    return getCookie(COOKIE) ?? null;
-  } catch {
-    return null;
-  }
-}
 
 const inputSchema = z.object({
   incident_id: z.string().uuid(),
@@ -29,11 +14,13 @@ const inputSchema = z.object({
 export const portalAccidentNotice = createServerFn({ method: "POST" })
   .inputValidator((d) => inputSchema.parse(d))
   .handler(async ({ data }) => {
+    const { getRequestHeader, getCookie } = await import("@tanstack/react-start/server");
     let token: string | null = null;
     try {
       const h = getRequestHeader("x-portal-token");
       if (h && h.length >= 32) token = h;
     } catch {}
+
     if (!token) {
       try {
         token = getCookie("portal_token") ?? null;
