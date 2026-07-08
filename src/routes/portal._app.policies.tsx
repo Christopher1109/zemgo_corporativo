@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProgramInfo } from "@/data/portal-program-info";
-import { Info, LifeBuoy } from "lucide-react";
 import {
   ChevronDown,
   ChevronUp,
@@ -22,6 +21,8 @@ import {
   CreditCard,
   Lock,
   AlertTriangle,
+  Info,
+  LifeBuoy,
 } from "lucide-react";
 
 export const Route = createFileRoute("/portal/_app/policies")({
