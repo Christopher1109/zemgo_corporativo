@@ -287,9 +287,7 @@ function DashboardPage() {
                 <Button asChild className="bg-rose-600 hover:bg-rose-700">
                   <Link to="/portal/incidents/new">Reportar ahora</Link>
                 </Button>
-                <Button asChild variant="outline" className="border-rose-300 text-rose-700 hover:bg-rose-50">
-                  <Link to="/portal/alcance">Ver pasos por programa</Link>
-                </Button>
+                <IncidentStepsDialog policies={policies} />
               </div>
             </CardContent>
           </Card>
