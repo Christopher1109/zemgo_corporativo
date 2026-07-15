@@ -8,10 +8,17 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { HopeLogo } from "@/components/hope-logo";
 
-// Username-based login. Usernames are mapped to a synthetic email
-// `${username}@hope.local` so we can keep using Supabase Auth.
 // Public sign-up is disabled — users are pre-created by an admin.
-const USERNAME_DOMAIN = "hope.local";
+// Accept full emails (new Zemgo users) and keep legacy short admin login working.
+const LEGACY_USERNAME_DOMAIN = "hope.local";
+const ZEMGO_USERNAME_DOMAIN = "zemgo.local";
+
+function resolveLoginEmail(value: string) {
+  const normalized = value.trim().toLowerCase();
+  if (normalized.includes("@")) return normalized;
+  if (normalized === "admin") return `${normalized}@${LEGACY_USERNAME_DOMAIN}`;
+  return `${normalized}@${ZEMGO_USERNAME_DOMAIN}`;
+}
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Iniciar sesión — ZEMGO" }] }),
@@ -34,7 +41,7 @@ function AuthPage() {
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const email = `${username.trim().toLowerCase()}@${USERNAME_DOMAIN}`;
+    const email = resolveLoginEmail(username);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) return toast.error("Usuario o contraseña incorrectos");
