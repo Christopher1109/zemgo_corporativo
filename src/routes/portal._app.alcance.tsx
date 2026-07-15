@@ -1,21 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { portalDashboard } from "@/lib/portal/portal.functions";
 import { getProgramInfo, type CoverageLine } from "@/data/portal-program-info";
 import { ProgramLogo } from "@/components/program-logo";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
-  ShieldCheck,
   HeartPulse,
   Stethoscope,
   Activity,
   Cross,
   Accessibility,
-  AlertTriangle,
-  ChevronRight,
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/portal/_app/alcance")({
   component: AlcancePage,
