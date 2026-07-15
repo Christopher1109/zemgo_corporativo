@@ -73,10 +73,12 @@ function PortalAppLayout() {
   const navItems = [
     { to: "/portal/dashboard", label: "Inicio", icon: Home },
     { to: "/portal/policies", label: "Certificados", icon: FileText },
+    { to: "/portal/alcance", label: "Alcance", icon: ShieldCheck },
     { to: "/portal/payments", label: "Pagos", icon: CreditCard },
     { to: "/portal/incidents", label: "Siniestros", icon: AlertTriangle },
     { to: "/portal/profile", label: "Mis Datos", icon: User },
   ];
+
 
   return (
     <div className="min-h-screen pb-20 md:pb-0 bg-slate-50">
