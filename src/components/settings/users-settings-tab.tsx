@@ -354,11 +354,15 @@ function UserRow({ user, programs, onChanged }: { user: any; programs: any[]; on
   const resetFn = useServerFn(forcePasswordReset);
 
   const accessMap = new Map<string, Role>();
-  for (const a of user.access ?? []) accessMap.set(a.program_id, a.role as Role);
+  const modulesMap = new Map<string, string[]>();
+  for (const a of user.access ?? []) {
+    accessMap.set(a.program_id, a.role as Role);
+    modulesMap.set(a.program_id, Array.isArray(a.modules) ? a.modules : ALL_MODULE_KEYS);
+  }
 
   const update = useMutation({
-    mutationFn: async (v: { program_id: string; role: Role }) =>
-      updateFn({ data: { user_id: user.id, program_id: v.program_id, role: v.role } }),
+    mutationFn: async (v: { program_id: string; role: Role; modules?: string[] }) =>
+      updateFn({ data: { user_id: user.id, program_id: v.program_id, role: v.role, modules: v.modules } }),
     onSuccess: () => { toast.success("Acceso actualizado"); onChanged(); },
     onError: (e: any) => toast.error(e.message || "Error"),
   });
@@ -402,28 +406,54 @@ function UserRow({ user, programs, onChanged }: { user: any; programs: any[]; on
 
         {open && (
           <div className="mt-3 border-t pt-3 space-y-3">
-            <div className="grid gap-2">
-              {programs.map((p: any) => (
-                <div key={p.id} className="flex items-center gap-2">
-                  <div
-                    className="h-6 w-6 rounded grid place-items-center text-[10px] font-bold text-white"
-                    style={{ backgroundColor: p.color_primary ?? "#64748b" }}
-                  >
-                    {p.code.slice(0, 2)}
+            <div className="grid gap-3">
+              {programs.map((p: any) => {
+                const role = accessMap.get(p.id) ?? "none";
+                const mods = modulesMap.get(p.id) ?? ALL_MODULE_KEYS;
+                return (
+                  <div key={p.id} className="border rounded-md p-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-6 w-6 rounded grid place-items-center text-[10px] font-bold text-white"
+                        style={{ backgroundColor: p.color_primary ?? "#64748b" }}
+                      >{p.code.slice(0, 2)}</div>
+                      <div className="flex-1 text-sm truncate">{p.name}</div>
+                      <Select
+                        value={role}
+                        onValueChange={(v) => update.mutate({ program_id: p.id, role: v as Role, modules: mods })}
+                      >
+                        <SelectTrigger className="w-36 h-8"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {ROLE_OPTIONS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {role !== "none" && (
+                      <div className="grid grid-cols-3 gap-1 pl-8">
+                        {MODULES.map((mod) => {
+                          const checked = mods.includes(mod.key);
+                          return (
+                            <label key={mod.key} className="flex items-center gap-1 text-xs">
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={(v) => {
+                                  const next = v
+                                    ? [...mods, mod.key]
+                                    : mods.filter((k) => k !== mod.key);
+                                  update.mutate({ program_id: p.id, role, modules: next });
+                                }}
+                              />
+                              {mod.label}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1 text-sm truncate">{p.name}</div>
-                  <Select
-                    value={accessMap.get(p.id) ?? "none"}
-                    onValueChange={(v) => update.mutate({ program_id: p.id, role: v as Role })}
-                  >
-                    <SelectTrigger className="w-40 h-8"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {ROLE_OPTIONS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
             <div className="flex flex-wrap gap-2 pt-2 border-t">
               <Button
                 variant="outline"
