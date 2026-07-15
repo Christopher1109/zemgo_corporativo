@@ -6,6 +6,8 @@ import { clearPortalToken } from "@/lib/portal/portal-token";
 import { Home, FileText, CreditCard, AlertTriangle, User, LogOut } from "lucide-react";
 import { HopeLogo } from "@/components/hope-logo";
 import { PortalChatbot } from "@/components/portal-chatbot";
+import { PortalPrivacyNotice } from "@/components/portal-privacy-notice";
+
 
 export const Route = createFileRoute("/portal/_app")({
   component: PortalAppLayout,
