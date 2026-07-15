@@ -13,8 +13,17 @@ export const PORTAL_FAQ: FaqItem[] = [
   },
   {
     q: "¿Cómo reporto un siniestro?",
-    a: "Ve a 'Siniestros' → 'Reportar siniestro', llena la información del evento y súbelo. Al finalizar podrás descargar de inmediato tu Carta Aviso de Accidente.",
+    a: [
+      "Sigue estos pasos para activar tu cobertura:",
+      "1. Ingresa al portal y entra a 'Siniestros' → 'Reportar siniestro'.",
+      "2. Llena el Aviso de Accidente con los datos del evento y una descripción.",
+      "3. Acude al hospital y muestra el Aviso de Accidente que se genera.",
+      "4. Solicita tu folio de Ingreso Hospitalario.",
+      "5. Una vez aprobado el dictamen (aprox. 4 horas), pasa a caja del hospital a pagar el deducible.",
+      "Puedes ver el paso a paso completo por programa en la sección 'Alcance'.",
+    ].join("\n"),
   },
+
   {
     q: "¿Dónde veo la lista de hospitales?",
     a: "Al reportar un siniestro te mostramos los hospitales autorizados según tu programa, ordenados por cercanía si aceptas compartir tu ubicación.",
