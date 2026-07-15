@@ -140,7 +140,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 p-2 space-y-1">
-          {NAV.map((item) => {
+          {visibleNav.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
@@ -150,17 +150,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition",
                   active ? "bg-white/20 font-medium" : "hover:bg-white/10",
-                  !item.enabled && "opacity-60",
                 )}
               >
                 <Icon className="h-4 w-4" />
                 <span className="flex-1">{item.label}</span>
-                {!item.enabled && (
-                  <span className="text-[10px] uppercase opacity-75">Próx.</span>
-                )}
               </Link>
             );
           })}
+
 
           {isSuperAdmin && (
             <div className="pt-4">
