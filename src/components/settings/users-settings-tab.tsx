@@ -288,27 +288,53 @@ function CreateUserDialog({ programs, onDone }: { programs: any[]; onDone: () =>
           <p className="text-[11px] text-muted-foreground mt-1">Mín. 8 caracteres. Cópiala antes de cerrar.</p>
         </div>
         <div>
-          <Label className="text-xs">Acceso por programa</Label>
-          <div className="grid gap-2 mt-1 max-h-56 overflow-y-auto">
-            {programs.map((p: any) => (
-              <div key={p.id} className="flex items-center gap-2">
-                <div
-                  className="h-6 w-6 rounded grid place-items-center text-[10px] font-bold text-white"
-                  style={{ backgroundColor: p.color_primary ?? "#64748b" }}
-                >
-                  {p.code.slice(0, 2)}
+          <Label className="text-xs">Acceso por programa y módulos</Label>
+          <div className="grid gap-3 mt-1 max-h-72 overflow-y-auto">
+            {programs.map((p: any) => {
+              const role = access[p.id] ?? "none";
+              const mods = modules[p.id] ?? ALL_MODULE_KEYS;
+              return (
+                <div key={p.id} className="border rounded-md p-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="h-6 w-6 rounded grid place-items-center text-[10px] font-bold text-white"
+                      style={{ backgroundColor: p.color_primary ?? "#64748b" }}
+                    >{p.code.slice(0, 2)}</div>
+                    <div className="flex-1 text-sm truncate">{p.name}</div>
+                    <Select value={role} onValueChange={(v) => setAccess({ ...access, [p.id]: v as Role })}>
+                      <SelectTrigger className="w-36 h-8"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ROLE_OPTIONS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {role !== "none" && (
+                    <div className="grid grid-cols-3 gap-1 pl-8">
+                      {MODULES.map((mod) => {
+                        const checked = mods.includes(mod.key);
+                        return (
+                          <label key={mod.key} className="flex items-center gap-1 text-xs">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => {
+                                const next = v
+                                  ? [...mods, mod.key]
+                                  : mods.filter((k) => k !== mod.key);
+                                setModules({ ...modules, [p.id]: next });
+                              }}
+                            />
+                            {mod.label}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <div className="flex-1 text-sm truncate">{p.name}</div>
-                <Select value={access[p.id] ?? "none"} onValueChange={(v) => setAccess({ ...access, [p.id]: v as Role })}>
-                  <SelectTrigger className="w-40 h-8"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ROLE_OPTIONS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
+
       </div>
       <DialogFooter>
         <Button disabled={!canSubmit || m.isPending} onClick={() => m.mutate()}>
