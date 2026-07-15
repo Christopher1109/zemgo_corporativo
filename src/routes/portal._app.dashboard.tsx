@@ -22,6 +22,15 @@ import {
   DollarSign,
 } from "lucide-react";
 import { ProgramLogo } from "@/components/program-logo";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { getProgramInfo } from "@/data/portal-program-info";
 
 export const Route = createFileRoute("/portal/_app/dashboard")({
   component: DashboardPage,
@@ -287,9 +296,7 @@ function DashboardPage() {
                 <Button asChild className="bg-rose-600 hover:bg-rose-700">
                   <Link to="/portal/incidents/new">Reportar ahora</Link>
                 </Button>
-                <Button asChild variant="outline" className="border-rose-300 text-rose-700 hover:bg-rose-50">
-                  <Link to="/portal/alcance">Ver pasos por programa</Link>
-                </Button>
+                <IncidentStepsDialog policies={policies} />
               </div>
             </CardContent>
           </Card>
@@ -501,5 +508,66 @@ function KpiTile({
       <div className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">{value}</div>
       {hint && <div className="text-[11px] text-slate-500 mt-0.5">{hint}</div>}
     </div>
+  );
+}
+
+function IncidentStepsDialog({ policies }: { policies: any[] }) {
+  const seen = new Set<string>();
+  const programs: Array<{ code: string; name: string }> = [];
+  for (const p of policies) {
+    const code = p.program?.code ?? p.programs?.code;
+    if (!code || seen.has(code)) continue;
+    seen.add(code);
+    programs.push({ code, name: p.program?.name ?? p.programs?.name ?? code });
+  }
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="border-rose-300 text-rose-700 hover:bg-rose-50">
+          Ver pasos por programa
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-rose-600" />
+            ¿Qué hacer en caso de siniestro?
+          </DialogTitle>
+          <DialogDescription>
+            Sigue estos pasos para activar tu cobertura según el programa correspondiente.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-6 pt-2">
+          {programs.length === 0 && (
+            <p className="text-sm text-slate-500">No tienes programas contratados.</p>
+          )}
+          {programs.map((p) => {
+            const info = getProgramInfo(p.code);
+            if (info.siniestro.length === 0) return null;
+            return (
+              <div key={p.code} className="rounded-xl border border-slate-200 p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-9 w-9 shrink-0 rounded-md bg-slate-50 grid place-items-center p-1 border">
+                    <ProgramLogo code={p.code} className="max-h-full max-w-full object-contain" />
+                  </div>
+                  <h4 className="font-semibold text-slate-900">{p.name}</h4>
+                </div>
+                <ol className="space-y-2">
+                  {info.siniestro.map((step, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-slate-700">
+                      <span className="h-6 w-6 shrink-0 rounded-full grid place-items-center text-xs font-bold bg-yellow-100 text-yellow-800">
+                        {i + 1}
+                      </span>
+                      <span className="leading-relaxed">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            );
+          })}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
