@@ -9,7 +9,9 @@ import {
   deactivateUser,
   reactivateUser,
   forcePasswordReset,
+  seedZemgoUsers,
 } from "@/lib/users.functions";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +23,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { UserPlus, KeyRound, UserX, UserCheck, ShieldCheck, Copy, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { UserPlus, KeyRound, UserX, UserCheck, ShieldCheck, Copy, Eye, EyeOff, RefreshCw, Sparkles } from "lucide-react";
 
 const ROLE_OPTIONS = [
   { value: "none", label: "Sin acceso" },
@@ -34,6 +37,20 @@ const ROLE_OPTIONS = [
 ] as const;
 
 type Role = typeof ROLE_OPTIONS[number]["value"];
+
+const MODULES: Array<{ key: string; label: string }> = [
+  { key: "clients",    label: "Clientes" },
+  { key: "policies",   label: "Certificados" },
+  { key: "payments",   label: "Pagos" },
+  { key: "finance",    label: "Finanzas" },
+  { key: "incidents",  label: "Siniestros" },
+  { key: "hospitals",  label: "Hospitales" },
+  { key: "alerts",     label: "Alertas y renovaciones" },
+  { key: "sales_reps", label: "Vendedores" },
+  { key: "reports",    label: "Reportes" },
+];
+const ALL_MODULE_KEYS = MODULES.map((m) => m.key);
+
 
 export function UsersSettingsTab() {
   const qc = useQueryClient();
@@ -77,16 +94,19 @@ export function UsersSettingsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="text-sm text-muted-foreground">
           {users.length} usuario{users.length === 1 ? "" : "s"} registrado{users.length === 1 ? "" : "s"}.
         </div>
-        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><UserPlus className="h-4 w-4 mr-2" /> Crear usuario</Button>
-          </DialogTrigger>
-          <CreateUserDialog programs={programs} onDone={() => { setInviteOpen(false); invalidate(); }} />
-        </Dialog>
+        <div className="flex gap-2">
+          <SeedZemgoButton onDone={invalidate} />
+          <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><UserPlus className="h-4 w-4 mr-2" /> Crear usuario</Button>
+            </DialogTrigger>
+            <CreateUserDialog programs={programs} onDone={() => { setInviteOpen(false); invalidate(); }} />
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-2">
@@ -97,6 +117,60 @@ export function UsersSettingsTab() {
     </div>
   );
 }
+
+function SeedZemgoButton({ onDone }: { onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [pw, setPw] = useState("Zemgo2026!");
+  const [result, setResult] = useState<any>(null);
+  const seedFn = useServerFn(seedZemgoUsers);
+  const m = useMutation({
+    mutationFn: () => seedFn({ data: { password: pw } }),
+    onSuccess: (r: any) => { setResult(r); toast.success("Usuarios sembrados"); onDone(); },
+    onError: (e: any) => toast.error(e.message || "Error"),
+  });
+  return (
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setResult(null); }}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline"><Sparkles className="h-4 w-4 mr-2" /> Sembrar equipo Zemgo</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Crear/actualizar 11 usuarios Zemgo</DialogTitle></DialogHeader>
+        {result ? (
+          <div className="space-y-2 text-sm max-h-80 overflow-y-auto">
+            <div className="rounded-md bg-muted/40 p-2 font-mono text-xs">Contraseña temporal: <strong>{result.password}</strong></div>
+            {(result.results ?? []).map((r: any) => (
+              <div key={r.email} className="flex justify-between border-b py-1">
+                <span className="font-mono text-xs">{r.email}</span>
+                <Badge variant={r.status.startsWith("error") ? "destructive" : "secondary"}>{r.status}</Badge>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Crea (o actualiza) los 11 usuarios predefinidos del equipo con sus programas y módulos permitidos.
+              Todos recibirán la misma contraseña temporal.
+            </p>
+            <div>
+              <Label className="text-xs">Contraseña temporal</Label>
+              <Input value={pw} onChange={(e) => setPw(e.target.value)} className="font-mono" />
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          {result ? (
+            <Button onClick={() => setOpen(false)}>Cerrar</Button>
+          ) : (
+            <Button disabled={m.isPending || pw.length < 8} onClick={() => m.mutate()}>
+              {m.isPending ? "Creando…" : "Ejecutar"}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function generatePassword(len = 12) {
   const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%";
@@ -115,6 +189,7 @@ function CreateUserDialog({ programs, onDone }: { programs: any[]; onDone: () =>
   const [password, setPassword] = useState(() => generatePassword());
   const [showPw, setShowPw] = useState(true);
   const [access, setAccess] = useState<Record<string, Role>>({});
+  const [modules, setModules] = useState<Record<string, string[]>>({});
   const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
 
   const m = useMutation({
@@ -125,9 +200,14 @@ function CreateUserDialog({ programs, onDone }: { programs: any[]; onDone: () =>
           password,
           full_name: fullName.trim(),
           phone: phone.trim() || null,
-          access: programs.map((p) => ({ program_id: p.id, role: access[p.id] ?? "none" })),
+          access: programs.map((p) => ({
+            program_id: p.id,
+            role: access[p.id] ?? "none",
+            modules: modules[p.id] ?? ALL_MODULE_KEYS,
+          })),
         },
       }),
+
     onSuccess: () => {
       toast.success("Usuario creado");
       setCreated({ email: email.trim(), password });
@@ -208,27 +288,53 @@ function CreateUserDialog({ programs, onDone }: { programs: any[]; onDone: () =>
           <p className="text-[11px] text-muted-foreground mt-1">Mín. 8 caracteres. Cópiala antes de cerrar.</p>
         </div>
         <div>
-          <Label className="text-xs">Acceso por programa</Label>
-          <div className="grid gap-2 mt-1 max-h-56 overflow-y-auto">
-            {programs.map((p: any) => (
-              <div key={p.id} className="flex items-center gap-2">
-                <div
-                  className="h-6 w-6 rounded grid place-items-center text-[10px] font-bold text-white"
-                  style={{ backgroundColor: p.color_primary ?? "#64748b" }}
-                >
-                  {p.code.slice(0, 2)}
+          <Label className="text-xs">Acceso por programa y módulos</Label>
+          <div className="grid gap-3 mt-1 max-h-72 overflow-y-auto">
+            {programs.map((p: any) => {
+              const role = access[p.id] ?? "none";
+              const mods = modules[p.id] ?? ALL_MODULE_KEYS;
+              return (
+                <div key={p.id} className="border rounded-md p-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="h-6 w-6 rounded grid place-items-center text-[10px] font-bold text-white"
+                      style={{ backgroundColor: p.color_primary ?? "#64748b" }}
+                    >{p.code.slice(0, 2)}</div>
+                    <div className="flex-1 text-sm truncate">{p.name}</div>
+                    <Select value={role} onValueChange={(v) => setAccess({ ...access, [p.id]: v as Role })}>
+                      <SelectTrigger className="w-36 h-8"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ROLE_OPTIONS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {role !== "none" && (
+                    <div className="grid grid-cols-3 gap-1 pl-8">
+                      {MODULES.map((mod) => {
+                        const checked = mods.includes(mod.key);
+                        return (
+                          <label key={mod.key} className="flex items-center gap-1 text-xs">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => {
+                                const next = v
+                                  ? [...mods, mod.key]
+                                  : mods.filter((k) => k !== mod.key);
+                                setModules({ ...modules, [p.id]: next });
+                              }}
+                            />
+                            {mod.label}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <div className="flex-1 text-sm truncate">{p.name}</div>
-                <Select value={access[p.id] ?? "none"} onValueChange={(v) => setAccess({ ...access, [p.id]: v as Role })}>
-                  <SelectTrigger className="w-40 h-8"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ROLE_OPTIONS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
+
       </div>
       <DialogFooter>
         <Button disabled={!canSubmit || m.isPending} onClick={() => m.mutate()}>
@@ -248,11 +354,15 @@ function UserRow({ user, programs, onChanged }: { user: any; programs: any[]; on
   const resetFn = useServerFn(forcePasswordReset);
 
   const accessMap = new Map<string, Role>();
-  for (const a of user.access ?? []) accessMap.set(a.program_id, a.role as Role);
+  const modulesMap = new Map<string, string[]>();
+  for (const a of user.access ?? []) {
+    accessMap.set(a.program_id, a.role as Role);
+    modulesMap.set(a.program_id, Array.isArray(a.modules) ? a.modules : ALL_MODULE_KEYS);
+  }
 
   const update = useMutation({
-    mutationFn: async (v: { program_id: string; role: Role }) =>
-      updateFn({ data: { user_id: user.id, program_id: v.program_id, role: v.role } }),
+    mutationFn: async (v: { program_id: string; role: Role; modules?: string[] }) =>
+      updateFn({ data: { user_id: user.id, program_id: v.program_id, role: v.role, modules: v.modules } }),
     onSuccess: () => { toast.success("Acceso actualizado"); onChanged(); },
     onError: (e: any) => toast.error(e.message || "Error"),
   });
@@ -296,28 +406,54 @@ function UserRow({ user, programs, onChanged }: { user: any; programs: any[]; on
 
         {open && (
           <div className="mt-3 border-t pt-3 space-y-3">
-            <div className="grid gap-2">
-              {programs.map((p: any) => (
-                <div key={p.id} className="flex items-center gap-2">
-                  <div
-                    className="h-6 w-6 rounded grid place-items-center text-[10px] font-bold text-white"
-                    style={{ backgroundColor: p.color_primary ?? "#64748b" }}
-                  >
-                    {p.code.slice(0, 2)}
+            <div className="grid gap-3">
+              {programs.map((p: any) => {
+                const role = accessMap.get(p.id) ?? "none";
+                const mods = modulesMap.get(p.id) ?? ALL_MODULE_KEYS;
+                return (
+                  <div key={p.id} className="border rounded-md p-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-6 w-6 rounded grid place-items-center text-[10px] font-bold text-white"
+                        style={{ backgroundColor: p.color_primary ?? "#64748b" }}
+                      >{p.code.slice(0, 2)}</div>
+                      <div className="flex-1 text-sm truncate">{p.name}</div>
+                      <Select
+                        value={role}
+                        onValueChange={(v) => update.mutate({ program_id: p.id, role: v as Role, modules: mods })}
+                      >
+                        <SelectTrigger className="w-36 h-8"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {ROLE_OPTIONS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {role !== "none" && (
+                      <div className="grid grid-cols-3 gap-1 pl-8">
+                        {MODULES.map((mod) => {
+                          const checked = mods.includes(mod.key);
+                          return (
+                            <label key={mod.key} className="flex items-center gap-1 text-xs">
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={(v) => {
+                                  const next = v
+                                    ? [...mods, mod.key]
+                                    : mods.filter((k) => k !== mod.key);
+                                  update.mutate({ program_id: p.id, role, modules: next });
+                                }}
+                              />
+                              {mod.label}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1 text-sm truncate">{p.name}</div>
-                  <Select
-                    value={accessMap.get(p.id) ?? "none"}
-                    onValueChange={(v) => update.mutate({ program_id: p.id, role: v as Role })}
-                  >
-                    <SelectTrigger className="w-40 h-8"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {ROLE_OPTIONS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
             <div className="flex flex-wrap gap-2 pt-2 border-t">
               <Button
                 variant="outline"

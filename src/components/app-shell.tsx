@@ -19,20 +19,22 @@ import { ProgramLogo } from "@/components/program-logo";
 import { SidebarNotifications } from "@/components/sidebar-notifications";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useMyAccess, unionModules, type ModuleKey } from "@/lib/use-my-access";
 
-const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, enabled: true },
-  { to: "/clients", label: "Clientes", icon: Users, enabled: true },
-  { to: "/policies", label: "Certificados", icon: FileText, enabled: true },
-  { to: "/payments", label: "Pagos", icon: CreditCard, enabled: true },
-  { to: "/finance", label: "Finanzas", icon: Wallet, enabled: true },
-  { to: "/incidents", label: "Siniestros", icon: AlertTriangle, enabled: true },
-  { to: "/hospitals", label: "Hospitales", icon: Hospital, enabled: true },
-  { to: "/alerts", label: "Alertas y renovaciones", icon: Bell, enabled: true },
-  { to: "/sales-reps", label: "Vendedores", icon: Briefcase, enabled: true },
-  { to: "/reports", label: "Reportes", icon: BarChart3, enabled: true },
-  { to: "/settings", label: "Configuración", icon: Settings, enabled: true },
-] as const;
+const NAV: Array<{ to: string; label: string; icon: any; module: ModuleKey | null }> = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, module: null },
+  { to: "/clients", label: "Clientes", icon: Users, module: "clients" },
+  { to: "/policies", label: "Certificados", icon: FileText, module: "policies" },
+  { to: "/payments", label: "Pagos", icon: CreditCard, module: "payments" },
+  { to: "/finance", label: "Finanzas", icon: Wallet, module: "finance" },
+  { to: "/incidents", label: "Siniestros", icon: AlertTriangle, module: "incidents" },
+  { to: "/hospitals", label: "Hospitales", icon: Hospital, module: "hospitals" },
+  { to: "/alerts", label: "Alertas y renovaciones", icon: Bell, module: "alerts" },
+  { to: "/sales-reps", label: "Vendedores", icon: Briefcase, module: "sales_reps" },
+  { to: "/reports", label: "Reportes", icon: BarChart3, module: "reports" },
+  { to: "/settings", label: "Configuración", icon: Settings, module: null },
+];
+
 
 const ADMIN_NAV = [
   { to: "/admin/integrations/google-sheets", label: "Google Sheets", icon: Plug },
@@ -58,6 +60,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: isSuperAdmin } = useIsSuperAdmin();
+  const { data: myAccess } = useMyAccess();
+  const allowedModules = unionModules(myAccess);
+  const visibleNav = NAV.filter((n) => {
+    if (n.module === null) return true;
+    if (isSuperAdmin) return true;
+    if (allowedModules === "all") return true;
+    if (!allowedModules) return true; // loading
+    return allowedModules.has(n.module);
+  });
+
 
 
 
@@ -128,7 +140,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 p-2 space-y-1">
-          {NAV.map((item) => {
+          {visibleNav.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
@@ -138,17 +150,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition",
                   active ? "bg-white/20 font-medium" : "hover:bg-white/10",
-                  !item.enabled && "opacity-60",
                 )}
               >
                 <Icon className="h-4 w-4" />
                 <span className="flex-1">{item.label}</span>
-                {!item.enabled && (
-                  <span className="text-[10px] uppercase opacity-75">Próx.</span>
-                )}
               </Link>
             );
           })}
+
 
           {isSuperAdmin && (
             <div className="pt-4">
