@@ -209,57 +209,6 @@ function ProgramAlcanceSection({ code, name }: { code: string; name: string }) {
         </div>
       )}
 
-      {/* Qué hacer en caso de siniestro */}
-      {info.siniestro.length > 0 && (
-        <div className={`px-5 md:px-8 py-6 border-t ${
-          t.panel.includes("bg-slate-900")
-            ? "border-white/10 bg-slate-950/40"
-            : "border-slate-100 bg-slate-50"
-        }`}>
-          <div className="flex items-start gap-3 mb-4">
-            <div className={`h-9 w-9 shrink-0 rounded-lg grid place-items-center ${
-              t.panel.includes("bg-slate-900") ? "bg-rose-500/20 text-rose-300" : "bg-rose-100 text-rose-700"
-            }`}>
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className={`font-semibold ${
-                t.panel.includes("bg-slate-900") ? "text-white" : "text-slate-900"
-              }`}>
-                ¿Qué hacer en caso de siniestro?
-              </h3>
-              <p className={`text-xs ${
-                t.panel.includes("bg-slate-900") ? "text-white/70" : "text-slate-600"
-              }`}>
-                Sigue estos pasos para activar tu cobertura.
-              </p>
-            </div>
-          </div>
-          <ol className="space-y-2">
-            {info.siniestro.map((step, i) => (
-              <li key={i} className={`flex items-start gap-3 text-sm ${
-                t.panel.includes("bg-slate-900") ? "text-slate-200" : "text-slate-700"
-              }`}>
-                <span className={`h-6 w-6 shrink-0 rounded-full grid place-items-center text-xs font-bold ${
-                  t.panel.includes("bg-slate-900")
-                    ? "bg-yellow-400/20 text-yellow-300"
-                    : "bg-yellow-100 text-yellow-800"
-                }`}>
-                  {i + 1}
-                </span>
-                <span className="leading-relaxed">{step}</span>
-              </li>
-            ))}
-          </ol>
-          <div className="mt-5">
-            <Button asChild size="sm" className="bg-rose-600 hover:bg-rose-700">
-              <Link to="/portal/incidents/new">
-                Reportar un siniestro <ChevronRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
