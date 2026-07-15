@@ -189,6 +189,7 @@ function CreateUserDialog({ programs, onDone }: { programs: any[]; onDone: () =>
   const [password, setPassword] = useState(() => generatePassword());
   const [showPw, setShowPw] = useState(true);
   const [access, setAccess] = useState<Record<string, Role>>({});
+  const [modules, setModules] = useState<Record<string, string[]>>({});
   const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
 
   const m = useMutation({
@@ -199,9 +200,14 @@ function CreateUserDialog({ programs, onDone }: { programs: any[]; onDone: () =>
           password,
           full_name: fullName.trim(),
           phone: phone.trim() || null,
-          access: programs.map((p) => ({ program_id: p.id, role: access[p.id] ?? "none" })),
+          access: programs.map((p) => ({
+            program_id: p.id,
+            role: access[p.id] ?? "none",
+            modules: modules[p.id] ?? ALL_MODULE_KEYS,
+          })),
         },
       }),
+
     onSuccess: () => {
       toast.success("Usuario creado");
       setCreated({ email: email.trim(), password });
