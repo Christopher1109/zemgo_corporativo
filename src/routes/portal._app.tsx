@@ -148,6 +148,8 @@ function PortalAppLayout() {
       </nav>
 
       <PortalChatbot />
+      <PortalPrivacyNotice clientId={client.id} />
+
     </div>
   );
 }
