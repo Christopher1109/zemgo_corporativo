@@ -1,38 +1,59 @@
 // Editable text shown in the "Alcance" and "Qué hacer en caso de siniestro"
-// collapsible sections of each policy on the portal. Update the copy per
-// program code without touching component code.
+// collapsible sections of each policy on the portal.
+
+export type CoverageLine = { label: string; amount: string };
 
 export type ProgramInfoBlock = {
   alcance: string;
-  siniestro: string;
+  coverages: CoverageLine[];
+  siniestro: string[];
 };
+
+const SINIESTRO_STEPS: string[] = [
+  "Ingresa al portal de clientes Zemgo.",
+  "Llena el Aviso de Accidente con tus datos y la descripción del siniestro.",
+  "Acude al hospital y muestra el Aviso de Accidente.",
+  "Solicita tu folio de Ingreso Hospitalario.",
+  "Una vez aprobado el dictamen (puede tardar alrededor de 4 horas), pasa a pagar el deducible en el área de caja del hospital.",
+];
 
 const DEFAULT: ProgramInfoBlock = {
   alcance:
-    "Cobertura nacional en hospitales autorizados. Incluye atención por accidente, gastos médicos derivados y asistencia telefónica 24/7. Consulta con tu asesor los sublímites por evento.",
-  siniestro:
-    "1) Llama al 800 de asistencia. 2) Acude al hospital autorizado más cercano. 3) Reporta el siniestro desde el portal para obtener tu Carta Aviso de Accidente. 4) Entrega la carta en admisión del hospital. Tienes 48 horas para dar aviso formal.",
+    "Cobertura respaldada por aseguradora autorizada, con red de hospitales por programa. Consulta a tu asesor los sublímites por evento.",
+  coverages: [],
+  siniestro: SINIESTRO_STEPS,
 };
 
-// Keyed by program code (uppercase). Falls back to DEFAULT.
 export const PROGRAM_INFO: Record<string, ProgramInfoBlock> = {
   ABC: {
     alcance:
-      "Programa ABC: cobertura por accidente escolar con red de hospitales autorizados a nivel nacional. Incluye gastos médicos por accidente, indemnización por invalidez y apoyo funerario según certificado.",
-    siniestro:
-      "1) Acude de inmediato al hospital autorizado más cercano de la red ABC. 2) Reporta el siniestro desde el portal en la sección 'Siniestros → Reportar'. 3) Descarga la Carta Aviso de Accidente y entrégala en admisión. 4) Da aviso dentro de las primeras 48 horas.",
+      "Programa diseñado para brindar seguridad, respaldo y tranquilidad ante los eventos inesperados de la vida. Con coberturas clave en vida, accidentes personales y servicios funerarios, ofrece protección integral para el asegurado y su familia, combinando beneficios reales a un costo accesible.",
+    coverages: [
+      { label: "Por fallecimiento", amount: "$100,000 M.N." },
+      { label: "En caso de muerte accidental, apoyo adicional de", amount: "$50,000 M.N." },
+      { label: "Gastos médicos por accidente", amount: "$25,000 M.N." },
+      { label: "Servicios funerarios", amount: "$25,000 M.N." },
+    ],
+    siniestro: SINIESTRO_STEPS,
   },
   FUTCARE: {
     alcance:
-      "FUT-CARE: cobertura para practicantes de fútbol amateur en entrenamientos y partidos oficiales. Incluye gastos médicos por lesión, rehabilitación y apoyo por incapacidad temporal.",
-    siniestro:
-      "1) Solicita atención en el hospital autorizado más cercano. 2) Reporta el evento en el portal para generar tu Carta Aviso de Accidente. 3) Presenta la carta y tu identificación en admisión. 4) Notifica a tu club dentro de las 48 horas siguientes.",
+      "Programa diseñado para jugadores de fútbol soccer amateur, que brinda cobertura ante accidentes durante entrenamientos o partidos, incluyendo protección por muerte accidental y pérdidas orgánicas, ofreciendo seguridad, respaldo y tranquilidad tanto para los jugadores como para sus familias.",
+    coverages: [
+      { label: "Accidentes deportivos en competencia, entrenamiento y traslados sin escala", amount: "$75,000" },
+      { label: "Muerte accidental durante partido o entrenamiento (en menores de 12 años aplica gastos funerarios)", amount: "$150,000" },
+      { label: "Pérdidas orgánicas", amount: "$150,000" },
+    ],
+    siniestro: SINIESTRO_STEPS,
   },
   MCV: {
     alcance:
-      "Manos con Valor: cobertura para trabajadoras del hogar. Incluye gastos médicos por accidente laboral, indemnización y asistencia legal básica.",
-    siniestro:
-      "1) Acude al hospital autorizado más cercano. 2) Avisa a tu contratante y reporta el siniestro en el portal. 3) Descarga y entrega la Carta Aviso de Accidente. 4) Reporta dentro de las primeras 48 horas.",
+      "Diseñado para respaldar y proteger a las trabajadoras del hogar, brindando confianza, seguridad y tranquilidad para ellas y su familia en todo momento. Ante cualquier imprevisto o accidente, contará con apoyo, acompañamiento y la atención necesaria para no estar sola en ningún momento.",
+    coverages: [
+      { label: "Gastos médicos por accidente", amount: "$50,000" },
+      { label: "Muerte accidental", amount: "$100,000" },
+    ],
+    siniestro: SINIESTRO_STEPS,
   },
 };
 

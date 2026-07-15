@@ -297,18 +297,29 @@ function PoliciesPage() {
                             <Info className="h-3.5 w-3.5" style={{ color }} />
                             Alcance de tu cobertura
                           </summary>
-                          <p className="mt-2 text-xs text-slate-600 leading-relaxed whitespace-pre-line">
-                            {info.alcance}
-                          </p>
+                          <div className="mt-2 space-y-2">
+                            <p className="text-xs text-slate-600 leading-relaxed">{info.alcance}</p>
+                            {info.coverages.length > 0 && (
+                              <ul className="space-y-1 pt-1 border-t border-slate-200">
+                                {info.coverages.map((c, i) => (
+                                  <li key={i} className="flex items-start justify-between gap-3 text-xs">
+                                    <span className="text-slate-700">{c.label}</span>
+                                    <span className="font-mono font-semibold text-slate-900 whitespace-nowrap">{c.amount}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
                         </details>
                         <details className="rounded-md border border-slate-200 bg-slate-50 p-3 group">
                           <summary className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 select-none">
                             <LifeBuoy className="h-3.5 w-3.5 text-rose-600" />
                             ¿Qué hacer en caso de siniestro?
                           </summary>
-                          <p className="mt-2 text-xs text-slate-600 leading-relaxed whitespace-pre-line">
-                            {info.siniestro}
-                          </p>
+                          <ol className="mt-2 space-y-1.5 text-xs text-slate-600 leading-relaxed list-decimal pl-4">
+                            {info.siniestro.map((s, i) => <li key={i}>{s}</li>)}
+                          </ol>
+
                         </details>
                       </div>
                     );
