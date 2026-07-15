@@ -217,6 +217,10 @@ export const inviteUser = createServerFn({ method: "POST" })
 // Mutate: create user directly with email + password (admin only)
 // No invitation email — admin sets the password and hands it to the user.
 // --------------------------------------------------------------
+const ModuleEnum = z.enum([
+  "clients","policies","payments","finance","incidents","hospitals","alerts","sales_reps","reports",
+]);
+
 const CreateDirectSchema = z.object({
   email: z.string().email().max(255),
   password: z.string().min(8).max(72),
@@ -225,6 +229,7 @@ const CreateDirectSchema = z.object({
   access: z.array(z.object({
     program_id: z.string().uuid(),
     role: z.enum(["none", "admin", "manager", "operator", "claims", "sales", "viewer"]),
+    modules: z.array(ModuleEnum).optional().nullable(),
   })).max(50),
 });
 
@@ -249,18 +254,29 @@ export const createUserDirect = createServerFn({ method: "POST" })
     const userId = created?.user?.id;
     if (!userId) throw new Error("create_no_user_id");
 
-    const { error: rpcErr } = await context.supabase.rpc("apply_invite_access_matrix" as any, {
-      _user_id: userId,
-      _phone: data.phone ?? null,
-      _access: data.access.filter((a) => a.role !== "none") as any,
-    });
-    if (rpcErr) throw new Error(rpcErr.message);
+    if (data.phone) {
+      await supabaseAdmin.from("profiles").update({ phone: data.phone }).eq("id", userId);
+    }
+    const rows = data.access
+      .filter((a) => a.role !== "none")
+      .map((a) => ({
+        user_id: userId,
+        program_id: a.program_id,
+        role: a.role,
+        modules: a.modules && a.modules.length > 0 ? a.modules : null,
+      }));
+    if (rows.length > 0) {
+      const { error: aErr } = await supabaseAdmin
+        .from("user_program_access")
+        .upsert(rows as any, { onConflict: "user_id,program_id" });
+      if (aErr) throw new Error(aErr.message);
+    }
 
     return { ok: true, user_id: userId, email: data.email };
   });
 
 // --------------------------------------------------------------
-// Mutate: update a single user's access to one program
+// Mutate: update a single user's access to one program (role + modules)
 // --------------------------------------------------------------
 export const updateUserAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -269,6 +285,7 @@ export const updateUserAccess = createServerFn({ method: "POST" })
       user_id: z.string().uuid(),
       program_id: z.string().uuid(),
       role: z.enum(["none", "admin", "manager", "operator", "claims", "sales", "viewer"]),
+      modules: z.array(ModuleEnum).optional().nullable(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -276,10 +293,113 @@ export const updateUserAccess = createServerFn({ method: "POST" })
       _user_id: data.user_id,
       _program_id: data.program_id,
       _role_text: data.role,
-    });
+      _modules: data.modules && data.modules.length > 0 ? data.modules : null,
+    } as any);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// --------------------------------------------------------------
+// Read: modules the current user has, per program
+// --------------------------------------------------------------
+export const getMyModules = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("user_program_access")
+      .select("program_id, role, modules")
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { access: data ?? [] };
+  });
+
+// --------------------------------------------------------------
+// Seed: 11 usuarios Zemgo predefinidos (idempotente)
+// --------------------------------------------------------------
+type Mod = z.infer<typeof ModuleEnum>;
+const ALL_MODULES: Mod[] = ["clients","policies","payments","finance","incidents","hospitals","alerts","sales_reps","reports"];
+
+const ZEMGO_USERS: Array<{
+  email: string; full_name: string;
+  programs: Array<"FUTCARE"|"ABC"|"MCV">;
+  modules: Mod[];
+}> = [
+  { email: "javier.moro@zemgo.local",       full_name: "Javier Moro",       programs: ["FUTCARE"],              modules: ALL_MODULES },
+  { email: "graciela.rivera@zemgo.local",   full_name: "Graciela Rivera",   programs: ["ABC","MCV"],            modules: ALL_MODULES },
+  { email: "laura.castro@zemgo.local",      full_name: "Laura Castro",      programs: ["FUTCARE","ABC","MCV"],  modules: ["payments","finance","sales_reps"] },
+  { email: "lucia.saldana@zemgo.local",     full_name: "Lucía Saldaña",     programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","incidents","hospitals","reports"] },
+  { email: "andrea.rodriguez@zemgo.local",  full_name: "Andrea Rodríguez",  programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","payments","alerts"] },
+  { email: "alisson@zemgo.local",           full_name: "Alisson",           programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","policies","hospitals","alerts"] },
+  { email: "saira@zemgo.local",             full_name: "Saira",             programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","policies","payments","finance","alerts","sales_reps","reports"] },
+  { email: "ing.javier@zemgo.local",        full_name: "Ing. Javier",       programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
+  { email: "alan.gomez@zemgo.local",        full_name: "Alan Gómez",        programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
+  { email: "alejandro@zemgo.local",         full_name: "Alejandro",         programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
+  { email: "abelardo@zemgo.local",          full_name: "Abelardo",          programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
+];
+
+export const seedZemgoUsers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ password: z.string().min(8).max(72) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertCallerIsAdmin(context.supabase);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Resolve programs by code
+    const { data: programs } = await supabaseAdmin.from("programs").select("id, code");
+    const codeMap = new Map<string, string>();
+    for (const p of programs ?? []) codeMap.set(String(p.code).toUpperCase(), p.id);
+
+    // Existing users by email
+    const emailToId = new Map<string, string>();
+    let page = 1;
+    while (true) {
+      const { data } = await (supabaseAdmin as any).auth.admin.listUsers({ page, perPage: 200 });
+      for (const u of data?.users ?? []) if (u.email) emailToId.set(u.email.toLowerCase(), u.id);
+      if (!data || data.users.length < 200) break;
+      page += 1; if (page > 25) break;
+    }
+
+    const results: Array<{ email: string; status: string; user_id?: string }> = [];
+
+    for (const u of ZEMGO_USERS) {
+      let userId = emailToId.get(u.email.toLowerCase());
+      let status: string;
+
+      if (!userId) {
+        const { data: created, error } = await (supabaseAdmin as any).auth.admin.createUser({
+          email: u.email,
+          password: data.password,
+          email_confirm: true,
+          user_metadata: { full_name: u.full_name },
+        });
+        if (error) { results.push({ email: u.email, status: "error:" + error.message }); continue; }
+        userId = created?.user?.id;
+        status = "created";
+      } else {
+        // Reset password so admin can hand out the same temp password
+        await (supabaseAdmin as any).auth.admin.updateUserById(userId, { password: data.password });
+        await supabaseAdmin.from("profiles").update({ full_name: u.full_name }).eq("id", userId);
+        status = "updated";
+      }
+
+      if (!userId) continue;
+
+      // Program access with modules — replace fully
+      await supabaseAdmin.from("user_program_access").delete().eq("user_id", userId);
+      const rows = u.programs
+        .map((code) => codeMap.get(code))
+        .filter((id): id is string => !!id)
+        .map((program_id) => ({
+          user_id: userId!, program_id, role: "operator" as const, modules: u.modules,
+        }));
+      if (rows.length) await supabaseAdmin.from("user_program_access").insert(rows as any);
+
+      results.push({ email: u.email, status, user_id: userId });
+    }
+
+    return { ok: true, password: data.password, results };
+  });
+
 
 export const deactivateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
