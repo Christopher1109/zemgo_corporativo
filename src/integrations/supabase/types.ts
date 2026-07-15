@@ -1697,6 +1697,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          modules: string[] | null
           program_id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
@@ -1704,6 +1705,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          modules?: string[] | null
           program_id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
@@ -1711,6 +1713,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          modules?: string[] | null
           program_id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -1853,6 +1856,11 @@ export type Database = {
           total_overdue: number
         }[]
       }
+      get_user_modules: { Args: { _user_id: string }; Returns: Json }
+      has_module_access: {
+        Args: { _module: string; _program_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_program_access: {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
@@ -1992,10 +2000,20 @@ export type Database = {
         Args: { _policy_number: string; _program_id: string }
         Returns: undefined
       }
-      update_user_program_access: {
-        Args: { _program_id: string; _role_text: string; _user_id: string }
-        Returns: Json
-      }
+      update_user_program_access:
+        | {
+            Args: { _program_id: string; _role_text: string; _user_id: string }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _modules?: string[]
+              _program_id: string
+              _role_text: string
+              _user_id: string
+            }
+            Returns: Json
+          }
       upsert_sales_rep_by_name: { Args: { _name: string }; Returns: string }
       verify_portal_code: {
         Args: { _client_id: string; _code: string; _ip: string; _ua: string }
