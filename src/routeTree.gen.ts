@@ -36,6 +36,7 @@ import { Route as PortalAppPoliciesRouteImport } from './routes/portal._app.poli
 import { Route as PortalAppPaymentsRouteImport } from './routes/portal._app.payments'
 import { Route as PortalAppIncidentsRouteImport } from './routes/portal._app.incidents'
 import { Route as PortalAppDashboardRouteImport } from './routes/portal._app.dashboard'
+import { Route as PortalAppAlcanceRouteImport } from './routes/portal._app.alcance'
 import { Route as ApiPublicPdfSmokeRouteImport } from './routes/api/public/pdf-smoke'
 import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
 import { Route as AuthenticatedSalesRepsRepIdRouteImport } from './routes/_authenticated/sales-reps.$repId'
@@ -191,6 +192,11 @@ const PortalAppDashboardRoute = PortalAppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => PortalAppRoute,
 } as any)
+const PortalAppAlcanceRoute = PortalAppAlcanceRouteImport.update({
+  id: '/alcance',
+  path: '/alcance',
+  getParentRoute: () => PortalAppRoute,
+} as any)
 const ApiPublicPdfSmokeRoute = ApiPublicPdfSmokeRouteImport.update({
   id: '/api/public/pdf-smoke',
   path: '/api/public/pdf-smoke',
@@ -310,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/sales-reps/$repId': typeof AuthenticatedSalesRepsRepIdRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
+  '/portal/alcance': typeof PortalAppAlcanceRoute
   '/portal/dashboard': typeof PortalAppDashboardRoute
   '/portal/incidents': typeof PortalAppIncidentsRouteWithChildren
   '/portal/payments': typeof PortalAppPaymentsRoute
@@ -348,6 +355,7 @@ export interface FileRoutesByTo {
   '/sales-reps/$repId': typeof AuthenticatedSalesRepsRepIdRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
+  '/portal/alcance': typeof PortalAppAlcanceRoute
   '/portal/dashboard': typeof PortalAppDashboardRoute
   '/portal/incidents': typeof PortalAppIncidentsRouteWithChildren
   '/portal/payments': typeof PortalAppPaymentsRoute
@@ -394,6 +402,7 @@ export interface FileRoutesById {
   '/_authenticated/sales-reps/$repId': typeof AuthenticatedSalesRepsRepIdRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
+  '/portal/_app/alcance': typeof PortalAppAlcanceRoute
   '/portal/_app/dashboard': typeof PortalAppDashboardRoute
   '/portal/_app/incidents': typeof PortalAppIncidentsRouteWithChildren
   '/portal/_app/payments': typeof PortalAppPaymentsRoute
@@ -439,6 +448,7 @@ export interface FileRouteTypes {
     | '/sales-reps/$repId'
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
+    | '/portal/alcance'
     | '/portal/dashboard'
     | '/portal/incidents'
     | '/portal/payments'
@@ -477,6 +487,7 @@ export interface FileRouteTypes {
     | '/sales-reps/$repId'
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
+    | '/portal/alcance'
     | '/portal/dashboard'
     | '/portal/incidents'
     | '/portal/payments'
@@ -522,6 +533,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales-reps/$repId'
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
+    | '/portal/_app/alcance'
     | '/portal/_app/dashboard'
     | '/portal/_app/incidents'
     | '/portal/_app/payments'
@@ -742,6 +754,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/portal/dashboard'
       preLoaderRoute: typeof PortalAppDashboardRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
+    '/portal/_app/alcance': {
+      id: '/portal/_app/alcance'
+      path: '/alcance'
+      fullPath: '/portal/alcance'
+      preLoaderRoute: typeof PortalAppAlcanceRouteImport
       parentRoute: typeof PortalAppRoute
     }
     '/api/public/pdf-smoke': {
@@ -973,6 +992,7 @@ const PortalAppIncidentsRouteWithChildren =
   PortalAppIncidentsRoute._addFileChildren(PortalAppIncidentsRouteChildren)
 
 interface PortalAppRouteChildren {
+  PortalAppAlcanceRoute: typeof PortalAppAlcanceRoute
   PortalAppDashboardRoute: typeof PortalAppDashboardRoute
   PortalAppIncidentsRoute: typeof PortalAppIncidentsRouteWithChildren
   PortalAppPaymentsRoute: typeof PortalAppPaymentsRoute
@@ -981,6 +1001,7 @@ interface PortalAppRouteChildren {
 }
 
 const PortalAppRouteChildren: PortalAppRouteChildren = {
+  PortalAppAlcanceRoute: PortalAppAlcanceRoute,
   PortalAppDashboardRoute: PortalAppDashboardRoute,
   PortalAppIncidentsRoute: PortalAppIncidentsRouteWithChildren,
   PortalAppPaymentsRoute: PortalAppPaymentsRoute,

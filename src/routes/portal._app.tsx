@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { portalMe, portalLogout } from "@/lib/portal/portal.functions";
 import { clearPortalToken } from "@/lib/portal/portal-token";
-import { Home, FileText, CreditCard, AlertTriangle, User, LogOut } from "lucide-react";
+import { Home, FileText, CreditCard, AlertTriangle, User, LogOut, ShieldCheck } from "lucide-react";
 import { HopeLogo } from "@/components/hope-logo";
 import { PortalChatbot } from "@/components/portal-chatbot";
 import { PortalPrivacyNotice } from "@/components/portal-privacy-notice";
