@@ -6,6 +6,7 @@ import { getProgramInfo, type CoverageLine } from "@/data/portal-program-info";
 import { ProgramLogo } from "@/components/program-logo";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  ShieldCheck,
   HeartPulse,
   Stethoscope,
   Activity,
