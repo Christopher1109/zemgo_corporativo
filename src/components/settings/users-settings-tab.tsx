@@ -23,7 +23,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { UserPlus, KeyRound, UserX, UserCheck, ShieldCheck, Copy, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { UserPlus, KeyRound, UserX, UserCheck, ShieldCheck, Copy, Eye, EyeOff, RefreshCw, Sparkles } from "lucide-react";
 
 const ROLE_OPTIONS = [
   { value: "none", label: "Sin acceso" },
@@ -36,6 +37,20 @@ const ROLE_OPTIONS = [
 ] as const;
 
 type Role = typeof ROLE_OPTIONS[number]["value"];
+
+const MODULES: Array<{ key: string; label: string }> = [
+  { key: "clients",    label: "Clientes" },
+  { key: "policies",   label: "Certificados" },
+  { key: "payments",   label: "Pagos" },
+  { key: "finance",    label: "Finanzas" },
+  { key: "incidents",  label: "Siniestros" },
+  { key: "hospitals",  label: "Hospitales" },
+  { key: "alerts",     label: "Alertas y renovaciones" },
+  { key: "sales_reps", label: "Vendedores" },
+  { key: "reports",    label: "Reportes" },
+];
+const ALL_MODULE_KEYS = MODULES.map((m) => m.key);
+
 
 export function UsersSettingsTab() {
   const qc = useQueryClient();
