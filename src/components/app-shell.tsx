@@ -60,6 +60,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: isSuperAdmin } = useIsSuperAdmin();
+  const { data: myAccess } = useMyAccess();
+  const allowedModules = unionModules(myAccess);
+  const visibleNav = NAV.filter((n) => {
+    if (n.module === null) return true;
+    if (isSuperAdmin) return true;
+    if (allowedModules === "all") return true;
+    if (!allowedModules) return true; // loading
+    return allowedModules.has(n.module);
+  });
+
 
 
 
