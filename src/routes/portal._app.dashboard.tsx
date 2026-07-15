@@ -22,6 +22,15 @@ import {
   DollarSign,
 } from "lucide-react";
 import { ProgramLogo } from "@/components/program-logo";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { getProgramInfo } from "@/data/portal-program-info";
 
 export const Route = createFileRoute("/portal/_app/dashboard")({
   component: DashboardPage,
