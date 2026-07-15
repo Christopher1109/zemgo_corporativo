@@ -130,7 +130,7 @@ function PortalAppLayout() {
       </main>
 
       {/* Bottom nav mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 z-10 grid grid-cols-5 border-t border-slate-200 bg-white md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-10 grid grid-cols-6 border-t border-slate-200 bg-white md:hidden">
         {navItems.map((n) => {
           const active = pathname === n.to;
           const Icon = n.icon;
