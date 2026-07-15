@@ -94,16 +94,19 @@ export function UsersSettingsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="text-sm text-muted-foreground">
           {users.length} usuario{users.length === 1 ? "" : "s"} registrado{users.length === 1 ? "" : "s"}.
         </div>
-        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><UserPlus className="h-4 w-4 mr-2" /> Crear usuario</Button>
-          </DialogTrigger>
-          <CreateUserDialog programs={programs} onDone={() => { setInviteOpen(false); invalidate(); }} />
-        </Dialog>
+        <div className="flex gap-2">
+          <SeedZemgoButton onDone={invalidate} />
+          <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><UserPlus className="h-4 w-4 mr-2" /> Crear usuario</Button>
+            </DialogTrigger>
+            <CreateUserDialog programs={programs} onDone={() => { setInviteOpen(false); invalidate(); }} />
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-2">
@@ -114,6 +117,60 @@ export function UsersSettingsTab() {
     </div>
   );
 }
+
+function SeedZemgoButton({ onDone }: { onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [pw, setPw] = useState("Zemgo2026!");
+  const [result, setResult] = useState<any>(null);
+  const seedFn = useServerFn(seedZemgoUsers);
+  const m = useMutation({
+    mutationFn: () => seedFn({ data: { password: pw } }),
+    onSuccess: (r: any) => { setResult(r); toast.success("Usuarios sembrados"); onDone(); },
+    onError: (e: any) => toast.error(e.message || "Error"),
+  });
+  return (
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setResult(null); }}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline"><Sparkles className="h-4 w-4 mr-2" /> Sembrar equipo Zemgo</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Crear/actualizar 11 usuarios Zemgo</DialogTitle></DialogHeader>
+        {result ? (
+          <div className="space-y-2 text-sm max-h-80 overflow-y-auto">
+            <div className="rounded-md bg-muted/40 p-2 font-mono text-xs">Contraseña temporal: <strong>{result.password}</strong></div>
+            {(result.results ?? []).map((r: any) => (
+              <div key={r.email} className="flex justify-between border-b py-1">
+                <span className="font-mono text-xs">{r.email}</span>
+                <Badge variant={r.status.startsWith("error") ? "destructive" : "secondary"}>{r.status}</Badge>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Crea (o actualiza) los 11 usuarios predefinidos del equipo con sus programas y módulos permitidos.
+              Todos recibirán la misma contraseña temporal.
+            </p>
+            <div>
+              <Label className="text-xs">Contraseña temporal</Label>
+              <Input value={pw} onChange={(e) => setPw(e.target.value)} className="font-mono" />
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          {result ? (
+            <Button onClick={() => setOpen(false)}>Cerrar</Button>
+          ) : (
+            <Button disabled={m.isPending || pw.length < 8} onClick={() => m.mutate()}>
+              {m.isPending ? "Creando…" : "Ejecutar"}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function generatePassword(len = 12) {
   const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%";
