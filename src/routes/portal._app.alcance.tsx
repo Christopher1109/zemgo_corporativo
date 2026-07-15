@@ -147,8 +147,7 @@ function AlcancePage() {
           Alcance de tus programas
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Estos son los beneficios que tienes contratados. Consulta el detalle de cada programa,
-          los montos protegidos y qué hacer en caso de un siniestro.
+          Estos son los beneficios que tienes contratados y los montos protegidos por cada programa.
         </p>
       </div>
 
