@@ -51,7 +51,8 @@ export const listUsers = createServerFn({ method: "GET" })
     // 2) all program access
     const { data: access } = await supabaseAdmin
       .from("user_program_access")
-      .select("user_id, program_id, role");
+      .select("user_id, program_id, role, modules");
+
 
     // 3) all programs (for chip names/colors)
     const { data: programs } = await supabaseAdmin
