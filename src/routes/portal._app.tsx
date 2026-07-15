@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { portalMe, portalLogout } from "@/lib/portal/portal.functions";
 import { clearPortalToken } from "@/lib/portal/portal-token";
-import { Home, FileText, CreditCard, AlertTriangle, User, LogOut } from "lucide-react";
+import { Home, FileText, CreditCard, AlertTriangle, User, LogOut, ShieldCheck } from "lucide-react";
 import { HopeLogo } from "@/components/hope-logo";
 import { PortalChatbot } from "@/components/portal-chatbot";
 import { PortalPrivacyNotice } from "@/components/portal-privacy-notice";
@@ -73,10 +73,12 @@ function PortalAppLayout() {
   const navItems = [
     { to: "/portal/dashboard", label: "Inicio", icon: Home },
     { to: "/portal/policies", label: "Certificados", icon: FileText },
+    { to: "/portal/alcance", label: "Alcance", icon: ShieldCheck },
     { to: "/portal/payments", label: "Pagos", icon: CreditCard },
     { to: "/portal/incidents", label: "Siniestros", icon: AlertTriangle },
     { to: "/portal/profile", label: "Mis Datos", icon: User },
   ];
+
 
   return (
     <div className="min-h-screen pb-20 md:pb-0 bg-slate-50">
@@ -128,7 +130,7 @@ function PortalAppLayout() {
       </main>
 
       {/* Bottom nav mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 z-10 grid grid-cols-5 border-t border-slate-200 bg-white md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-10 grid grid-cols-6 border-t border-slate-200 bg-white md:hidden">
         {navItems.map((n) => {
           const active = pathname === n.to;
           const Icon = n.icon;

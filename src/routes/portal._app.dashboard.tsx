@@ -261,20 +261,39 @@ function DashboardPage() {
             </Card>
           )}
 
-          <Card>
+          <Card className="overflow-hidden border-rose-300 bg-gradient-to-br from-rose-50 via-white to-rose-50">
+            <div className="h-1.5 w-full bg-rose-500" />
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-rose-600" />
-                <CardTitle className="text-base">¿Tuviste un siniestro?</CardTitle>
+                <div className="rounded-full bg-rose-500/15 p-2">
+                  <AlertTriangle className="h-5 w-5 text-rose-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-base text-rose-900">
+                    ¿Tuviste un siniestro?
+                  </CardTitle>
+                  <p className="text-[11px] text-rose-800/70">
+                    Actívalo en línea siguiendo el paso a paso.
+                  </p>
+                </div>
               </div>
             </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              <p className="text-sm text-slate-600">Repórtalo en línea y te contactamos.</p>
-              <Button asChild variant="outline">
-                <Link to="/portal/incidents/new">Reportar</Link>
-              </Button>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-slate-700">
+                Repórtalo desde el portal y descarga inmediatamente tu <strong>Carta Aviso
+                de Accidente</strong> para presentarla en el hospital.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild className="bg-rose-600 hover:bg-rose-700">
+                  <Link to="/portal/incidents/new">Reportar ahora</Link>
+                </Button>
+                <Button asChild variant="outline" className="border-rose-300 text-rose-700 hover:bg-rose-50">
+                  <Link to="/portal/alcance">Ver pasos por programa</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
+
         </div>
       )}
 
