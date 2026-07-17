@@ -13,7 +13,7 @@ export const Route = createFileRoute("/")({
       host = window.location.hostname;
     } else {
       try {
-        const req = getWebRequest();
+        const req = getRequest();
         host = req?.headers.get("host") ?? null;
       } catch {
         host = null;
