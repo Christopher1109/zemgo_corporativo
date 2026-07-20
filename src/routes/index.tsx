@@ -9,12 +9,7 @@ export const Route = createFileRoute("/")({
 function RootRedirect() {
   const navigate = useNavigate();
   useEffect(() => {
-    const host = window.location.hostname.toLowerCase();
-    if (host.includes("zemgoportal")) {
-      navigate({ to: "/portal", replace: true });
-    } else {
-      navigate({ to: "/dashboard", replace: true });
-    }
+    navigate({ to: "/dashboard", replace: true });
   }, [navigate]);
   return null;
 }

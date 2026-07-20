@@ -6,10 +6,6 @@
 
 import { createElement } from "react";
 import { getCertificatePayload, saveCertificatePdf } from "@/lib/certificate.functions";
-import {
-  getPortalCertificatePayload,
-  savePortalCertificatePdf,
-} from "@/lib/portal/certificate.functions";
 import { CertificateABC } from "./templates/CertificateABC";
 import { CertificateFutCare } from "./templates/CertificateFutCare";
 import { CertificateMCV } from "./templates/CertificateMCV";
@@ -43,7 +39,6 @@ function buildDoc(programCode: string, data: any) {
 
 async function blobToBase64(blob: Blob): Promise<string> {
   const buf = await blob.arrayBuffer();
-  // Chunked base64 encoding to avoid call-stack limits on big PDFs.
   const bytes = new Uint8Array(buf);
   let binary = "";
   const chunk = 0x8000;
@@ -55,17 +50,12 @@ async function blobToBase64(blob: Blob): Promise<string> {
 
 export async function generateCertificateClient(
   policyId: string,
-  opts?: { portal?: boolean },
 ): Promise<{ url: string }> {
-  const portal = opts?.portal === true;
-  const payloadFn = portal ? getPortalCertificatePayload : getCertificatePayload;
-  const saveFn = portal ? savePortalCertificatePdf : saveCertificatePdf;
-
-  const { programCode, payload } = await payloadFn({ data: { policy_id: policyId } });
+  const { programCode, payload } = await getCertificatePayload({ data: { policy_id: policyId } });
   const { pdf } = await import("@react-pdf/renderer");
   const blob = await pdf(buildDoc(programCode, payload) as any).toBlob();
   const pdf_base64 = await blobToBase64(blob);
-  const res = await saveFn({
+  const res = await saveCertificatePdf({
     data: {
       policy_id: policyId,
       folio: payload.policy.folio,
@@ -76,4 +66,3 @@ export async function generateCertificateClient(
   });
   return { url: res.url };
 }
-
