@@ -223,7 +223,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Button>
           </div>
         </header>
-        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+        <main className="flex-1 p-6 overflow-y-auto">
+          <RouteAccessGuard>{children}</RouteAccessGuard>
+        </main>
       </div>
     </div>
   );
