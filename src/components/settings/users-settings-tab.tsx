@@ -7,6 +7,7 @@ import {
   createUserDirect,
   updateUserAccess,
   deactivateUser,
+  deleteUser,
   reactivateUser,
   forcePasswordReset,
   seedZemgoUsers,
@@ -24,7 +25,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserPlus, KeyRound, UserX, UserCheck, ShieldCheck, Copy, Eye, EyeOff, RefreshCw, Sparkles } from "lucide-react";
+import { UserPlus, KeyRound, UserX, UserCheck, ShieldCheck, Copy, Eye, EyeOff, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 
 const ROLE_OPTIONS = [
   { value: "none", label: "Sin acceso" },
@@ -74,7 +75,7 @@ export function UsersSettingsTab() {
       return (
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
-            Necesitas rol de super administrador para gestionar usuarios.
+            Necesitas ser Superadministrador o administrador de programa para gestionar usuarios.
           </CardContent>
         </Card>
       );
@@ -350,6 +351,7 @@ function UserRow({ user, programs, onChanged }: { user: any; programs: any[]; on
   const [open, setOpen] = useState(false);
   const updateFn = useServerFn(updateUserAccess);
   const deactivateFn = useServerFn(deactivateUser);
+  const deleteFn = useServerFn(deleteUser);
   const reactivateFn = useServerFn(reactivateUser);
   const resetFn = useServerFn(forcePasswordReset);
 
@@ -498,6 +500,23 @@ function UserRow({ user, programs, onChanged }: { user: any; programs: any[]; on
                   <UserCheck className="h-4 w-4 mr-2" /> Reactivar
                 </Button>
               )}
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={async () => {
+                  const confirmText = window.prompt(
+                    `Esto ELIMINA permanentemente a ${user.email ?? user.full_name}. Escribe ELIMINAR para confirmar:`,
+                  );
+                  if (confirmText !== "ELIMINAR") return;
+                  try {
+                    await deleteFn({ data: { user_id: user.id } });
+                    toast.success("Usuario eliminado");
+                    onChanged();
+                  } catch (e: any) { toast.error(e.message || "No se pudo eliminar"); }
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+              </Button>
             </div>
           </div>
         )}

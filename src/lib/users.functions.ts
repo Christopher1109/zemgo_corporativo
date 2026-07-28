@@ -9,10 +9,18 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const SIG_TTL_SECONDS = 60 * 60 * 24 * 365; // 1 year
 
-async function assertCallerIsAdmin(supabase: any) {
-  const { data, error } = await supabase.rpc("is_super_admin", {
-    _user_id: (await supabase.auth.getUser()).data.user?.id ?? null,
-  });
+/** Superadministrador O administrador de algún programa: puede gestionar usuarios. */
+async function assertCallerIsAdmin(supabase: any, userId?: string) {
+  const uid = userId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
+  const { data, error } = await supabase.rpc("can_manage_users", { _user_id: uid });
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("forbidden");
+}
+
+/** Solo Superadministrador (integraciones, credenciales de plataforma). */
+async function assertCallerIsSuperAdmin(supabase: any, userId?: string) {
+  const uid = userId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
+  const { data, error } = await supabase.rpc("is_super_admin", { _user_id: uid });
   if (error) throw new Error(error.message);
   if (!data) throw new Error("forbidden");
 }
@@ -28,6 +36,21 @@ export const checkIsSuperAdmin = createServerFn({ method: "GET" })
     });
     if (error) throw new Error(error.message);
     return { isAdmin: Boolean(data) };
+  });
+
+// --------------------------------------------------------------
+// Read: nivel de autorización del usuario actual (para gating de UI)
+// --------------------------------------------------------------
+export const getMyAuthLevel = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const [su, pa] = await Promise.all([
+      context.supabase.rpc("is_super_admin", { _user_id: context.userId }),
+      (context.supabase.rpc as any)("is_any_program_admin", { _user_id: context.userId }),
+    ]);
+    const isSuperAdmin = Boolean(su.data);
+    const isProgramAdmin = Boolean(pa.data);
+    return { isSuperAdmin, isProgramAdmin, canManageUsers: isSuperAdmin || isProgramAdmin };
   });
 
 // --------------------------------------------------------------
@@ -323,6 +346,7 @@ const ZEMGO_USERS: Array<{
   email: string; full_name: string;
   programs: Array<"FUTCARE"|"ABC"|"MCV">;
   modules: Mod[];
+  role?: "admin" | "operator";
 }> = [
   { email: "javier.moro@zemgo.local",       full_name: "Javier Moro",       programs: ["FUTCARE"],              modules: ALL_MODULES },
   { email: "graciela.rivera@zemgo.local",   full_name: "Graciela Rivera",   programs: ["ABC","MCV"],            modules: ALL_MODULES },
@@ -330,11 +354,11 @@ const ZEMGO_USERS: Array<{
   { email: "lucia.saldana@zemgo.local",     full_name: "Lucía Saldaña",     programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","incidents","hospitals","reports"] },
   { email: "andrea.rodriguez@zemgo.local",  full_name: "Andrea Rodríguez",  programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","payments","alerts"] },
   { email: "alisson@zemgo.local",           full_name: "Alisson",           programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","policies","hospitals","alerts"] },
-  { email: "saira@zemgo.local",             full_name: "Saira",             programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","policies","payments","finance","alerts","sales_reps","reports"] },
-  { email: "ing.javier@zemgo.local",        full_name: "Ing. Javier",       programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
-  { email: "alan.gomez@zemgo.local",        full_name: "Alan Gómez",        programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
-  { email: "alejandro@zemgo.local",         full_name: "Alejandro",         programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
-  { email: "abelardo@zemgo.local",          full_name: "Abelardo",          programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
+  { email: "saira@zemgo.local",             full_name: "Saira",             programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES, role: "admin" },
+  { email: "ing.javier@zemgo.local",        full_name: "Ing. Javier",       programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES, role: "admin" },
+  { email: "alan.gomez@zemgo.local",        full_name: "Alan Gómez",        programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES, role: "admin" },
+  { email: "alejandro@zemgo.local",         full_name: "Alejandro",         programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES, role: "admin" },
+  { email: "abelardo@zemgo.local",          full_name: "Abelardo",          programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES, role: "admin" },
 ];
 
 export const seedZemgoUsers = createServerFn({ method: "POST" })
@@ -390,7 +414,7 @@ export const seedZemgoUsers = createServerFn({ method: "POST" })
         .map((code) => codeMap.get(code))
         .filter((id): id is string => !!id)
         .map((program_id) => ({
-          user_id: userId!, program_id, role: "operator" as const, modules: u.modules,
+          user_id: userId!, program_id, role: (u.role ?? "operator") as "admin" | "operator", modules: u.modules,
         }));
       if (rows.length) await supabaseAdmin.from("user_program_access").insert(rows as any);
 
@@ -503,5 +527,30 @@ export const setSignatureUrl = createServerFn({ method: "POST" })
       entity_id: data.user_id, action: "SIGNATURE_UPDATED",
       diff: { storage_path: data.storage_path } as any,
     });
+    return { ok: true };
+  });
+
+// --------------------------------------------------------------
+// Mutate: eliminar usuario permanentemente (superadmin o admin de programa)
+// --------------------------------------------------------------
+export const deleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ user_id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCallerIsAdmin(context.supabase, context.userId);
+    if (context.userId === data.user_id) throw new Error("cannot_delete_self");
+
+    // Valida permisos, anti-lockout y limpia perfil/accesos (registra en audit_log)
+    const { error } = await (context.supabase.rpc as any)("delete_user_account", {
+      _user_id: data.user_id,
+    });
+    if (error) throw new Error(error.message);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: dErr } = await (supabaseAdmin as any).auth.admin.deleteUser(data.user_id);
+    if (dErr) throw new Error(dErr.message ?? "delete_auth_user_failed");
+
     return { ok: true };
   });

@@ -46,10 +46,17 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    if (!activeId && programs.length > 0) {
+    if (programs.length === 0) return;
+    if (!activeId) {
       const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
       const initial = stored && programs.find((p) => p.id === stored) ? stored : programs[0].id;
       setActiveId(initial);
+      return;
+    }
+    // El programa guardado ya no está disponible para este usuario → resetear
+    if (!programs.find((p) => p.id === activeId)) {
+      setActiveId(programs[0].id);
+      if (typeof window !== "undefined") localStorage.setItem(STORAGE_KEY, programs[0].id);
     }
   }, [programs, activeId]);
 
