@@ -1072,6 +1072,21 @@ export type Database = {
           },
         ]
       }
+      platform_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       policies: {
         Row: {
           certificate_number: string | null
@@ -2107,6 +2122,19 @@ export type Database = {
         Args: { _access: Json; _phone: string; _user_id: string }
         Returns: Json
       }
+      can_manage_users: { Args: { _user_id: string }; Returns: boolean }
+      can_read_program_module: {
+        Args: { _modules: string[]; _program_id: string }
+        Returns: boolean
+      }
+      can_write_program_module: {
+        Args: {
+          _modules: string[]
+          _program_id: string
+          _roles: Database["public"]["Enums"]["app_role"][]
+        }
+        Returns: boolean
+      }
       cancel_payment: {
         Args: { _payment_id: string; _reason: string }
         Returns: undefined
@@ -2195,8 +2223,16 @@ export type Database = {
         }[]
       }
       get_user_modules: { Args: { _user_id: string }; Returns: Json }
+      has_any_module: {
+        Args: { _modules: string[]; _program_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_module_access: {
         Args: { _module: string; _program_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_module_any_program: {
+        Args: { _module: string; _user_id: string }
         Returns: boolean
       }
       has_program_access: {
@@ -2211,7 +2247,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_any_program_admin: { Args: { _user_id: string }; Returns: boolean }
       is_last_admin_in_program: {
+        Args: { _program_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_program_admin: {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
       }
