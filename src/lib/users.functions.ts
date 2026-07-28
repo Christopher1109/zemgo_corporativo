@@ -346,6 +346,7 @@ const ZEMGO_USERS: Array<{
   email: string; full_name: string;
   programs: Array<"FUTCARE"|"ABC"|"MCV">;
   modules: Mod[];
+  role?: "admin" | "operator";
 }> = [
   { email: "javier.moro@zemgo.local",       full_name: "Javier Moro",       programs: ["FUTCARE"],              modules: ALL_MODULES },
   { email: "graciela.rivera@zemgo.local",   full_name: "Graciela Rivera",   programs: ["ABC","MCV"],            modules: ALL_MODULES },
@@ -353,11 +354,11 @@ const ZEMGO_USERS: Array<{
   { email: "lucia.saldana@zemgo.local",     full_name: "Lucía Saldaña",     programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","incidents","hospitals","reports"] },
   { email: "andrea.rodriguez@zemgo.local",  full_name: "Andrea Rodríguez",  programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","payments","alerts"] },
   { email: "alisson@zemgo.local",           full_name: "Alisson",           programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","policies","hospitals","alerts"] },
-  { email: "saira@zemgo.local",             full_name: "Saira",             programs: ["FUTCARE","ABC","MCV"],  modules: ["clients","policies","payments","finance","alerts","sales_reps","reports"] },
-  { email: "ing.javier@zemgo.local",        full_name: "Ing. Javier",       programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
-  { email: "alan.gomez@zemgo.local",        full_name: "Alan Gómez",        programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
-  { email: "alejandro@zemgo.local",         full_name: "Alejandro",         programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
-  { email: "abelardo@zemgo.local",          full_name: "Abelardo",          programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES },
+  { email: "saira@zemgo.local",             full_name: "Saira",             programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES, role: "admin" },
+  { email: "ing.javier@zemgo.local",        full_name: "Ing. Javier",       programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES, role: "admin" },
+  { email: "alan.gomez@zemgo.local",        full_name: "Alan Gómez",        programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES, role: "admin" },
+  { email: "alejandro@zemgo.local",         full_name: "Alejandro",         programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES, role: "admin" },
+  { email: "abelardo@zemgo.local",          full_name: "Abelardo",          programs: ["FUTCARE","ABC","MCV"],  modules: ALL_MODULES, role: "admin" },
 ];
 
 export const seedZemgoUsers = createServerFn({ method: "POST" })
