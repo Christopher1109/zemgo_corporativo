@@ -9,10 +9,18 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const SIG_TTL_SECONDS = 60 * 60 * 24 * 365; // 1 year
 
-async function assertCallerIsAdmin(supabase: any) {
-  const { data, error } = await supabase.rpc("is_super_admin", {
-    _user_id: (await supabase.auth.getUser()).data.user?.id ?? null,
-  });
+/** Superadministrador O administrador de algún programa: puede gestionar usuarios. */
+async function assertCallerIsAdmin(supabase: any, userId?: string) {
+  const uid = userId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
+  const { data, error } = await supabase.rpc("can_manage_users", { _user_id: uid });
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("forbidden");
+}
+
+/** Solo Superadministrador (integraciones, credenciales de plataforma). */
+async function assertCallerIsSuperAdmin(supabase: any, userId?: string) {
+  const uid = userId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
+  const { data, error } = await supabase.rpc("is_super_admin", { _user_id: uid });
   if (error) throw new Error(error.message);
   if (!data) throw new Error("forbidden");
 }
@@ -28,6 +36,21 @@ export const checkIsSuperAdmin = createServerFn({ method: "GET" })
     });
     if (error) throw new Error(error.message);
     return { isAdmin: Boolean(data) };
+  });
+
+// --------------------------------------------------------------
+// Read: nivel de autorización del usuario actual (para gating de UI)
+// --------------------------------------------------------------
+export const getMyAuthLevel = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const [su, pa] = await Promise.all([
+      context.supabase.rpc("is_super_admin", { _user_id: context.userId }),
+      (context.supabase.rpc as any)("is_any_program_admin", { _user_id: context.userId }),
+    ]);
+    const isSuperAdmin = Boolean(su.data);
+    const isProgramAdmin = Boolean(pa.data);
+    return { isSuperAdmin, isProgramAdmin, canManageUsers: isSuperAdmin || isProgramAdmin };
   });
 
 // --------------------------------------------------------------
