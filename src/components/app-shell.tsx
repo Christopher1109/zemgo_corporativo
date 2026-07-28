@@ -68,15 +68,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { data: isSuperAdmin } = useIsSuperAdmin();
+  const { data: level } = useAuthLevel();
+  const isSuperAdmin = !!level?.isSuperAdmin;
   const { data: myAccess } = useMyAccess();
-  const allowedModules = unionModules(myAccess);
+  // Permisos del PROGRAMA ACTIVO (no la unión de todos)
+  const programModules = modulesForProgram(myAccess, activeProgram?.id);
   const visibleNav = NAV.filter((n) => {
-    if (n.module === null) return true;
+    if (n.requires === "manage_users") return !!level?.canManageUsers;
     if (isSuperAdmin) return true;
-    if (allowedModules === "all") return true;
-    if (!allowedModules) return true; // loading
-    return allowedModules.has(n.module);
+    if (n.module === null) return true;
+    return canAccessModule(programModules, n.module);
   });
 
 
