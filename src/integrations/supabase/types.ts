@@ -2147,6 +2147,7 @@ export type Database = {
         Args: { _reason: string; _user_id: string }
         Returns: undefined
       }
+      delete_user_account: { Args: { _user_id: string }; Returns: Json }
       finish_sheet_sync: {
         Args: {
           _details?: Json
