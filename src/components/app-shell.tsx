@@ -19,9 +19,18 @@ import { ProgramLogo } from "@/components/program-logo";
 import { SidebarNotifications } from "@/components/sidebar-notifications";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useMyAccess, unionModules, type ModuleKey } from "@/lib/use-my-access";
+import { useMyAccess, useAuthLevel, modulesForProgram, canAccessModule, type ModuleKey } from "@/lib/use-my-access";
+import { RouteAccessGuard } from "@/lib/access-guard";
 
-const NAV: Array<{ to: string; label: string; icon: any; module: ModuleKey | null }> = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: any;
+  module: ModuleKey | null;
+  requires?: "manage_users";
+};
+
+const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, module: null },
   { to: "/clients", label: "Clientes", icon: Users, module: "clients" },
   { to: "/policies", label: "Certificados", icon: FileText, module: "policies" },
@@ -32,7 +41,7 @@ const NAV: Array<{ to: string; label: string; icon: any; module: ModuleKey | nul
   { to: "/alerts", label: "Alertas y renovaciones", icon: Bell, module: "alerts" },
   { to: "/sales-reps", label: "Vendedores", icon: Briefcase, module: "sales_reps" },
   { to: "/reports", label: "Reportes", icon: BarChart3, module: "reports" },
-  { to: "/settings", label: "Configuración", icon: Settings, module: null },
+  { to: "/settings", label: "Configuración", icon: Settings, module: null, requires: "manage_users" },
 ];
 
 
