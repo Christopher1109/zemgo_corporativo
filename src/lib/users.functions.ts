@@ -528,3 +528,28 @@ export const setSignatureUrl = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+// --------------------------------------------------------------
+// Mutate: eliminar usuario permanentemente (superadmin o admin de programa)
+// --------------------------------------------------------------
+export const deleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ user_id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCallerIsAdmin(context.supabase, context.userId);
+    if (context.userId === data.user_id) throw new Error("cannot_delete_self");
+
+    // Valida permisos, anti-lockout y limpia perfil/accesos (registra en audit_log)
+    const { error } = await (context.supabase.rpc as any)("delete_user_account", {
+      _user_id: data.user_id,
+    });
+    if (error) throw new Error(error.message);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: dErr } = await (supabaseAdmin as any).auth.admin.deleteUser(data.user_id);
+    if (dErr) throw new Error(dErr.message ?? "delete_auth_user_failed");
+
+    return { ok: true };
+  });
