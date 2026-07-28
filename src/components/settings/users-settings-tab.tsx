@@ -498,6 +498,23 @@ function UserRow({ user, programs, onChanged }: { user: any; programs: any[]; on
                   <UserCheck className="h-4 w-4 mr-2" /> Reactivar
                 </Button>
               )}
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={async () => {
+                  const confirmText = window.prompt(
+                    `Esto ELIMINA permanentemente a ${user.email ?? user.full_name}. Escribe ELIMINAR para confirmar:`,
+                  );
+                  if (confirmText !== "ELIMINAR") return;
+                  try {
+                    await deleteFn({ data: { user_id: user.id } });
+                    toast.success("Usuario eliminado");
+                    onChanged();
+                  } catch (e: any) { toast.error(e.message || "No se pudo eliminar"); }
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+              </Button>
             </div>
           </div>
         )}
