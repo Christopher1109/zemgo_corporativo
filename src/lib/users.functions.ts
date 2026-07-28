@@ -414,7 +414,7 @@ export const seedZemgoUsers = createServerFn({ method: "POST" })
         .map((code) => codeMap.get(code))
         .filter((id): id is string => !!id)
         .map((program_id) => ({
-          user_id: userId!, program_id, role: "operator" as const, modules: u.modules,
+          user_id: userId!, program_id, role: (u.role ?? "operator") as "admin" | "operator", modules: u.modules,
         }));
       if (rows.length) await supabaseAdmin.from("user_program_access").insert(rows as any);
 
