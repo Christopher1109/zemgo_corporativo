@@ -197,7 +197,28 @@ export type Database = {
             foreignKeyName: "client_programs_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_programs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_programs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_programs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
           },
           {
@@ -405,7 +426,28 @@ export type Database = {
             foreignKeyName: "contractors_linked_client_id_fkey"
             columns: ["linked_client_id"]
             isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contractors_linked_client_id_fkey"
+            columns: ["linked_client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contractors_linked_client_id_fkey"
+            columns: ["linked_client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contractors_linked_client_id_fkey"
+            columns: ["linked_client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
           },
         ]
@@ -483,6 +525,68 @@ export type Database = {
           uploaded_by?: string | null
         }
         Relationships: []
+      }
+      duplicate_curp_attempts: {
+        Row: {
+          created_at: string | null
+          curp: string
+          existing_client_id: string | null
+          id: string
+          program_code: string | null
+          raw_payload: Json | null
+          reviewed: boolean | null
+          wix_form_item_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          curp: string
+          existing_client_id?: string | null
+          id?: string
+          program_code?: string | null
+          raw_payload?: Json | null
+          reviewed?: boolean | null
+          wix_form_item_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          curp?: string
+          existing_client_id?: string | null
+          id?: string
+          program_code?: string | null
+          raw_payload?: Json | null
+          reviewed?: boolean | null
+          wix_form_item_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duplicate_curp_attempts_existing_client_id_fkey"
+            columns: ["existing_client_id"]
+            isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duplicate_curp_attempts_existing_client_id_fkey"
+            columns: ["existing_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duplicate_curp_attempts_existing_client_id_fkey"
+            columns: ["existing_client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duplicate_curp_attempts_existing_client_id_fkey"
+            columns: ["existing_client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hospitals: {
         Row: {
@@ -615,7 +719,28 @@ export type Database = {
             foreignKeyName: "incidents_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
           },
           {
@@ -1025,7 +1150,28 @@ export type Database = {
             foreignKeyName: "policies_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policies_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policies_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policies_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
           },
           {
@@ -1164,7 +1310,28 @@ export type Database = {
             foreignKeyName: "portal_access_codes_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_access_codes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_access_codes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_access_codes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
           },
         ]
@@ -1253,7 +1420,28 @@ export type Database = {
             foreignKeyName: "portal_sessions_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
           },
         ]
@@ -1660,7 +1848,28 @@ export type Database = {
             foreignKeyName: "sheet_synced_rows_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sheet_synced_rows_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sheet_synced_rows_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sheet_synced_rows_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
           },
           {
@@ -1730,6 +1939,135 @@ export type Database = {
       }
     }
     Views: {
+      abc_clients: {
+        Row: {
+          address_full: string | null
+          cancelled_at: string | null
+          city: string | null
+          colonia: string | null
+          created_at: string | null
+          created_by: string | null
+          curp: string | null
+          date_of_birth: string | null
+          email: string | null
+          enrolled_at: string | null
+          enrollment_metadata: Json | null
+          first_name: string | null
+          gender: string | null
+          id: string | null
+          last_name: string | null
+          marital_status: string | null
+          metadata: Json | null
+          number: string | null
+          phone: string | null
+          phone_alt: string | null
+          program_status:
+            | Database["public"]["Enums"]["client_program_status"]
+            | null
+          referral_source_id: string | null
+          rfc: string | null
+          sales_rep_id: string | null
+          state: string | null
+          street: string | null
+          updated_at: string | null
+          zip: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_sales_rep_id_fkey"
+            columns: ["sales_rep_id"]
+            isOneToOne: false
+            referencedRelation: "sales_reps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      futcare_clients: {
+        Row: {
+          address_full: string | null
+          cancelled_at: string | null
+          city: string | null
+          colonia: string | null
+          created_at: string | null
+          created_by: string | null
+          curp: string | null
+          date_of_birth: string | null
+          email: string | null
+          enrolled_at: string | null
+          enrollment_metadata: Json | null
+          first_name: string | null
+          gender: string | null
+          id: string | null
+          last_name: string | null
+          marital_status: string | null
+          metadata: Json | null
+          number: string | null
+          phone: string | null
+          phone_alt: string | null
+          program_status:
+            | Database["public"]["Enums"]["client_program_status"]
+            | null
+          referral_source_id: string | null
+          rfc: string | null
+          sales_rep_id: string | null
+          state: string | null
+          street: string | null
+          updated_at: string | null
+          zip: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_sales_rep_id_fkey"
+            columns: ["sales_rep_id"]
+            isOneToOne: false
+            referencedRelation: "sales_reps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manos_con_valor_clients: {
+        Row: {
+          address_full: string | null
+          cancelled_at: string | null
+          city: string | null
+          colonia: string | null
+          created_at: string | null
+          created_by: string | null
+          curp: string | null
+          date_of_birth: string | null
+          email: string | null
+          enrolled_at: string | null
+          enrollment_metadata: Json | null
+          first_name: string | null
+          gender: string | null
+          id: string | null
+          last_name: string | null
+          marital_status: string | null
+          metadata: Json | null
+          number: string | null
+          phone: string | null
+          phone_alt: string | null
+          program_status:
+            | Database["public"]["Enums"]["client_program_status"]
+            | null
+          referral_source_id: string | null
+          rfc: string | null
+          sales_rep_id: string | null
+          state: string | null
+          street: string | null
+          updated_at: string | null
+          zip: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_sales_rep_id_fkey"
+            columns: ["sales_rep_id"]
+            isOneToOne: false
+            referencedRelation: "sales_reps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mv_monthly_collection: {
         Row: {
           month: string | null
