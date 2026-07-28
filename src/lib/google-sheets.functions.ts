@@ -9,10 +9,18 @@ const sheetConfigSchema = z.object({
 });
 export type SheetConfig = z.infer<typeof sheetConfigSchema>;
 
+/** Integraciones = exclusivo del Superadministrador. */
+async function assertSuperAdmin(supabase: any) {
+  const { data, error } = await supabase.rpc("is_super_admin");
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("forbidden: solo el Superadministrador puede usar Integraciones");
+}
+
 
 export const getGoogleSheetsConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await assertSuperAdmin(context.supabase);
     const { supabase } = context;
     const { data: meta, error: metaErr } = await supabase.rpc(
       "get_google_sheets_credentials_meta",
@@ -43,6 +51,7 @@ export const saveGoogleSheetsCredentials = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase);
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(data.service_account_json);
@@ -63,6 +72,7 @@ export const setGoogleSheetsEnabled = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ enabled: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase);
     const { error } = await context.supabase
       .from("system_config")
       .upsert({ key: "google_sheets.enabled", value: data.enabled });
@@ -73,6 +83,7 @@ export const setGoogleSheetsEnabled = createServerFn({ method: "POST" })
 export const testGoogleSheetsConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await assertSuperAdmin(context.supabase);
     const { data: creds, error } = await context.supabase.rpc(
       "get_google_sheets_credentials",
     );
@@ -96,6 +107,7 @@ export const testGoogleSheetsConnection = createServerFn({ method: "POST" })
 export const listSheetSyncLog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await assertSuperAdmin(context.supabase);
     const { data, error } = await context.supabase
       .from("sheet_sync_log")
       .select("*")
@@ -108,6 +120,7 @@ export const listSheetSyncLog = createServerFn({ method: "GET" })
 export const listSheetProblemRows = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await assertSuperAdmin(context.supabase);
     const { data, error } = await context.supabase
       .from("sheet_synced_rows")
       .select("id, sheet_id, sheet_program, row_number, folio, status, error_message, warnings, raw_data, last_synced_at")
@@ -122,6 +135,7 @@ export const ignoreSheetRow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase);
     const { data: isAdmin } = await context.supabase.rpc("is_super_admin", {
       _user_id: context.userId,
     });
@@ -139,6 +153,7 @@ export const retrySheetRow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase);
     const { data: isAdmin } = await context.supabase.rpc("is_super_admin", {
       _user_id: context.userId,
     });
@@ -197,6 +212,7 @@ export const runGoogleSheetsSyncNow = createServerFn({ method: "POST" })
     z.object({ sheet_id: z.string().optional() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase);
     const { data: isAdmin } = await context.supabase.rpc("is_super_admin", {
       _user_id: context.userId,
     });
