@@ -1,46 +1,78 @@
-# Plan — ZEMGO parte 2 (4 bloques)
+## PASO 1 — Resultado de la auditoría
 
-## 1. Carta Aviso de Accidente (HIR) — rehacer con React-PDF nativo
-Ya existe `MedicalPassHIR.tsx` (React-PDF) muy cercana al diseño de referencia. El generador actual (`accident-notice.functions.ts`) usa la imagen de plantilla + pdf-lib con posiciones absolutas — frágil. Voy a:
+### Lo que SÍ está protegido de verdad (RLS real en Supabase)
+El filtrado **por programa** sí existe a nivel de datos. Todas las tablas sensibles tienen RLS con `has_program_access()` / `has_program_role()`:
+`clients`, `policies`, `incidents`, `payments`, `medical_passes`, `hospitals`, `client_programs`, `documents`, `profiles`, `sales_reps`.
+Un usuario sin fila en `user_program_access` para un programa no puede leer sus datos, ni por API directa.
 
-- Reescribir `portalAccidentNotice` para usar `MedicalPassHIR` (React-PDF) vía `renderPdfToBytes`.
-- Ajustar la plantilla al diseño exacto (encabezado naranja/azul con círculos, campos con fondo gris claro tipo píldora, franja naranja del aviso 48hrs, footer azul con contactos, firma de Graciela Rivera Bersoza).
-- Autocompletar: contratante, N° póliza (desde configuración por programa — punto 3), asegurado, fecha nac., CURP, N° certificado, suma asegurada.
-- Captura manual (ya se pide al reportar): deducible, fecha/hora accidente, descripción, hospital.
-- Firma "Graciela Rivera Bersoza" con imagen SVG/asset de firma (se conserva la actual del director si está cargada; nombre fijo por defecto).
-- Eliminar dependencia de la imagen de fondo `accident-notice-hir-bg.jpg`.
+### Lo que NO está protegido (confirmado)
 
-## 2. Contratante como entidad + validaciones
-- Nueva tabla `contractors` (mismos campos que `clients`: full_name, curp, phone, email, address...).
-- Columna `contractor_id` en `policies` (FK a contractors). Deprecar el campo texto `contracting_party` (mantener por compatibilidad, poblar desde el contractor).
-- En `/policies/new`:
-  - Buscador de "Cliente titular" (ya existe).
-  - Checkbox "El contratante es el mismo que el cliente titular" (default ON).
-  - Si OFF: buscador de Contratante + botón "Crear nuevo contratante" inline (modal corto).
-  - Botón "Crear nuevo cliente titular" inline también (si no existe ya).
-- Validaciones al crear contractor:
-  - Bloqueo si tel/email == usuario en sesión → error.
-  - Advertencia si tel/email ya existe en otro contractor → dialog "Confirmar / Corregir".
-- Los datos de contacto viven en `contractors`. `clients` conserva sus campos pero no se validan contra sesión.
+1. **Los checkboxes de módulos son 100% visuales.** La función `has_module_access()` existe en la base de datos pero **no la usa ninguna política RLS ni ninguna server function**. El único filtro está en el sidebar (`src/components/app-shell.tsx:64-72`). Un operador con solo `clients` marcado puede entrar por URL directa a `/payments`, `/incidents` o `/sales-reps` y **la API le devuelve los datos**.
 
-## 3. N° Póliza por programa en Configuración
-- Añadir columna `policy_number` a `programs` (ya existe? verificar — si no, migración).
-- Nueva pestaña "Póliza" en `/settings` con lista de los 3 programas (ABC, FUT-CARE, MCV) y campo editable por cada uno.
-- Server fn `updateProgramPolicyNumber` (super-admin).
-- La Carta Aviso usa `programs.policy_number` según el programa del certificado.
+2. **Ninguna ruta de `src/routes/_authenticated/` tiene `beforeLoad`.** El único gate real es "¿hay sesión?" (`route.tsx:28-36`). Integraciones se protege con un chequeo *dentro del componente* (después de renderizar); Configuración **no tiene ningún gate** — cualquier usuario abre `/settings` y ve las pestañas Alertas y Póliza y puede editarlas.
 
-## 4. Filtros en /hospitals
-- Añadir en la vista de Hospitales tres controles combinables:
-  - Input de búsqueda por nombre (contains, case-insensitive).
-  - Select por ciudad (poblado con ciudades distintas de la lista).
-  - Select por estatus: Todos / Activo / Inactivo.
-- Filtrado client-side sobre el listado ya cargado.
+3. **Endpoints de Google Sheets sin chequeo de admin**: `getGoogleSheetsConfig`, `saveGoogleSheetsCredentials`, `setGoogleSheetsEnabled`, `testGoogleSheetsConnection`, `listSheetSyncLog`, `listSheetProblemRows` solo exigen sesión. Cualquier operador puede leer/escribir la configuración de credenciales llamando la función directamente. (Riesgo alto.)
 
-## Orden de ejecución
-1. Migración: `contractors` + `policies.contractor_id` + `programs.policy_number` (si falta).
-2. Punto 3 (Configuración Póliza) — rápido, desbloquea punto 1.
-3. Punto 1 (Carta HIR reescrita) — con captura de verificación.
-4. Punto 2 (Contratante entidad + validaciones).
-5. Punto 4 (Filtros Hospitales).
+4. **`is_super_admin()` = "tener rol `admin` en cualquier programa".** Esto es el punto crítico para tu Paso 3b: si asciendo a los 5 usuarios a `admin`, automáticamente se convierten en superadmins y verían Integraciones, todos los perfiles, credenciales y `sales_reps` globales. Hay que separar los dos conceptos.
 
-Confirmación con screenshot al terminar cada bloque, en particular el 1.
+5. **Causa real de "la operadora ve los tres programas": NO es un bug de código, es la configuración de datos.** El seed `seedZemgoUsers` (`src/lib/users.functions.ts:322-338`) le dio a casi todos los operadores fila en FUTCARE + ABC + MCV. Hoy en la base: solo `javier.moro` (FUTCARE) y `graciela.rivera` (ABC+MCV) están acotados; los demás 9 tienen los 3 programas. Necesito que me digas quién debía tener solo uno.
+
+6. **No existe borrado de usuarios**, solo `deactivateUser` (ban) / `reactivateUser`.
+
+7. Otros hallazgos menores: `program-context.tsx` lista **todos** los programas sin filtrar por acceso; `saveCertificatePdf` y `getMedicalPassSignedUrl` usan el cliente service-role (bypass RLS) para storage sin re-verificar programa.
+
+**Conclusión: el filtrado por PROGRAMA es real; el filtrado por MÓDULO es solo visual. Y Configuración/Integraciones prácticamente no tienen backend gate.**
+
+---
+
+## PASO 2 — Corrección (estricta en backend + frontend)
+
+### Migración A — Modelo de roles limpio
+- Nueva tabla `public.platform_admins (user_id)` = **Superadministrador**. Se siembra únicamente con `admin@hope.local`.
+- `is_super_admin(uuid)` se redefine para leer esa tabla (deja de significar "admin de algún programa"). Se mantiene compatibilidad con todas las políticas que ya la usan.
+- Nueva función `is_program_admin(_user_id, _program_id)` y `is_any_program_admin(_user_id)` para el nivel "admin de programa" (los 5 usuarios).
+
+### Migración B — RLS por módulo (el fix de fondo)
+Se añade `has_module_access(auth.uid(), <program_id>, '<módulo>')` a las políticas SELECT/INSERT/UPDATE de:
+
+| Tabla | Módulo requerido |
+|---|---|
+| `clients`, `client_programs` | `clients` |
+| `policies`, `beneficiaries`, `dependents` | `policies` |
+| `payments`, `payment_schedules` | `payments` |
+| `incidents`, `medical_passes` | `incidents` |
+| `hospitals` | `hospitals` |
+| `sales_reps`, `commission_tiers` | `sales_reps` |
+
+Los superadmins hacen bypass. Se endurece también `programs` (hoy `USING (true)`) para que cada quien solo vea sus programas, y `sales_reps` para que los admins de programa puedan leerlos (hoy es solo super-admin, lo que rompe el módulo).
+
+Las RPC del dashboard (`get_dashboard_kpis`, `get_action_items`, `get_top_debtors`, etc.) se ajustan para filtrar por acceso del llamante en lugar de asumirlo.
+
+### Frontend
+- `beforeLoad` real en cada ruta de `_authenticated/`: valida programa + módulo contra el acceso del usuario y redirige a `/dashboard` si no aplica (`/settings` → solo superadmin y admins; `/admin/integrations/*` → solo superadmin).
+- `program-context.tsx`: el selector solo muestra los programas del usuario; si el programa activo guardado en `localStorage` no está permitido, se descarta.
+- Se cierran los 6 endpoints de Google Sheets con chequeo de superadmin, y se re-verifica programa en `saveCertificatePdf` / `getMedicalPassSignedUrl`.
+
+---
+
+## PASO 3 — Cambios de roles
+- `admin@hope.local` → alta en `platform_admins`, etiqueta visible **"Superadministrador"** en Configuración > Usuarios. Único que ve Integraciones.
+- `abelardo@`, `alejandro@`, `alan.gomez@`, `ing.javier@`, `saira@` (zemgo.local) → rol `admin` en FUTCARE, ABC y MCV, con `modules = NULL` (todos los módulos). Nota: hoy `saira@` tiene módulos recortados (sin `incidents` ni `hospitals`); al pasar a admin tendrá todo — dímelo si prefieres conservar su recorte.
+- Se corrige el seed `seedZemgoUsers` para que no revierta estos roles al volver a ejecutarse.
+
+## PASO 4 — Configuración
+- `/settings` visible y accesible solo para superadmin + admins de programa (gate en ruta y en cada server fn: `listProgramAlertConfig`, `updateProgramAlertOffsets`, `updateProgramPolicyNumber`, `listUsers`, `getUserDetail`, `updateUserAccess`).
+- La pestaña Usuarios y todo dato de credenciales queda cerrado a operators por UI, por ruta y por API.
+- Integraciones desaparece del sidebar y de la ruta para los 5 admins.
+
+## PASO 5 — Eliminar usuarios
+- Nueva server fn `deleteUser`: borra `user_program_access`, `profiles` y el usuario de `auth.users` (Admin API), con protecciones: no puedes borrarte a ti mismo, no puedes borrar al último admin de un programa, no puedes borrar a un superadministrador salvo que seas superadministrador. Queda registrado en `audit_log`.
+- En Configuración > Usuarios: botón Eliminar con diálogo de confirmación (escribir el email), junto a Desactivar.
+
+---
+
+## Antes de implementar, necesito confirmar 3 cosas
+
+1. **¿Quién es la operadora que debía ver solo un programa, y qué programa?** Hoy 9 de 11 usuarios tienen los 3 programas en la base; corrijo las filas que me indiques.
+2. **¿`saira@` conserva sus módulos recortados o pasa a admin con acceso total?** (Paso 3b dice admin en los 3 programas.)
+3. Existe también `christocr9@gmail.com` con rol `admin` en los 3 programas. **¿Ese usuario debe ser Superadministrador, admin, o eliminarse?**
