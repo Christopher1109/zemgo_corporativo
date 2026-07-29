@@ -17,6 +17,7 @@ import type { ReactNode } from "react";
 
 import { ProgramLogo } from "@/components/program-logo";
 import { SidebarNotifications } from "@/components/sidebar-notifications";
+import { AccountMenu } from "@/components/account-menu";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyAccess, useAuthLevel, modulesForProgram, canAccessModule, type ModuleKey } from "@/lib/use-my-access";
