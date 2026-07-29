@@ -17,6 +17,7 @@ import type { ReactNode } from "react";
 
 import { ProgramLogo } from "@/components/program-logo";
 import { SidebarNotifications } from "@/components/sidebar-notifications";
+import { AccountMenu } from "@/components/account-menu";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyAccess, useAuthLevel, modulesForProgram, canAccessModule, type ModuleKey } from "@/lib/use-my-access";
@@ -218,6 +219,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <div className="flex items-center gap-2">
             <SidebarNotifications />
+            <AccountMenu />
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" /> Salir
             </Button>
