@@ -41,25 +41,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   return (
-        <AuthContext.Provider
-                value={{
-                          session,
-                          user: session?.user ?? null,
-                          loading,
-                          signOut: async () => {
-                                      await supabase.auth.signOut();
-                                      queryClient.clear();
-                          },
-                }}
-              >
-          {children}
-        </AuthContext.Provider>AuthContext.Provider>
-      );
+    <AuthContext.Provider
+      value={{
+        session,
+        user: session?.user ?? null,
+        loading,
+        signOut: async () => {
+          await supabase.auth.signOut();
+          queryClient.clear();
+        },
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-    return ctx;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 }
-</AuthContext.Provider>
+
