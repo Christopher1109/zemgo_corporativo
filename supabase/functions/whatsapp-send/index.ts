@@ -94,6 +94,23 @@ Deno.serve(async (req: Request) => {
           sent_by: userId,
         }),
       });
+
+      // Un humano ya está atendiendo esta conversación — el bot se calla
+      // por unas horas para no contestar encima de la persona.
+      await fetch(`${supabaseUrl}/rest/v1/whatsapp_conversation_state?on_conflict=wa_phone`, {
+        method: "POST",
+        headers: {
+          apikey: serviceKey,
+          authorization: `Bearer ${serviceKey}`,
+          "content-type": "application/json",
+          prefer: "resolution=merge-duplicates,return=minimal",
+        },
+        body: JSON.stringify({
+          wa_phone: to,
+          bot_paused_until: new Date(Date.now() + 12 * 3600_000).toISOString(),
+          updated_at: new Date().toISOString(),
+        }),
+      });
     } catch (err) {
       console.error("[whatsapp-send] error logging message", err);
     }

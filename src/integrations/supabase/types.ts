@@ -1952,6 +1952,24 @@ export type Database = {
           },
         ]
       }
+      whatsapp_conversation_state: {
+        Row: {
+          bot_paused_until: string | null
+          updated_at: string
+          wa_phone: string
+        }
+        Insert: {
+          bot_paused_until?: string | null
+          updated_at?: string
+          wa_phone: string
+        }
+        Update: {
+          bot_paused_until?: string | null
+          updated_at?: string
+          wa_phone?: string
+        }
+        Relationships: []
+      }
       whatsapp_messages: {
         Row: {
           body: string | null
@@ -2292,6 +2310,8 @@ export type Database = {
         }[]
       }
       get_user_modules: { Args: { _user_id: string }; Returns: Json }
+      get_whatsapp_conversations: { Args: never; Returns: Json }
+      get_whatsapp_thread: { Args: { _wa_phone: string }; Returns: Json }
       has_any_module: {
         Args: { _modules: string[]; _program_id: string; _user_id: string }
         Returns: boolean
@@ -2412,6 +2432,7 @@ export type Database = {
         Returns: Json
       }
       resolve_portal_session: { Args: { _token: string }; Returns: string }
+      resume_whatsapp_bot: { Args: { _wa_phone: string }; Returns: undefined }
       revoke_medical_pass: {
         Args: { _pass_id: string; _reason: string }
         Returns: undefined
