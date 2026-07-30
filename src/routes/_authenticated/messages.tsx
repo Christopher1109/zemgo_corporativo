@@ -131,6 +131,7 @@ function MessagesPage() {
 
   const selectedConv = conversations?.find((c) => c.wa_phone === selected);
   const selectedPaused = isPaused(selectedConv?.bot_paused_until ?? null);
+  const pendingCount = conversations?.filter((c) => c.needs_human).length ?? 0;
 
   return (
     <div className="h-full flex flex-col p-6 gap-4">
@@ -138,6 +139,11 @@ function MessagesPage() {
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <MessageCircle className="h-6 w-6" />
           Mensajes de WhatsApp
+          {pendingCount > 0 && (
+            <Badge variant="destructive" className="ml-1">
+              {pendingCount} {pendingCount === 1 ? "solicitud" : "solicitudes"} de atención
+            </Badge>
+          )}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Historial de conversaciones del bot y del equipo. Puedes responder manualmente dentro de las 24h
@@ -163,11 +169,14 @@ function MessagesPage() {
                 <button
                   key={c.wa_phone}
                   onClick={() => setSelected(c.wa_phone)}
-                  className={`w-full text-left px-4 py-3 border-b hover:bg-muted/50 transition ${
+                  className={`w-full text-left px-4 py-3 border-b hover:bg-muted/50 transition relative ${
                     selected === c.wa_phone ? "bg-muted" : ""
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
+                  {c.needs_human && (
+                    <span className="absolute top-3 right-3 h-2 w-2 rounded-full bg-red-500" />
+                  )}
+                  <div className="flex items-center justify-between gap-2 pr-3">
                     <span className="font-medium text-sm truncate">
                       {c.client_name || formatPhone(c.wa_phone)}
                     </span>
@@ -182,10 +191,16 @@ function MessagesPage() {
                         {PROGRAM_LABEL[c.program_code] ?? c.program_code}
                       </Badge>
                     )}
-                    {paused && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 gap-1">
-                        <User className="h-2.5 w-2.5" /> humano
+                    {c.needs_human ? (
+                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                        Pide hablar con alguien
                       </Badge>
+                    ) : (
+                      paused && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 gap-1">
+                          <User className="h-2.5 w-2.5" /> humano
+                        </Badge>
+                      )
                     )}
                   </div>
                   <div className="text-xs text-muted-foreground truncate mt-1">

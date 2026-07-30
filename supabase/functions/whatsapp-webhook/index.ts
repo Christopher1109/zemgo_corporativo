@@ -24,7 +24,7 @@ const DEFAULT_PORTAL_URL = "https://www.zemgoportal.com";
 
 // Cuánto tiempo se calla el bot para un número después de que interviene un
 // humano, o después de que el cliente pide hablar con alguien.
-const HUMAN_PAUSE_HOURS = 12;
+const HUMAN_PAUSE_HOURS = 2;
 
 function portalUrl(): string {
   return (Deno.env.get("PORTAL_BASE_URL") ?? DEFAULT_PORTAL_URL).replace(/\/+$/, "");
@@ -158,10 +158,12 @@ async function isBotPaused(waPhone: string): Promise<boolean> {
   }
 }
 
-async function setBotPause(waPhone: string, hours: number | null) {
+async function setBotPause(waPhone: string, hours: number | null, needsHuman?: boolean) {
   const creds = supabaseRest();
   if (!creds) return;
   const bot_paused_until = hours === null ? null : new Date(Date.now() + hours * 3600_000).toISOString();
+  const row: Record<string, unknown> = { wa_phone: waPhone, bot_paused_until, updated_at: new Date().toISOString() };
+  if (needsHuman !== undefined) row.needs_human = needsHuman;
   try {
     await fetch(`${creds.supabaseUrl}/rest/v1/whatsapp_conversation_state?on_conflict=wa_phone`, {
       method: "POST",
@@ -171,7 +173,7 @@ async function setBotPause(waPhone: string, hours: number | null) {
         "content-type": "application/json",
         prefer: "resolution=merge-duplicates,return=minimal",
       },
-      body: JSON.stringify({ wa_phone: waPhone, bot_paused_until, updated_at: new Date().toISOString() }),
+      body: JSON.stringify(row),
     });
   } catch (err) {
     console.error("[whatsapp-webhook] error setting pause state", err);
@@ -314,31 +316,37 @@ Deno.serve(async (req: Request) => {
               raw_payload: msg,
             });
 
-            // Opción 5: el cliente pide hablar con una persona → se pausa el
-            // bot y se avisa, sin mandar el menú de nuevo.
-            if (option === "5") {
-              await setBotPause(from, HUMAN_PAUSE_HOURS);
-              await sendText(
-                from,
-                "Perfecto, un asesor de Zemgo te va a contactar en breve por este mismo chat. Si necesitas el menú de opciones de nuevo, escribe *menu*.",
-              );
-              continue;
-            }
-
             // Si el cliente escribe explícitamente "menu", se reactiva el
-            // bot aunque estuviera en pausa por intervención humana.
+            // bot SIEMPRE, aunque estuviera en pausa por intervención
+            // humana — es la salida de emergencia del cliente.
             const resumeRequested = msg?.type === "text" && isResumeKeyword(String(msg?.text?.body ?? ""));
             if (resumeRequested) {
-              await setBotPause(from, null);
+              await setBotPause(from, null, false);
               await sendListMenu(from);
               continue;
             }
 
-            // Si ya interviene una persona (o el cliente pidió hablar con
-            // alguien), el bot se queda callado para no contestar por
-            // encima — el equipo lo atiende desde el sistema corporativo.
+            // Si ya interviene una persona (o el cliente ya pidió hablar
+            // con alguien antes), el bot se queda callado del todo — ni
+            // siquiera si el mensaje vuelve a mencionar "persona" o toca
+            // la opción 5 de nuevo. Esto va ANTES de revisar la opción,
+            // porque si no, un mensaje como "quiero hablar con una
+            // persona, gracias" volvía a disparar la confirmación del bot
+            // por encima de lo que ya estaba contestando el equipo.
             if (await isBotPaused(from)) {
               console.log("[whatsapp-webhook] bot en pausa, no se responde →", from);
+              continue;
+            }
+
+            // Opción 5: el cliente pide hablar con una persona → se pausa
+            // el bot, se marca la conversación como "necesita atención" y
+            // se avisa, sin mandar el menú de nuevo.
+            if (option === "5") {
+              await setBotPause(from, HUMAN_PAUSE_HOURS, true);
+              await sendText(
+                from,
+                "Perfecto, un asesor de Zemgo te va a contactar en breve por este mismo chat. Si necesitas el menú de opciones de nuevo, escribe *menu*.",
+              );
               continue;
             }
 

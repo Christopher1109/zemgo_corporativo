@@ -1955,16 +1955,19 @@ export type Database = {
       whatsapp_conversation_state: {
         Row: {
           bot_paused_until: string | null
+          needs_human: boolean
           updated_at: string
           wa_phone: string
         }
         Insert: {
           bot_paused_until?: string | null
+          needs_human?: boolean
           updated_at?: string
           wa_phone: string
         }
         Update: {
           bot_paused_until?: string | null
+          needs_human?: boolean
           updated_at?: string
           wa_phone?: string
         }

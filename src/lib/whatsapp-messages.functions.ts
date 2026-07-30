@@ -14,6 +14,7 @@ export interface WhatsappConversation {
   program_name: string | null;
   program_status: string | null;
   bot_paused_until: string | null;
+  needs_human: boolean;
 }
 
 export interface WhatsappThreadMessage {

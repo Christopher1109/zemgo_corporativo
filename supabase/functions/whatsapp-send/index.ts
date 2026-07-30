@@ -96,7 +96,8 @@ Deno.serve(async (req: Request) => {
       });
 
       // Un humano ya está atendiendo esta conversación — el bot se calla
-      // por unas horas para no contestar encima de la persona.
+      // por un rato para no contestar encima de la persona, y se limpia
+      // la bandera de "necesita atención" (ya se está atendiendo).
       await fetch(`${supabaseUrl}/rest/v1/whatsapp_conversation_state?on_conflict=wa_phone`, {
         method: "POST",
         headers: {
@@ -107,7 +108,8 @@ Deno.serve(async (req: Request) => {
         },
         body: JSON.stringify({
           wa_phone: to,
-          bot_paused_until: new Date(Date.now() + 12 * 3600_000).toISOString(),
+          bot_paused_until: new Date(Date.now() + 2 * 3600_000).toISOString(),
+          needs_human: false,
           updated_at: new Date().toISOString(),
         }),
       });
