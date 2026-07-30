@@ -5,7 +5,7 @@ import { getMyModules, getMyAuthLevel } from "@/lib/users.functions";
 
 export type ModuleKey =
   | "clients" | "policies" | "payments" | "finance"
-  | "incidents" | "hospitals" | "alerts" | "sales_reps" | "reports";
+  | "incidents" | "hospitals" | "alerts" | "sales_reps" | "reports" | "messages";
 
 export type AccessRow = { program_id: string; role: string; modules: string[] | null };
 

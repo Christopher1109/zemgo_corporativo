@@ -241,7 +241,7 @@ export const inviteUser = createServerFn({ method: "POST" })
 // No invitation email — admin sets the password and hands it to the user.
 // --------------------------------------------------------------
 const ModuleEnum = z.enum([
-  "clients","policies","payments","finance","incidents","hospitals","alerts","sales_reps","reports",
+  "clients","policies","payments","finance","incidents","hospitals","alerts","sales_reps","reports","messages",
 ]);
 
 const CreateDirectSchema = z.object({
@@ -340,7 +340,7 @@ export const getMyModules = createServerFn({ method: "GET" })
 // Seed: 11 usuarios Zemgo predefinidos (idempotente)
 // --------------------------------------------------------------
 type Mod = z.infer<typeof ModuleEnum>;
-const ALL_MODULES: Mod[] = ["clients","policies","payments","finance","incidents","hospitals","alerts","sales_reps","reports"];
+const ALL_MODULES: Mod[] = ["clients","policies","payments","finance","incidents","hospitals","alerts","sales_reps","reports","messages"];
 
 const ZEMGO_USERS: Array<{
   email: string; full_name: string;

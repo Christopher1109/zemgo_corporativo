@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Plug, Hospital, Briefcase } from "lucide-react";
+import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Plug, Hospital, Briefcase, MessageCircle } from "lucide-react";
 import { useProgram } from "@/lib/program-context";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ const NAV: NavItem[] = [
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, module: "incidents" },
   { to: "/hospitals", label: "Hospitales", icon: Hospital, module: "hospitals" },
   { to: "/alerts", label: "Alertas y renovaciones", icon: Bell, module: "alerts" },
+  { to: "/messages", label: "Mensajes", icon: MessageCircle, module: "messages" },
   { to: "/sales-reps", label: "Vendedores", icon: Briefcase, module: "sales_reps" },
   { to: "/reports", label: "Reportes", icon: BarChart3, module: "reports" },
   { to: "/settings", label: "Configuración", icon: Settings, module: null, requires: "manage_users" },

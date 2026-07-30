@@ -1952,6 +1952,74 @@ export type Database = {
           },
         ]
       }
+      whatsapp_messages: {
+        Row: {
+          body: string | null
+          client_id: string | null
+          created_at: string
+          direction: string
+          id: string
+          message_type: string
+          raw_payload: Json | null
+          sent_by: string | null
+          wa_message_id: string | null
+          wa_phone: string
+        }
+        Insert: {
+          body?: string | null
+          client_id?: string | null
+          created_at?: string
+          direction: string
+          id?: string
+          message_type?: string
+          raw_payload?: Json | null
+          sent_by?: string | null
+          wa_message_id?: string | null
+          wa_phone: string
+        }
+        Update: {
+          body?: string | null
+          client_id?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          message_type?: string
+          raw_payload?: Json | null
+          sent_by?: string | null
+          wa_message_id?: string | null
+          wa_phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       abc_clients: {
