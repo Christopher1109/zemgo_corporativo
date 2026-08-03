@@ -32,6 +32,7 @@ function IncidentDetail() {
   const rejectFn = useServerFn(rejectIncident);
   const revokeFn = useServerFn(revokeMedicalPass);
   const signFn = useServerFn(getMedicalPassSignedUrl);
+  const generateFn = useServerFn(generateMedicalPass);
 
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
