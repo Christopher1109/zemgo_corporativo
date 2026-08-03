@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { issueMedicalPass, rejectIncident, revokeMedicalPass, getMedicalPassSignedUrl } from "@/lib/incidents.functions";
+import { generateMedicalPass } from "@/lib/pdf/generateMedicalPass";
 import { INCIDENT_STATUS } from "./incidents.index";
 
 export const Route = createFileRoute("/_authenticated/incidents/$incidentId")({
