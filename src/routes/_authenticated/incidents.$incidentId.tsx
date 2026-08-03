@@ -177,11 +177,21 @@ function IncidentDetail() {
   }
 
   async function downloadPass(passId: string) {
+    setBusy(true);
     try {
-      const { url } = await signFn({ data: { pass_id: passId } });
+      let url: string;
+      try {
+        ({ url } = await signFn({ data: { pass_id: passId } }));
+      } catch (e: any) {
+        if (!String(e?.message ?? e).includes("pdf_not_generated")) throw e;
+        await generateFn({ data: { pass_id: passId } });
+        qc.invalidateQueries({ queryKey: ["incident-passes", incidentId] });
+        ({ url } = await signFn({ data: { pass_id: passId } }));
+      }
       window.open(url, "_blank");
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
   }
+
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-4">
