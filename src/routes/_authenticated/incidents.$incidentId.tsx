@@ -249,36 +249,53 @@ function IncidentDetail() {
             {passes.map((p: any) => {
               const expired = new Date(p.valid_until).getTime() < Date.now();
               const revoked = !!p.revoked_at;
+              const snap = (p.snapshot ?? {}) as any;
               return (
-                <div key={p.id} className="border rounded p-3 flex items-center justify-between">
-                  <div className="text-sm">
-                    <div className="font-medium">Pase {p.id.slice(0, 8)}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Emitido {new Date(p.valid_from).toLocaleString("es-MX")} · Vence {new Date(p.valid_until).toLocaleString("es-MX")}
+                <div key={p.id} className="border rounded p-3 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="text-sm">
+                      <div className="font-medium">Carta de autorización {p.id.slice(0, 8)}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Emitido {new Date(p.valid_from).toLocaleString("es-MX")} · Vence {new Date(p.valid_until).toLocaleString("es-MX")}
+                      </div>
+                      <div className="text-xs">Director: {p.director_name ?? "—"}</div>
+                      {revoked && <div className="text-xs text-red-600">ANULADO: {p.revocation_reason}</div>}
                     </div>
-                    <div className="text-xs">Director: {p.director_name ?? "—"}</div>
-                    {revoked && <div className="text-xs text-red-600">ANULADO: {p.revocation_reason}</div>}
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={revoked ? "bg-red-100 text-red-800" : expired ? "bg-gray-100" : "bg-green-100 text-green-800"}>
+                        {revoked ? "Anulado" : expired ? "Expirado" : "Activo"}
+                      </Badge>
+                      {!revoked && (
+                        <Button size="sm" variant="outline" disabled={busy} onClick={() => downloadPass(p.id)}>
+                          <FileDown className="h-4 w-4 mr-1" /> {p.pdf_url ? "Descargar PDF" : "Generar y descargar PDF"}
+                        </Button>
+                      )}
+                      {canRevoke && !revoked && !expired && (
+                        <Button size="sm" variant="destructive" onClick={() => { setRevokePassId(p.id); setReason(""); }}>
+                          <Ban className="h-4 w-4 mr-1" /> Anular
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={revoked ? "bg-red-100 text-red-800" : expired ? "bg-gray-100" : "bg-green-100 text-green-800"}>
-                      {revoked ? "Anulado" : expired ? "Expirado" : "Activo"}
-                    </Badge>
-                    {!revoked && p.pdf_url && (
-                      <Button size="sm" variant="outline" onClick={() => downloadPass(p.id)}>
-                        <FileDown className="h-4 w-4 mr-1" /> PDF
-                      </Button>
-                    )}
-                    {canRevoke && !revoked && !expired && (
-                      <Button size="sm" variant="destructive" onClick={() => { setRevokePassId(p.id); setReason(""); }}>
-                        <Ban className="h-4 w-4 mr-1" /> Anular
-                      </Button>
-                    )}
+                  <div className="grid grid-cols-2 gap-2 text-xs border-t pt-2">
+                    <Field label="Asegurado" value={snap.insured_name ?? "—"} />
+                    <Field label="CURP" value={snap.insured_curp ?? "—"} />
+                    <Field label="Programa" value={`${snap.program_code ?? "—"} ${snap.program_name ?? ""}`} />
+                    <Field label="Folio certificado" value={snap.folio ?? "—"} />
+                    <Field label="No. de póliza" value={snap.policy_number ?? "—"} />
+                    <Field label="No. Certificado" value={snap.certificate_number ?? "—"} />
+                    <Field label="Contratante" value={snap.contracting_party ?? "—"} />
+                    <Field label="Hospital" value={snap.hospital ?? "—"} />
+                    <Field label="Suma asegurada" value={snap.sum_insured ? `$${snap.sum_insured}` : "—"} />
+                    <Field label="Deducible" value={snap.deductible ? `$${snap.deductible}` : "—"} />
+                    <Field label="Fecha accidente" value={`${snap.accident_date ?? "—"} ${snap.accident_time ?? ""}`} />
                   </div>
                 </div>
               );
             })}
           </Card>
         </TabsContent>
+
 
         <TabsContent value="history">
           <Card className="p-4 space-y-2">
