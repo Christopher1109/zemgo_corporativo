@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/clients/")({
 
 function ClientsList() {
   const { activeProgram, programs } = useProgram();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [programFilter, setProgramFilter] = useState<string>("active");
   const [statusFilter, setStatusFilter] = useState<string>("all");
