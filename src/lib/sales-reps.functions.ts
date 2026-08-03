@@ -209,3 +209,75 @@ export const deleteCommissionTier = createServerFn({ method: "POST" })
     if (d.error) throw new Error(d.error.message);
     return { ok: true };
   });
+
+/** Search policies (certificates) to link/unlink to a sales rep */
+export const searchAssignablePolicies = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        search: z.string().optional(),
+        program_id: z.string().uuid().nullable().optional(),
+        only_unassigned: z.boolean().optional(),
+      })
+      .parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    let q = context.supabase
+      .from("policies")
+      .select(
+        "id, folio, status, premium, sales_rep_id, program_id, programs(code, color_primary), clients(id, first_name, last_name, curp)",
+      )
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (data.program_id) q = q.eq("program_id", data.program_id);
+    if (data.only_unassigned) q = q.is("sales_rep_id", null);
+    if (data.search && data.search.trim().length >= 2) {
+      q = q.ilike("folio", `%${data.search.trim()}%`);
+    }
+    const r = await q;
+    if (r.error) throw new Error(r.error.message);
+    return r.data ?? [];
+  });
+
+/** Link or unlink a certificate to a sales rep. Also syncs the client's rep. */
+export const setPolicySalesRep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        policy_id: z.string().uuid(),
+        sales_rep_id: z.string().uuid().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase;
+    const u = await sb
+      .from("policies")
+      .update({ sales_rep_id: data.sales_rep_id })
+      .eq("id", data.policy_id)
+      .select("id, client_id")
+      .maybeSingle();
+    if (u.error) throw new Error(u.error.message);
+    if (!u.data) throw new Error("No se pudo actualizar el certificado (permisos)");
+    if (u.data.client_id) {
+      await sb
+        .from("clients")
+        .update({ sales_rep_id: data.sales_rep_id })
+        .eq("id", u.data.client_id);
+    }
+    return { ok: true };
+  });
+
+/** Delete a sales rep and unlink all their history (admins only). */
+export const deleteSalesRep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ sales_rep_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const r = await context.supabase.rpc("delete_sales_rep", {
+      _sales_rep_id: data.sales_rep_id,
+    });
+    if (r.error) throw new Error(r.error.message);
+    return r.data as any;
+  });
