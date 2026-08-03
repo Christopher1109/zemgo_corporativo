@@ -129,7 +129,11 @@ function ClientsList() {
               <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Sin clientes registrados.</TableCell></TableRow>
             )}
             {rows.map((r: any) => (
-              <TableRow key={`${r.clients?.id}-${r.programs?.id}`}>
+              <TableRow
+                key={`${r.clients?.id}-${r.programs?.id}`}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => navigate({ to: "/clients/$clientId", params: { clientId: r.clients.id } })}
+              >
                 <TableCell className="font-medium">{r.clients?.first_name} {r.clients?.last_name}</TableCell>
                 <TableCell className="font-mono text-xs">{r.clients?.curp}</TableCell>
                 <TableCell>{r.clients?.phone ?? "—"}</TableCell>
