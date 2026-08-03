@@ -1672,6 +1672,75 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_rep_match_review: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          id: string
+          normalized_name: string
+          raw_name: string
+          resolved_sales_rep_id: string | null
+          reviewed: boolean | null
+          source: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          normalized_name: string
+          raw_name: string
+          resolved_sales_rep_id?: string | null
+          reviewed?: boolean | null
+          source?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          normalized_name?: string
+          raw_name?: string
+          resolved_sales_rep_id?: string | null
+          reviewed?: boolean | null
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_rep_match_review_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_rep_match_review_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_rep_match_review_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_rep_match_review_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_rep_match_review_resolved_sales_rep_id_fkey"
+            columns: ["resolved_sales_rep_id"]
+            isOneToOne: false
+            referencedRelation: "sales_reps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_reps: {
         Row: {
           code: string | null
@@ -2486,7 +2555,12 @@ export type Database = {
             }
             Returns: Json
           }
-      upsert_sales_rep_by_name: { Args: { _name: string }; Returns: string }
+      upsert_sales_rep_by_name:
+        | { Args: { _name: string }; Returns: string }
+        | {
+            Args: { _client_id?: string; _name: string; _source?: string }
+            Returns: string
+          }
       verify_portal_code: {
         Args: { _client_id: string; _code: string; _ip: string; _ua: string }
         Returns: Json

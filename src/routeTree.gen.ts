@@ -38,6 +38,7 @@ import { Route as AuthenticatedIncidentsNewRouteImport } from './routes/_authent
 import { Route as AuthenticatedIncidentsDashboardRouteImport } from './routes/_authenticated/incidents.dashboard'
 import { Route as AuthenticatedIncidentsIncidentIdRouteImport } from './routes/_authenticated/incidents.$incidentId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
+import { Route as AuthenticatedClientsClientIdRouteImport } from './routes/_authenticated/clients.$clientId'
 import { Route as ApiPublicHooksSheetsSyncRouteImport } from './routes/api/public/hooks/sheets-sync'
 import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
 import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
@@ -200,6 +201,12 @@ const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AuthenticatedClientsRoute,
 } as any)
+const AuthenticatedClientsClientIdRoute =
+  AuthenticatedClientsClientIdRouteImport.update({
+    id: '/$clientId',
+    path: '/$clientId',
+    getParentRoute: () => AuthenticatedClientsRoute,
+  } as any)
 const ApiPublicHooksSheetsSyncRoute =
   ApiPublicHooksSheetsSyncRouteImport.update({
     id: '/api/public/hooks/sheets-sync',
@@ -245,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
@@ -276,6 +284,7 @@ export interface FileRoutesByTo {
   '/messages': typeof AuthenticatedMessagesRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
@@ -313,6 +322,7 @@ export interface FileRoutesById {
   '/_authenticated/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
   '/_authenticated/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/_authenticated/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
@@ -350,6 +360,7 @@ export interface FileRouteTypes {
     | '/policies'
     | '/reports'
     | '/settings'
+    | '/clients/$clientId'
     | '/clients/new'
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
@@ -381,6 +392,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/reports'
     | '/settings'
+    | '/clients/$clientId'
     | '/clients/new'
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
@@ -417,6 +429,7 @@ export interface FileRouteTypes {
     | '/_authenticated/policies'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/_authenticated/clients/$clientId'
     | '/_authenticated/clients/new'
     | '/_authenticated/incidents/$incidentId'
     | '/_authenticated/incidents/dashboard'
@@ -656,6 +669,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsNewRouteImport
       parentRoute: typeof AuthenticatedClientsRoute
     }
+    '/_authenticated/clients/$clientId': {
+      id: '/_authenticated/clients/$clientId'
+      path: '/$clientId'
+      fullPath: '/clients/$clientId'
+      preLoaderRoute: typeof AuthenticatedClientsClientIdRouteImport
+      parentRoute: typeof AuthenticatedClientsRoute
+    }
     '/api/public/hooks/sheets-sync': {
       id: '/api/public/hooks/sheets-sync'
       path: '/api/public/hooks/sheets-sync'
@@ -695,11 +715,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedClientsRouteChildren {
+  AuthenticatedClientsClientIdRoute: typeof AuthenticatedClientsClientIdRoute
   AuthenticatedClientsNewRoute: typeof AuthenticatedClientsNewRoute
   AuthenticatedClientsIndexRoute: typeof AuthenticatedClientsIndexRoute
 }
 
 const AuthenticatedClientsRouteChildren: AuthenticatedClientsRouteChildren = {
+  AuthenticatedClientsClientIdRoute: AuthenticatedClientsClientIdRoute,
   AuthenticatedClientsNewRoute: AuthenticatedClientsNewRoute,
   AuthenticatedClientsIndexRoute: AuthenticatedClientsIndexRoute,
 }
