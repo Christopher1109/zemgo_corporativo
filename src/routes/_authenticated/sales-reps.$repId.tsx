@@ -1,11 +1,37 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getSalesRepDetail } from "@/lib/sales-reps.functions";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  getSalesRepDetail,
+  searchAssignablePolicies,
+  setPolicySalesRep,
+  deleteSalesRep,
+} from "@/lib/sales-reps.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, User, Phone, DollarSign, FileText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, User, FileText, Plus, Trash2, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/sales-reps/$repId")({
   head: () => ({ meta: [{ title: "Vendedor — ZEMGO" }] }),
