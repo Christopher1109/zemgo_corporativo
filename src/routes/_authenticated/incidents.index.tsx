@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/incidents/")({
 export const INCIDENT_STATUS: Record<string, { label: string; cls: string }> = {
   reported: { label: "Reportado", cls: "bg-yellow-100 text-yellow-800 border-yellow-300" },
   pending_review: { label: "En revisión", cls: "bg-orange-100 text-orange-800 border-orange-300" },
-  pass_issued: { label: "Pase emitido", cls: "bg-green-100 text-green-800 border-green-300" },
+  pass_issued: { label: "Carta emitida", cls: "bg-green-100 text-green-800 border-green-300" },
   pass_expired: { label: "Pase expirado", cls: "bg-gray-100 text-gray-700 border-gray-300" },
   in_treatment: { label: "En tratamiento", cls: "bg-blue-100 text-blue-800 border-blue-300" },
   closed: { label: "Cerrado", cls: "bg-gray-200 text-gray-900 border-gray-400" },
@@ -202,7 +202,7 @@ function PassDownloadButton({ passes }: { passes: Array<{ id: string; pdf_url: s
       size="sm"
       variant="outline"
       className="h-7 px-2"
-      title={isExpired ? "Pase vencido (descargar copia)" : "Descargar pase médico"}
+      title={isExpired ? "Carta vencida (descargar copia)" : "Descargar carta de aviso de accidente"}
       onClick={async () => {
         try {
           const { url } = await fn({ data: { pass_id: active.id } });
