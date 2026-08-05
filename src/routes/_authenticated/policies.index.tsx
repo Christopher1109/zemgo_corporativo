@@ -52,6 +52,8 @@ function PoliciesList() {
         .select(
           "id, folio, status, start_date, end_date, premium, programs(id,name,color_primary), clients(id,first_name,last_name)",
         )
+        // Corporate certificates are managed inside the company folder.
+        .is("company_id", null)
         .order("created_at", { ascending: false })
         .limit(200);
       if (effectiveProgramId) q = q.eq("program_id", effectiveProgramId);
