@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Plug, Hospital, Briefcase, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Hospital, Briefcase, MessageCircle } from "lucide-react";
 import { useProgram } from "@/lib/program-context";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -46,10 +46,6 @@ const NAV: NavItem[] = [
   { to: "/settings", label: "Configuración", icon: Settings, module: null, requires: "manage_users" },
 ];
 
-
-const ADMIN_NAV = [
-  { to: "/admin/integrations/google-sheets", label: "Google Sheets", icon: Plug },
-] as const;
 
 export function useIsSuperAdmin() {
   const { user } = useAuth();
@@ -169,33 +165,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
-
-
-          {isSuperAdmin && (
-            <div className="pt-4">
-              <div className="px-3 pb-1 text-[10px] uppercase tracking-widest opacity-60">
-                Integraciones
-              </div>
-              {ADMIN_NAV.map((item) => {
-                const Icon = item.icon;
-                const active = pathname === item.to || pathname.startsWith(item.to + "/");
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition",
-                      active ? "bg-white/20 font-medium" : "hover:bg-white/10",
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="flex-1">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
         </nav>
+
 
 
 
