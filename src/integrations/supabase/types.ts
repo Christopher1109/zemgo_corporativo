@@ -235,6 +235,7 @@ export type Database = {
           address_full: string | null
           city: string | null
           colonia: string | null
+          company_id: string | null
           created_at: string
           created_by: string | null
           curp: string
@@ -261,6 +262,7 @@ export type Database = {
           address_full?: string | null
           city?: string | null
           colonia?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           curp: string
@@ -287,6 +289,7 @@ export type Database = {
           address_full?: string | null
           city?: string | null
           colonia?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           curp?: string
@@ -310,6 +313,13 @@ export type Database = {
           zip?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "clients_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "clients_sales_rep_id_fkey"
             columns: ["sales_rep_id"]
@@ -356,6 +366,112 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          address_full: string | null
+          city: string | null
+          contact_name: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          is_active: boolean
+          legal_name: string
+          notes: string | null
+          phone: string | null
+          program_id: string
+          rfc: string | null
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_full?: string | null
+          city?: string | null
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          legal_name: string
+          notes?: string | null
+          phone?: string | null
+          program_id: string
+          rfc?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_full?: string | null
+          city?: string | null
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          legal_name?: string
+          notes?: string | null
+          phone?: string | null
+          program_id?: string
+          rfc?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_imports: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          details: Json
+          file_name: string | null
+          id: string
+          rows_created: number
+          rows_detected: number
+          rows_failed: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          details?: Json
+          file_name?: string | null
+          id?: string
+          rows_created?: number
+          rows_detected?: number
+          rows_failed?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          details?: Json
+          file_name?: string | null
+          id?: string
+          rows_created?: number
+          rows_detected?: number
+          rows_failed?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_imports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -1092,6 +1208,7 @@ export type Database = {
           certificate_number: string | null
           certificate_pdf_url: string | null
           client_id: string
+          company_id: string | null
           contracting_party: string | null
           contractor_id: string | null
           created_at: string
@@ -1116,6 +1233,7 @@ export type Database = {
           certificate_number?: string | null
           certificate_pdf_url?: string | null
           client_id: string
+          company_id?: string | null
           contracting_party?: string | null
           contractor_id?: string | null
           created_at?: string
@@ -1140,6 +1258,7 @@ export type Database = {
           certificate_number?: string | null
           certificate_pdf_url?: string | null
           client_id?: string
+          company_id?: string | null
           contracting_party?: string | null
           contractor_id?: string | null
           created_at?: string
@@ -1187,6 +1306,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "manos_con_valor_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
           {

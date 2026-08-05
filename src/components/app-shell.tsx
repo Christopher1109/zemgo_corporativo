@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Hospital, Briefcase, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Hospital, Briefcase, MessageCircle, Building2 } from "lucide-react";
 import { useProgram } from "@/lib/program-context";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, module: null },
   { to: "/clients", label: "Clientes", icon: Users, module: "clients" },
+  { to: "/companies", label: "Empresas", icon: Building2, module: "clients" },
   { to: "/policies", label: "Certificados", icon: FileText, module: "policies" },
   { to: "/payments", label: "Pagos", icon: CreditCard, module: "payments" },
   { to: "/finance", label: "Finanzas", icon: Wallet, module: "finance" },

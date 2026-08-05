@@ -27,6 +27,7 @@ import { Route as AuthenticatedSalesRepsIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedPoliciesIndexRouteImport } from './routes/_authenticated/policies.index'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments.index'
 import { Route as AuthenticatedIncidentsIndexRouteImport } from './routes/_authenticated/incidents.index'
+import { Route as AuthenticatedCompaniesIndexRouteImport } from './routes/_authenticated/companies.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
 import { Route as ApiPublicPdfSmokeRouteImport } from './routes/api/public/pdf-smoke'
 import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
@@ -37,6 +38,7 @@ import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_au
 import { Route as AuthenticatedIncidentsNewRouteImport } from './routes/_authenticated/incidents.new'
 import { Route as AuthenticatedIncidentsDashboardRouteImport } from './routes/_authenticated/incidents.dashboard'
 import { Route as AuthenticatedIncidentsIncidentIdRouteImport } from './routes/_authenticated/incidents.$incidentId'
+import { Route as AuthenticatedCompaniesCompanyIdRouteImport } from './routes/_authenticated/companies.$companyId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
 import { Route as AuthenticatedClientsClientIdRouteImport } from './routes/_authenticated/clients.$clientId'
 import { Route as ApiPublicHooksSheetsSyncRouteImport } from './routes/api/public/hooks/sheets-sync'
@@ -138,6 +140,12 @@ const AuthenticatedIncidentsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedIncidentsRoute,
   } as any)
+const AuthenticatedCompaniesIndexRoute =
+  AuthenticatedCompaniesIndexRouteImport.update({
+    id: '/companies/',
+    path: '/companies/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedClientsIndexRoute =
   AuthenticatedClientsIndexRouteImport.update({
     id: '/',
@@ -195,6 +203,12 @@ const AuthenticatedIncidentsIncidentIdRoute =
     id: '/$incidentId',
     path: '/$incidentId',
     getParentRoute: () => AuthenticatedIncidentsRoute,
+  } as any)
+const AuthenticatedCompaniesCompanyIdRoute =
+  AuthenticatedCompaniesCompanyIdRouteImport.update({
+    id: '/companies/$companyId',
+    path: '/companies/$companyId',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   id: '/new',
@@ -254,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/incidents/new': typeof AuthenticatedIncidentsNewRoute
@@ -264,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
+  '/companies/': typeof AuthenticatedCompaniesIndexRoute
   '/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
@@ -286,6 +302,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/incidents/new': typeof AuthenticatedIncidentsNewRoute
@@ -296,6 +313,7 @@ export interface FileRoutesByTo {
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
+  '/companies': typeof AuthenticatedCompaniesIndexRoute
   '/incidents': typeof AuthenticatedIncidentsIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
@@ -324,6 +342,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
+  '/_authenticated/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/_authenticated/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/_authenticated/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/_authenticated/incidents/new': typeof AuthenticatedIncidentsNewRoute
@@ -334,6 +353,7 @@ export interface FileRoutesById {
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
+  '/_authenticated/companies/': typeof AuthenticatedCompaniesIndexRoute
   '/_authenticated/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
@@ -362,6 +382,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/clients/$clientId'
     | '/clients/new'
+    | '/companies/$companyId'
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
     | '/incidents/new'
@@ -372,6 +393,7 @@ export interface FileRouteTypes {
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/clients/'
+    | '/companies/'
     | '/incidents/'
     | '/payments/'
     | '/policies/'
@@ -394,6 +416,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/clients/$clientId'
     | '/clients/new'
+    | '/companies/$companyId'
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
     | '/incidents/new'
@@ -404,6 +427,7 @@ export interface FileRouteTypes {
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/clients'
+    | '/companies'
     | '/incidents'
     | '/payments'
     | '/policies'
@@ -431,6 +455,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/clients/$clientId'
     | '/_authenticated/clients/new'
+    | '/_authenticated/companies/$companyId'
     | '/_authenticated/incidents/$incidentId'
     | '/_authenticated/incidents/dashboard'
     | '/_authenticated/incidents/new'
@@ -441,6 +466,7 @@ export interface FileRouteTypes {
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/_authenticated/clients/'
+    | '/_authenticated/companies/'
     | '/_authenticated/incidents/'
     | '/_authenticated/payments/'
     | '/_authenticated/policies/'
@@ -592,6 +618,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIncidentsIndexRouteImport
       parentRoute: typeof AuthenticatedIncidentsRoute
     }
+    '/_authenticated/companies/': {
+      id: '/_authenticated/companies/'
+      path: '/companies'
+      fullPath: '/companies/'
+      preLoaderRoute: typeof AuthenticatedCompaniesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/clients/': {
       id: '/_authenticated/clients/'
       path: '/'
@@ -661,6 +694,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/incidents/$incidentId'
       preLoaderRoute: typeof AuthenticatedIncidentsIncidentIdRouteImport
       parentRoute: typeof AuthenticatedIncidentsRoute
+    }
+    '/_authenticated/companies/$companyId': {
+      id: '/_authenticated/companies/$companyId'
+      path: '/companies/$companyId'
+      fullPath: '/companies/$companyId'
+      preLoaderRoute: typeof AuthenticatedCompaniesCompanyIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/clients/new': {
       id: '/_authenticated/clients/new'
@@ -794,7 +834,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedCompaniesCompanyIdRoute: typeof AuthenticatedCompaniesCompanyIdRoute
   AuthenticatedSalesRepsRepIdRoute: typeof AuthenticatedSalesRepsRepIdRoute
+  AuthenticatedCompaniesIndexRoute: typeof AuthenticatedCompaniesIndexRoute
   AuthenticatedSalesRepsIndexRoute: typeof AuthenticatedSalesRepsIndexRoute
   AuthenticatedAdminIntegrationsGoogleSheetsRoute: typeof AuthenticatedAdminIntegrationsGoogleSheetsRoute
 }
@@ -811,7 +853,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedCompaniesCompanyIdRoute: AuthenticatedCompaniesCompanyIdRoute,
   AuthenticatedSalesRepsRepIdRoute: AuthenticatedSalesRepsRepIdRoute,
+  AuthenticatedCompaniesIndexRoute: AuthenticatedCompaniesIndexRoute,
   AuthenticatedSalesRepsIndexRoute: AuthenticatedSalesRepsIndexRoute,
   AuthenticatedAdminIntegrationsGoogleSheetsRoute:
     AuthenticatedAdminIntegrationsGoogleSheetsRoute,

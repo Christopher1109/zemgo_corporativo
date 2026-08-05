@@ -32,7 +32,7 @@ function ClientsList() {
       let q = supabase
         .from("client_programs")
         .select(
-          "status, enrolled_at, programs(id,code,name,color_primary), clients(id,first_name,last_name,curp,phone,email,created_at)",
+          "status, enrolled_at, programs(id,code,name,color_primary), clients(id,first_name,last_name,curp,phone,email,created_at,company_id)",
         )
         .order("enrolled_at", { ascending: false })
         .limit(200);
@@ -42,6 +42,8 @@ function ClientsList() {
       if (error) throw error;
       const term = search.trim().toLowerCase();
       return (data ?? []).filter((r: any) => {
+        // Corporate insureds live inside their company folder, not in this list.
+        if (r.clients?.company_id) return false;
         if (!term) return true;
         const c = r.clients;
         return (
@@ -57,7 +59,7 @@ function ClientsList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Clientes</h1>
-          <p className="text-sm text-muted-foreground">Listado de clientes y afiliaciones por programa.</p>
+          <p className="text-sm text-muted-foreground">Clientes individuales y sus afiliaciones. Los asegurados de empresas se consolidan en <Link to="/companies" className="underline">Empresas</Link>.</p>
         </div>
         <Button asChild>
           <Link to="/clients/new">

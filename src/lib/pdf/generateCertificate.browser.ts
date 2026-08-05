@@ -66,3 +66,10 @@ export async function generateCertificateClient(
   });
   return { url: res.url };
 }
+
+/** Render a certificate PDF in the browser and return the raw bytes (used for bulk ZIP downloads). */
+export async function renderCertificateBlob(policyId: string): Promise<Blob> {
+  const { programCode, payload } = await getCertificatePayload({ data: { policy_id: policyId } });
+  const { pdf } = await import("@react-pdf/renderer");
+  return await pdf(buildDoc(programCode, payload) as any).toBlob();
+}
