@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Plug, Hospital, Briefcase, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Hospital, Briefcase, MessageCircle } from "lucide-react";
 import { useProgram } from "@/lib/program-context";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -46,10 +46,6 @@ const NAV: NavItem[] = [
   { to: "/settings", label: "Configuración", icon: Settings, module: null, requires: "manage_users" },
 ];
 
-
-const ADMIN_NAV = [
-  { to: "/admin/integrations/google-sheets", label: "Google Sheets", icon: Plug },
-] as const;
 
 export function useIsSuperAdmin() {
   const { user } = useAuth();
