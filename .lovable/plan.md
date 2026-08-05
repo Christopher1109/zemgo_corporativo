@@ -1,27 +1,59 @@
-## Paso 1 — Resultado de la auditoría (verificado en base de datos y código)
+# Vendedores, empresas y siniestros
 
-**Sí hay RLS real, y ya no es solo visual.** Estado actual confirmado con consultas:
+Ya hecho en esta respuesta: se quitó del menú lateral la sección "Integraciones" y el enlace de Google Sheets (el sync automático sigue corriendo por detrás).
 
-1. **Programas**: la tabla `programs` solo devuelve los programas donde el usuario tiene fila en `user_program_access`. La causa original de "la operadora ve los tres" no era un bug de código: el seed le dio acceso a FUTCARE, ABC y MCV en la tabla de accesos.
-2. **Módulos (checkboxes)**: antes eran solo visuales. Hoy las políticas RLS de `clients`, `client_programs`, `policies`, `payments`, `payment_schedules`, `incidents`, `medical_passes`, `hospitals`, `beneficiaries`, `dependents`, `sales_reps` y `commission_tiers` usan `can_read_program_module` / `can_write_program_module`, es decir, el filtro por módulo ya se aplica a nivel de datos.
-3. **Roles**: `admin@hope.local` es el único en `platform_admins` → único Superadministrador (única cuenta con Integraciones). Los 5 usuarios pedidos (abelardo, alejandro, alan.gomez, ing.javier, saira) ya están como **admin** en FUTCARE, ABC y MCV con todos los módulos.
-4. **Configuración/Usuarios**: las funciones de gestión (`update_user_program_access`, `deactivate_user`, `reactivate_user`, `delete_user_account`) exigen `can_manage_users` = Superadmin o admin de programa. Crear y **eliminar** usuarios ya existe.
-5. **Integraciones**: las server functions de Google Sheets exigen Superadministrador; el sidebar y el guard de ruta también.
+## 1. Comisiones por evento (nuevo modelo)
 
-## Hallazgo pendiente
+Hoy la comisión se calcula con escalones sobre la prima total. Se reemplaza por comisión por pago cobrado:
 
-- `christocr9@gmail.com` figura como **admin en los 3 programas** y no está en tu lista de 5. Eso le da acceso a Configuración y gestión de usuarios.
+- Primer pago de un cliente nuevo: 20% del monto pagado.
+- Cualquier pago posterior (renovación mensual de ABC, renovación anual de FutCare y Humanos con Valor): 10% del monto pagado.
 
-## Qué haría a continuación
+Reglas:
+- La comisión se genera solo cuando el pago queda marcado como pagado/conciliado.
+- Se guarda como registro propio (vendedor, certificado, pago, tipo nuevo/renovación, porcentaje, monto) para que quede historial auditable y no se recalcule al cambiar tarifas.
+- Los pagos ya pagados se cargan una vez hacia atrás para que el panel arranque con datos reales.
 
-1. **Ajustar `christocr9@gmail.com`**: bajarlo a operator (o quitarle acceso) según me indiques — o dejarlo si es tu cuenta.
-2. **Verificación en vivo**: iniciar sesión como una operadora acotada (ej. `laura.castro`, con solo pagos/finanzas/vendedores) y comprobar por navegador que:
-   - el selector de programas solo muestra los suyos,
-   - `/clients`, `/incidents`, `/settings` y `/admin/integrations/google-sheets` quedan bloqueados por URL directa,
-   - las consultas a la API devuelven vacío/denegado para esos módulos.
-3. **Corregir lo que falle** en esa verificación (política o guard que se haya escapado) y reportar el resultado.
+## 2. Nueva vista de cartera del vendedor
 
-### Detalle técnico
-La verificación se hace con Playwright contra localhost restaurando la sesión, más consultas directas comprobando `can_read_program_module` para el usuario de prueba.
+Reemplaza la lista plana actual:
 
-¿Qué hago con `christocr9@gmail.com`?
+- Encabezado con: comisión del mes en curso, comisión pagada acumulada del año, prima cobrada y número de clientes.
+- Desglose del mes: cuánto viene de clientes nuevos (20%) y cuánto de renovaciones (10%).
+- Cartera agrupada por estado del cliente: activo, prospecto, suspendido/inactivo, vencido — con conteo por grupo y filtro rápido.
+- Cada renglón: cliente, programa, folio, estado, próxima fecha de pago, monto y comisión asociada.
+- Sección "Próximas renovaciones" con la comisión estimada que generará cada una.
+- Se conservan las acciones actuales: agregar certificado, quitar certificado, eliminar vendedor.
+
+## 3. Clientes tipo Empresa
+
+En "Nuevo cliente" se pregunta primero: Empresa o Persona.
+
+Empresa:
+- Se captura razón social, RFC, contacto y programa; queda como carpeta, no como certificado individual.
+- Dentro de la empresa: botón para descargar la plantilla Excel con las columnas requeridas (nombre, apellidos, CURP, RFC, fecha de nacimiento, género, estado civil, dependientes, email, teléfono, domicilio).
+- Botón para subir el Excel devuelto por la empresa: el sistema valida fila por fila, muestra errores (CURP inválido, duplicado, campos faltantes) y crea un certificado por persona en estado pendiente.
+- Panel de la empresa con avance: cargados / aprobados / pagados.
+- Cuando todos están aprobados y pagados, botón "Descargar certificados" que entrega un ZIP con un PDF por empleado.
+
+Consolidación:
+- En "Clientes" y "Certificados" la empresa aparece como un solo renglón (p. ej. "Sams — 200 asegurados"); el desglose vive dentro del detalle de la empresa, no en la lista general.
+
+## 4. Siniestros: carta de aviso de accidente
+
+- En el detalle del siniestro, la sección "Pases médicos" se renombra a "Carta de aviso de accidente".
+- Se muestra la carta correspondiente a ese siniestro, con la información que llenó el cliente en el portal, guardada en la base de datos.
+- Botón de descarga del PDF; si aún no existe archivo, se genera al momento a partir de los datos guardados.
+
+## Detalles técnicos
+
+- Nueva tabla `sales_commissions` (vendedor, pago, certificado, tipo, porcentaje, monto, periodo) más trigger/actualización en el flujo de `mark_payment_paid` y de conciliación bancaria.
+- Nueva tabla `companies` (o `client_groups`) + `company_id` en `clients`/`policies` para consolidar y para el flujo de carga masiva; registro de cada importación con su resultado por fila.
+- Importación y plantilla Excel en servidor con `xlsx`; generación del ZIP reutilizando los renderers PDF existentes por programa.
+- La carta de aviso reutiliza el registro actual de pases (`medical_passes`) renombrado en UI y consultado solo por `incident_id`, sin filtrar por estado.
+
+## Orden de entrega
+
+1. Comisiones + nueva vista de cartera del vendedor.
+2. Carta de aviso de accidente en siniestros.
+3. Empresas: alta, plantilla, importación de Excel, consolidación y ZIP de certificados.
