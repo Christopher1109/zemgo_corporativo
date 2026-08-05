@@ -27,6 +27,7 @@ import { Route as AuthenticatedSalesRepsIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedPoliciesIndexRouteImport } from './routes/_authenticated/policies.index'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments.index'
 import { Route as AuthenticatedIncidentsIndexRouteImport } from './routes/_authenticated/incidents.index'
+import { Route as AuthenticatedCompaniesIndexRouteImport } from './routes/_authenticated/companies.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
 import { Route as ApiPublicPdfSmokeRouteImport } from './routes/api/public/pdf-smoke'
 import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
@@ -137,6 +138,12 @@ const AuthenticatedIncidentsIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedIncidentsRoute,
+  } as any)
+const AuthenticatedCompaniesIndexRoute =
+  AuthenticatedCompaniesIndexRouteImport.update({
+    id: '/companies/',
+    path: '/companies/',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedClientsIndexRoute =
   AuthenticatedClientsIndexRouteImport.update({
@@ -264,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
+  '/companies/': typeof AuthenticatedCompaniesIndexRoute
   '/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
@@ -296,6 +304,7 @@ export interface FileRoutesByTo {
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
+  '/companies': typeof AuthenticatedCompaniesIndexRoute
   '/incidents': typeof AuthenticatedIncidentsIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
@@ -334,6 +343,7 @@ export interface FileRoutesById {
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
   '/api/public/pdf-smoke': typeof ApiPublicPdfSmokeRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
+  '/_authenticated/companies/': typeof AuthenticatedCompaniesIndexRoute
   '/_authenticated/incidents/': typeof AuthenticatedIncidentsIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
@@ -372,6 +382,7 @@ export interface FileRouteTypes {
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/clients/'
+    | '/companies/'
     | '/incidents/'
     | '/payments/'
     | '/policies/'
@@ -404,6 +415,7 @@ export interface FileRouteTypes {
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/clients'
+    | '/companies'
     | '/incidents'
     | '/payments'
     | '/policies'
@@ -441,6 +453,7 @@ export interface FileRouteTypes {
     | '/api/public/bootstrap'
     | '/api/public/pdf-smoke'
     | '/_authenticated/clients/'
+    | '/_authenticated/companies/'
     | '/_authenticated/incidents/'
     | '/_authenticated/payments/'
     | '/_authenticated/policies/'
@@ -591,6 +604,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/incidents/'
       preLoaderRoute: typeof AuthenticatedIncidentsIndexRouteImport
       parentRoute: typeof AuthenticatedIncidentsRoute
+    }
+    '/_authenticated/companies/': {
+      id: '/_authenticated/companies/'
+      path: '/companies'
+      fullPath: '/companies/'
+      preLoaderRoute: typeof AuthenticatedCompaniesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/clients/': {
       id: '/_authenticated/clients/'
@@ -795,6 +815,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSalesRepsRepIdRoute: typeof AuthenticatedSalesRepsRepIdRoute
+  AuthenticatedCompaniesIndexRoute: typeof AuthenticatedCompaniesIndexRoute
   AuthenticatedSalesRepsIndexRoute: typeof AuthenticatedSalesRepsIndexRoute
   AuthenticatedAdminIntegrationsGoogleSheetsRoute: typeof AuthenticatedAdminIntegrationsGoogleSheetsRoute
 }
@@ -812,6 +833,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSalesRepsRepIdRoute: AuthenticatedSalesRepsRepIdRoute,
+  AuthenticatedCompaniesIndexRoute: AuthenticatedCompaniesIndexRoute,
   AuthenticatedSalesRepsIndexRoute: AuthenticatedSalesRepsIndexRoute,
   AuthenticatedAdminIntegrationsGoogleSheetsRoute:
     AuthenticatedAdminIntegrationsGoogleSheetsRoute,
