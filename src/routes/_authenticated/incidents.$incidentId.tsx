@@ -144,7 +144,7 @@ function IncidentDetail() {
           hospital: hospitalOverride || incident.hospital || "",
         },
       });
-      toast.success("Pase médico emitido");
+      toast.success("Carta de aviso de accidente emitida");
       setApproveOpen(false);
       setConfirmed(false);
       qc.invalidateQueries({ queryKey: ["incident", incidentId] });
@@ -171,7 +171,7 @@ function IncidentDetail() {
     setBusy(true);
     try {
       await revokeFn({ data: { pass_id: revokePassId, reason } });
-      toast.success("Pase anulado");
+      toast.success("Carta anulada");
       setRevokePassId(null); setReason("");
       qc.invalidateQueries({ queryKey: ["incident-passes", incidentId] });
       qc.invalidateQueries({ queryKey: ["incident-history", incidentId] });
@@ -217,7 +217,7 @@ function IncidentDetail() {
         <TabsList>
           <TabsTrigger value="info">Siniestro</TabsTrigger>
           <TabsTrigger value="insured">Asegurado y certificado</TabsTrigger>
-          <TabsTrigger value="passes">Pases médicos ({passes.length})</TabsTrigger>
+          <TabsTrigger value="passes">Cartas de aviso de accidente ({passes.length})</TabsTrigger>
           <TabsTrigger value="history">Historial</TabsTrigger>
         </TabsList>
 
@@ -257,7 +257,7 @@ function IncidentDetail() {
 
         <TabsContent value="passes">
           <Card className="p-4 space-y-3">
-            {passes.length === 0 && <div className="text-sm text-muted-foreground">Sin pases médicos emitidos.</div>}
+            {passes.length === 0 && <div className="text-sm text-muted-foreground">Aún no hay carta de aviso de accidente para este siniestro.</div>}
             {passes.map((p: any) => {
               const expired = new Date(p.valid_until).getTime() < Date.now();
               const revoked = !!p.revoked_at;
@@ -266,7 +266,7 @@ function IncidentDetail() {
                 <div key={p.id} className="border rounded p-3 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="text-sm">
-                      <div className="font-medium">Carta de autorización {p.id.slice(0, 8)}</div>
+                      <div className="font-medium">Carta de aviso de accidente {p.id.slice(0, 8)}</div>
                       <div className="text-xs text-muted-foreground">
                         Emitido {new Date(p.valid_from).toLocaleString("es-MX")} · Vence {new Date(p.valid_until).toLocaleString("es-MX")}
                       </div>
@@ -326,7 +326,7 @@ function IncidentDetail() {
       {/* Approve dialog */}
       <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Aprobar y emitir pase médico</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Aprobar y emitir carta de aviso de accidente</DialogTitle></DialogHeader>
           <div className="space-y-3 text-sm">
             <div className="bg-muted p-3 rounded">
               <div><b>Asegurado:</b> {incident.clients.first_name} {incident.clients.last_name}</div>
@@ -351,7 +351,7 @@ function IncidentDetail() {
             </div>
             <label className="flex items-start gap-2">
               <Checkbox checked={confirmed} onCheckedChange={(c) => setConfirmed(c === true)} />
-              <span className="text-xs">Confirmo que revisé el caso y autorizo la emisión del pase médico.</span>
+              <span className="text-xs">Confirmo que revisé el caso y autorizo la emisión de la carta de aviso de accidente.</span>
             </label>
           </div>
           <DialogFooter>
@@ -385,7 +385,7 @@ function IncidentDetail() {
       {/* Revoke dialog */}
       <Dialog open={!!revokePassId} onOpenChange={(o) => !o && setRevokePassId(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Anular pase médico</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Anular carta de aviso de accidente</DialogTitle></DialogHeader>
           <div className="space-y-3 text-sm">
             <div className="text-red-600 font-medium">Esta acción es irreversible.</div>
             <div>
@@ -395,7 +395,7 @@ function IncidentDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRevokePassId(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={handleRevoke} disabled={busy}>Anular pase</Button>
+            <Button variant="destructive" onClick={handleRevoke} disabled={busy}>Anular carta</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

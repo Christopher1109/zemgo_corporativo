@@ -113,7 +113,7 @@ function NewIncident() {
         },
       });
       if ((res as any).auto_pass?.pass_id) {
-        toast.success("Siniestro reportado y pase médico emitido");
+        toast.success("Siniestro reportado y carta de aviso de accidente emitida");
       } else if ((res as any).auto_pass_error) {
         toast.success("Siniestro reportado. El pase se emite manualmente desde el detalle.");
       } else {
@@ -207,7 +207,7 @@ function NewIncident() {
             className="mt-0.5 h-4 w-4"
           />
           <div className="text-sm">
-            <div className="font-medium">Emitir pase médico automáticamente</div>
+            <div className="font-medium">Emitir carta de aviso de accidente automáticamente</div>
             <div className="text-xs text-muted-foreground">
               Si capturas hospital y existe un director admin/manager en el programa, el pase se genera al reportar el siniestro. Si no, puedes emitirlo manualmente desde el detalle.
             </div>
