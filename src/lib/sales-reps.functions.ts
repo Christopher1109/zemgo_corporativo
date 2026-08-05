@@ -2,23 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-/** Tier lookup helper */
-function pickTier(tiers: any[], clientCount: number, programId: string | null) {
-  const filtered = tiers.filter(
-    (t) => t.program_id === programId || t.program_id === null,
-  );
-  // Program-specific tier wins over global
-  const sorted = filtered.sort(
-    (a, b) => (a.program_id ? 0 : 1) - (b.program_id ? 0 : 1),
-  );
-  return (
-    sorted.find(
-      (t) =>
-        clientCount >= (t.min_clients ?? 0) &&
-        (t.max_clients == null || clientCount <= t.max_clients),
-    ) ?? null
-  );
-}
 
 const COMMISSION_NEW = 20;
 const COMMISSION_RENEWAL = 10;
