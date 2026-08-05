@@ -20,7 +20,14 @@ function pickTier(tiers: any[], clientCount: number, programId: string | null) {
   );
 }
 
-/** List all sales reps with their aggregate stats. */
+const COMMISSION_NEW = 20;
+const COMMISSION_RENEWAL = 10;
+
+function monthKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/** List all sales reps with commission-based stats. */
 export const listSalesReps = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
@@ -35,12 +42,11 @@ export const listSalesReps = createServerFn({ method: "GET" })
 
     const repsQ = await sb
       .from("sales_reps")
-      .select("id, full_name, referral_source, code, commission_rate, is_active")
+      .select("id, full_name, referral_source, code, is_active")
       .order("full_name");
     if (repsQ.error) throw new Error(repsQ.error.message);
     const reps = repsQ.data ?? [];
 
-    // Aggregate: count active policies + premium per rep
     let polQ = sb
       .from("policies")
       .select("sales_rep_id, premium, status, program_id, client_id")
@@ -49,11 +55,15 @@ export const listSalesReps = createServerFn({ method: "GET" })
     const pol = await polQ;
     if (pol.error) throw new Error(pol.error.message);
 
-    const tiersQ = await sb
-      .from("commission_tiers")
-      .select("id, program_id, min_clients, max_clients, percentage, label");
-    if (tiersQ.error) throw new Error(tiersQ.error.message);
-    const tiers = tiersQ.data ?? [];
+    let comQ = sb
+      .from("sales_commissions")
+      .select("sales_rep_id, kind, amount, base_amount, period, program_id");
+    if (programId) comQ = comQ.eq("program_id", programId);
+    const com = await comQ;
+    if (com.error) throw new Error(com.error.message);
+
+    const thisMonth = monthKey(new Date());
+    const thisYear = String(new Date().getFullYear());
 
     const stats = new Map<
       string,
@@ -61,12 +71,7 @@ export const listSalesReps = createServerFn({ method: "GET" })
     >();
     for (const p of pol.data ?? []) {
       const rid = p.sales_rep_id as string;
-      const s = stats.get(rid) ?? {
-        active: 0,
-        total: 0,
-        premium: 0,
-        clients: new Set<string>(),
-      };
+      const s = stats.get(rid) ?? { active: 0, total: 0, premium: 0, clients: new Set<string>() };
       s.total += 1;
       if (p.status === "active") s.active += 1;
       s.premium += Number(p.premium ?? 0);
@@ -74,46 +79,50 @@ export const listSalesReps = createServerFn({ method: "GET" })
       stats.set(rid, s);
     }
 
+    const comStats = new Map<
+      string,
+      { month: number; month_new: number; month_renewal: number; year: number; lifetime: number; collected: number }
+    >();
+    for (const c of com.data ?? []) {
+      const rid = c.sales_rep_id as string;
+      const s =
+        comStats.get(rid) ??
+        { month: 0, month_new: 0, month_renewal: 0, year: 0, lifetime: 0, collected: 0 };
+      const amt = Number(c.amount ?? 0);
+      const period = String(c.period ?? "");
+      s.lifetime += amt;
+      s.collected += Number(c.base_amount ?? 0);
+      if (period.startsWith(thisYear)) s.year += amt;
+      if (period.startsWith(thisMonth)) {
+        s.month += amt;
+        if (c.kind === "new") s.month_new += amt;
+        else s.month_renewal += amt;
+      }
+      comStats.set(rid, s);
+    }
+
     return reps.map((r) => {
-      const s = stats.get(r.id) ?? {
-        active: 0,
-        total: 0,
-        premium: 0,
-        clients: new Set<string>(),
-      };
-      const clientCount = s.clients.size;
-      const tier = pickTier(tiers, clientCount, programId);
-      const rate = Number(tier?.percentage ?? r.commission_rate ?? 0);
-      const commission = (s.premium * rate) / 100;
-      // Next tier (min_clients > current)
-      const upcoming = tiers
-        .filter(
-          (t) =>
-            (t.program_id === programId || t.program_id === null) &&
-            (t.min_clients ?? 0) > clientCount,
-        )
-        .sort((a, b) => (a.min_clients ?? 0) - (b.min_clients ?? 0))[0];
+      const s = stats.get(r.id) ?? { active: 0, total: 0, premium: 0, clients: new Set<string>() };
+      const c =
+        comStats.get(r.id) ??
+        { month: 0, month_new: 0, month_renewal: 0, year: 0, lifetime: 0, collected: 0 };
       return {
         ...r,
         active_policies: s.active,
         total_policies: s.total,
-        clients: clientCount,
+        clients: s.clients.size,
         premium_total: s.premium,
-        commission_rate: rate,
-        commission_amount: commission,
-        tier_label: tier?.label ?? null,
-        next_tier: upcoming
-          ? {
-              label: upcoming.label,
-              percentage: Number(upcoming.percentage),
-              missing: (upcoming.min_clients ?? 0) - clientCount,
-            }
-          : null,
+        collected_total: c.collected,
+        commission_month: c.month,
+        commission_month_new: c.month_new,
+        commission_month_renewal: c.month_renewal,
+        commission_year: c.year,
+        commission_lifetime: c.lifetime,
       };
     });
   });
 
-/** Detailed portfolio for one sales rep */
+/** Detailed portfolio + commission breakdown for one sales rep */
 export const getSalesRepDetail = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
@@ -123,7 +132,7 @@ export const getSalesRepDetail = createServerFn({ method: "GET" })
     const sb = context.supabase;
     const repQ = await sb
       .from("sales_reps")
-      .select("id, full_name, referral_source, code, commission_rate, is_active, metadata")
+      .select("id, full_name, referral_source, code, is_active, metadata")
       .eq("id", data.sales_rep_id)
       .maybeSingle();
     if (repQ.error) throw new Error(repQ.error.message);
@@ -132,22 +141,136 @@ export const getSalesRepDetail = createServerFn({ method: "GET" })
     const polQ = await sb
       .from("policies")
       .select(
-        "id, folio, status, premium, start_date, end_date, program_id, programs(code, name, color_primary), clients(id, first_name, last_name, email, phone, state)",
+        "id, folio, status, premium, start_date, end_date, program_id, client_id, programs(code, name, color_primary), clients(id, first_name, last_name, email, phone, state)",
       )
       .eq("sales_rep_id", data.sales_rep_id)
       .order("start_date", { ascending: false });
     if (polQ.error) throw new Error(polQ.error.message);
+    const policies = polQ.data ?? [];
+    const policyIds = policies.map((p: any) => p.id);
 
-    const tiersQ = await sb
-      .from("commission_tiers")
-      .select("id, program_id, min_clients, max_clients, percentage, label");
-    if (tiersQ.error) throw new Error(tiersQ.error.message);
+    const comQ = await sb
+      .from("sales_commissions")
+      .select("id, policy_id, payment_id, kind, percentage, base_amount, amount, earned_at, period")
+      .eq("sales_rep_id", data.sales_rep_id)
+      .order("earned_at", { ascending: false });
+    if (comQ.error) throw new Error(comQ.error.message);
+    const commissions = comQ.data ?? [];
+
+    // Client program status (prospect / active / inactive / cancelled)
+    const clientIds = Array.from(
+      new Set(policies.map((p: any) => p.client_id).filter(Boolean)),
+    ) as string[];
+    const cpMap = new Map<string, string>();
+    if (clientIds.length) {
+      const cpQ = await sb
+        .from("client_programs")
+        .select("client_id, program_id, status")
+        .in("client_id", clientIds);
+      if (!cpQ.error) {
+        for (const cp of cpQ.data ?? []) {
+          cpMap.set(`${cp.client_id}:${cp.program_id}`, cp.status as string);
+        }
+      }
+    }
+
+    // Payments for this portfolio (paid history + upcoming)
+    let payments: any[] = [];
+    if (policyIds.length) {
+      const payQ = await sb
+        .from("payments")
+        .select("id, policy_id, amount, paid_amount, due_date, paid_at, status")
+        .in("policy_id", policyIds)
+        .order("due_date", { ascending: true });
+      if (payQ.error) throw new Error(payQ.error.message);
+      payments = payQ.data ?? [];
+    }
+
+    const paidByPolicy = new Map<string, number>();
+    for (const p of payments) {
+      if (p.status === "paid") paidByPolicy.set(p.policy_id, (paidByPolicy.get(p.policy_id) ?? 0) + 1);
+    }
+
+    const comByPolicy = new Map<string, number>();
+    for (const c of commissions) {
+      comByPolicy.set(c.policy_id as string, (comByPolicy.get(c.policy_id as string) ?? 0) + Number(c.amount ?? 0));
+    }
+
+    const nextByPolicy = new Map<string, any>();
+    for (const p of payments) {
+      if (p.status === "paid" || p.status === "cancelled" || p.status === "refunded") continue;
+      if (!nextByPolicy.has(p.policy_id)) nextByPolicy.set(p.policy_id, p);
+    }
+
+    const rows = policies.map((p: any) => {
+      const next = nextByPolicy.get(p.id) ?? null;
+      const paidCount = paidByPolicy.get(p.id) ?? 0;
+      const cpStatus = cpMap.get(`${p.client_id}:${p.program_id}`) ?? null;
+      const estPct = paidCount === 0 ? COMMISSION_NEW : COMMISSION_RENEWAL;
+      return {
+        ...p,
+        client_program_status: cpStatus,
+        paid_payments: paidCount,
+        commission_earned: comByPolicy.get(p.id) ?? 0,
+        next_payment: next
+          ? {
+              id: next.id,
+              due_date: next.due_date,
+              amount: Number(next.amount ?? 0),
+              status: next.status,
+              estimated_percentage: estPct,
+              estimated_commission: (Number(next.amount ?? 0) * estPct) / 100,
+            }
+          : null,
+      };
+    });
+
+    const thisMonth = monthKey(new Date());
+    const thisYear = String(new Date().getFullYear());
+    let month = 0, monthNew = 0, monthRenewal = 0, year = 0, lifetime = 0, collected = 0;
+    for (const c of commissions) {
+      const amt = Number(c.amount ?? 0);
+      const period = String(c.period ?? "");
+      lifetime += amt;
+      collected += Number(c.base_amount ?? 0);
+      if (period.startsWith(thisYear)) year += amt;
+      if (period.startsWith(thisMonth)) {
+        month += amt;
+        if (c.kind === "new") monthNew += amt;
+        else monthRenewal += amt;
+      }
+    }
+
+    const horizon = new Date();
+    horizon.setDate(horizon.getDate() + 60);
+    const upcoming = rows
+      .filter((r: any) => r.next_payment?.due_date && new Date(r.next_payment.due_date) <= horizon)
+      .sort(
+        (a: any, b: any) =>
+          new Date(a.next_payment.due_date).getTime() - new Date(b.next_payment.due_date).getTime(),
+      )
+      .slice(0, 20);
 
     return {
       rep: repQ.data,
-      policies: polQ.data ?? [],
-      tiers: tiersQ.data ?? [],
+      policies: rows,
+      commissions,
+      summary: {
+        rates: { new: COMMISSION_NEW, renewal: COMMISSION_RENEWAL },
+        commission_month: month,
+        commission_month_new: monthNew,
+        commission_month_renewal: monthRenewal,
+        commission_year: year,
+        commission_lifetime: lifetime,
+        collected_total: collected,
+        pipeline_commission: upcoming.reduce(
+          (s: number, r: any) => s + (r.next_payment?.estimated_commission ?? 0),
+          0,
+        ),
+      },
+      upcoming,
     };
+
   });
 
 /** List commission tiers */
