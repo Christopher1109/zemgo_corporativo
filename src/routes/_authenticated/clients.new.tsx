@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { Building2, UserRound } from "lucide-react";
 import { createCompany } from "@/lib/companies.functions";
 
 import { toast } from "sonner";

@@ -34,6 +34,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, module: null },
   { to: "/clients", label: "Clientes", icon: Users, module: "clients" },
+  { to: "/companies", label: "Empresas", icon: Building2, module: "clients" },
   { to: "/policies", label: "Certificados", icon: FileText, module: "policies" },
   { to: "/payments", label: "Pagos", icon: CreditCard, module: "payments" },
   { to: "/finance", label: "Finanzas", icon: Wallet, module: "finance" },
