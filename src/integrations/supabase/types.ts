@@ -1672,6 +1672,111 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_commissions: {
+        Row: {
+          amount: number
+          base_amount: number
+          client_id: string | null
+          created_at: string
+          earned_at: string
+          id: string
+          kind: string
+          payment_id: string
+          percentage: number
+          period: string
+          policy_id: string
+          program_id: string | null
+          sales_rep_id: string
+        }
+        Insert: {
+          amount?: number
+          base_amount?: number
+          client_id?: string | null
+          created_at?: string
+          earned_at?: string
+          id?: string
+          kind: string
+          payment_id: string
+          percentage: number
+          period?: string
+          policy_id: string
+          program_id?: string | null
+          sales_rep_id: string
+        }
+        Update: {
+          amount?: number
+          base_amount?: number
+          client_id?: string | null
+          created_at?: string
+          earned_at?: string
+          id?: string
+          kind?: string
+          payment_id?: string
+          percentage?: number
+          period?: string
+          policy_id?: string
+          program_id?: string | null
+          sales_rep_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_commissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_commissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_commissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_commissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_commissions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: true
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_commissions_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_commissions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_commissions_sales_rep_id_fkey"
+            columns: ["sales_rep_id"]
+            isOneToOne: false
+            referencedRelation: "sales_reps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_rep_match_review: {
         Row: {
           client_id: string | null
