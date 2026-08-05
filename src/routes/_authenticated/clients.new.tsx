@@ -152,14 +152,107 @@ function NewClient() {
     return enrollAndGo(client.id, "create");
   }
 
+  if (kind === null) {
+    return (
+      <div className="max-w-3xl space-y-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Nuevo registro</h1>
+          <p className="text-sm text-muted-foreground">¿Vas a dar de alta una persona o una empresa?</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <button type="button" onClick={() => setKind("person")} className="text-left">
+            <Card className="h-full hover:border-primary/60 transition">
+              <CardContent className="p-6 space-y-2">
+                <UserRound className="h-7 w-7" style={{ color: "var(--program-primary)" }} />
+                <div className="font-semibold">Persona</div>
+                <p className="text-sm text-muted-foreground">
+                  Un titular individual con su CURP, contacto y domicilio. Genera un certificado a su nombre.
+                </p>
+              </CardContent>
+            </Card>
+          </button>
+          <button type="button" onClick={() => setKind("company")} className="text-left">
+            <Card className="h-full hover:border-primary/60 transition">
+              <CardContent className="p-6 space-y-2">
+                <Building2 className="h-7 w-7" style={{ color: "var(--program-primary)" }} />
+                <div className="font-semibold">Empresa</div>
+                <p className="text-sm text-muted-foreground">
+                  Alta masiva: se registra la empresa y sus asegurados se cargan por Excel (hasta 300). Un
+                  certificado por persona, todo consolidado en la carpeta de la empresa.
+                </p>
+              </CardContent>
+            </Card>
+          </button>
+        </div>
+        <Button variant="outline" onClick={() => navigate({ to: "/clients" })}>Cancelar</Button>
+      </div>
+    );
+  }
+
+  if (kind === "company") {
+    return (
+      <div className="max-w-3xl space-y-4">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setKind(null)}>← Cambiar tipo</Button>
+        </div>
+        <div>
+          <h1 className="text-2xl font-semibold">Nueva empresa</h1>
+          <p className="text-sm text-muted-foreground">
+            Registra la empresa; después cargas su Excel de asegurados y se generan los certificados.
+          </p>
+        </div>
+        <form onSubmit={onSubmitCompany} className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Programa</CardTitle></CardHeader>
+            <CardContent>
+              <Label>Programa *</Label>
+              <Select value={programId} onValueChange={setProgramId}>
+                <SelectTrigger className="mt-1.5 max-w-md"><SelectValue placeholder="Selecciona…" /></SelectTrigger>
+                <SelectContent>
+                  {programs.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle className="text-base">Datos de la empresa</CardTitle></CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-4">
+              <Field label="Razón social *" className="md:col-span-2">
+                <Input required value={company.legal_name} onChange={(e) => setCompany({ ...company, legal_name: e.target.value })} />
+              </Field>
+              <Field label="RFC"><Input className="uppercase font-mono" value={company.rfc} onChange={(e) => setCompany({ ...company, rfc: e.target.value })} /></Field>
+              <Field label="Persona de contacto"><Input value={company.contact_name} onChange={(e) => setCompany({ ...company, contact_name: e.target.value })} /></Field>
+              <Field label="Email"><Input type="email" value={company.email} onChange={(e) => setCompany({ ...company, email: e.target.value })} /></Field>
+              <Field label="Teléfono"><Input value={company.phone} onChange={(e) => setCompany({ ...company, phone: e.target.value })} /></Field>
+              <Field label="Domicilio" className="md:col-span-2"><Input value={company.address_full} onChange={(e) => setCompany({ ...company, address_full: e.target.value })} /></Field>
+              <Field label="Ciudad"><Input value={company.city} onChange={(e) => setCompany({ ...company, city: e.target.value })} /></Field>
+              <Field label="Estado"><Input value={company.state} onChange={(e) => setCompany({ ...company, state: e.target.value })} /></Field>
+              <Field label="Notas" className="md:col-span-2"><Textarea rows={2} value={company.notes} onChange={(e) => setCompany({ ...company, notes: e.target.value })} /></Field>
+            </CardContent>
+          </Card>
+          <div className="flex gap-2 justify-end">
+            <Button type="button" variant="outline" onClick={() => navigate({ to: "/clients" })}>Cancelar</Button>
+            <Button type="submit" disabled={busy}>{busy ? "Guardando..." : "Crear empresa"}</Button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl space-y-4">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={() => setKind(null)}>← Cambiar tipo</Button>
+      </div>
       <div>
         <h1 className="text-2xl font-semibold">Nuevo cliente</h1>
         <p className="text-sm text-muted-foreground">Captura los datos del prospecto y selecciona el programa al que se afilia.</p>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
+
         <Card>
           <CardHeader><CardTitle className="text-base">Programa</CardTitle></CardHeader>
           <CardContent>
