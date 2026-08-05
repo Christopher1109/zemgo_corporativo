@@ -29,13 +29,48 @@ function NewClient() {
   const navigate = useNavigate();
   const { programs, activeProgram } = useProgram();
   const { user } = useAuth();
+  const [kind, setKind] = useState<"person" | "company" | null>(null);
   const [form, setForm] = useState({ ...empty });
   const [programId, setProgramId] = useState<string>(activeProgram?.id ?? "");
   const [busy, setBusy] = useState(false);
+  const [company, setCompany] = useState({
+    legal_name: "", rfc: "", contact_name: "", email: "", phone: "",
+    address_full: "", city: "", state: "", notes: "",
+  });
+  const createCompanyFn = useServerFn(createCompany);
 
   const selectedProgram = programs.find((p) => p.id === programId);
   const programCode = (selectedProgram?.code ?? "").toUpperCase();
   const isABC = programCode === "ABC";
+
+  async function onSubmitCompany(e: React.FormEvent) {
+    e.preventDefault();
+    if (!programId) return toast.error("Selecciona un programa");
+    setBusy(true);
+    try {
+      const res = await createCompanyFn({
+        data: {
+          program_id: programId,
+          legal_name: company.legal_name.trim(),
+          rfc: company.rfc.trim().toUpperCase() || null,
+          contact_name: company.contact_name || null,
+          email: company.email || null,
+          phone: company.phone || null,
+          address_full: company.address_full || null,
+          city: company.city || null,
+          state: company.state || null,
+          notes: company.notes || null,
+        },
+      });
+      toast.success("Empresa creada — ahora carga a sus asegurados");
+      navigate({ to: "/companies/$companyId", params: { companyId: res.id } });
+    } catch (err: any) {
+      toast.error(err?.message ?? "No se pudo crear la empresa");
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   const set = (k: keyof typeof empty) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
