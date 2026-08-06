@@ -2528,6 +2528,10 @@ export type Database = {
         Args: { _payment_id: string; _reason: string }
         Returns: undefined
       }
+      claim_portal_accident_notice: {
+        Args: { _file_name?: string; _incident_id: string; _token: string }
+        Returns: Json
+      }
       create_payment_schedule_for_policy: {
         Args: { _policy_id: string }
         Returns: string
@@ -2671,7 +2675,10 @@ export type Database = {
         }
         Returns: Json
       }
+      name_tokens: { Args: { _name: string }; Returns: string[] }
       next_policy_folio: { Args: { _program_id: string }; Returns: string }
+      normalize_person_name: { Args: { _name: string }; Returns: string }
+      portal_normalize_name: { Args: { _name: string }; Returns: string }
       process_sheet_row: {
         Args: {
           _program: string
@@ -2799,6 +2806,15 @@ export type Database = {
       }
       verify_portal_login: {
         Args: { _curp: string; _ip: string; _phone_last4: string; _ua: string }
+        Returns: Json
+      }
+      verify_portal_login_by_name: {
+        Args: {
+          _full_name: string
+          _ip: string
+          _phone_last4: string
+          _ua: string
+        }
         Returns: Json
       }
     }
