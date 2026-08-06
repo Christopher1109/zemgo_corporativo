@@ -60,7 +60,7 @@ function PolicyDetail() {
       const { data, error } = await supabase
         .from("policies")
         .select(
-          "*, programs(id,name,code,color_primary), clients(id,first_name,last_name,curp,phone,email), beneficiaries(*), dependents(*)",
+          "*, programs(id,name,code,color_primary), clients(*, sales_reps(id, full_name, code)), beneficiaries(*), dependents(*)",
         )
         .eq("id", policyId)
         .single();
