@@ -131,9 +131,24 @@ function MessagesPage() {
     }
   }
 
+  // Segmentación por programa: cada programa tendrá su propia línea/bot de WhatsApp,
+  // así que el equipo puede ver sólo las conversaciones del programa que atiende.
+  const filtered = (conversations ?? []).filter((c) =>
+    programFilter === "all"
+      ? true
+      : programFilter === "none"
+        ? !c.program_code
+        : (c.program_code ?? "").toUpperCase() === programFilter,
+  );
+  const countFor = (code: string) =>
+    (conversations ?? []).filter((c) =>
+      code === "none" ? !c.program_code : (c.program_code ?? "").toUpperCase() === code,
+    ).length;
+
   const selectedConv = conversations?.find((c) => c.wa_phone === selected);
   const selectedPaused = isPaused(selectedConv?.bot_paused_until ?? null);
-  const pendingCount = conversations?.filter((c) => c.needs_human).length ?? 0;
+  const pendingCount = filtered.filter((c) => c.needs_human).length;
+
 
   return (
     <div className="h-full flex flex-col p-6 gap-4">
