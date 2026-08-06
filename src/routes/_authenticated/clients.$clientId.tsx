@@ -235,18 +235,22 @@ function ClientDetail() {
                   <TableHead>Fecha accidente</TableHead>
                   <TableHead>Hospital</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Carta de aviso</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {incidents.length === 0 && (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Sin siniestros.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Sin siniestros.</TableCell></TableRow>
                 )}
                 {incidents.map((i) => (
                   <TableRow key={i.id}>
                     <TableCell>{i.accident_date ?? "—"}</TableCell>
                     <TableCell>{i.hospital ?? "—"}</TableCell>
                     <TableCell><Badge variant="secondary">{i.status}</Badge></TableCell>
+                    <TableCell>
+                      <AccidentLetterButton passes={(i.medical_passes ?? []) as any[]} />
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button asChild size="sm" variant="outline">
                         <Link to="/incidents/$incidentId" params={{ incidentId: i.id }}>Ver</Link>
