@@ -37,10 +37,20 @@ export const listPolicyRevisions = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("policy_revisions")
-      .select("id, edited_at, edited_by, fields_changed, profiles:edited_by(full_name)")
+      .select("id, edited_at, edited_by, fields_changed")
       .eq("policy_id", data.policy_id)
       .order("edited_at", { ascending: false })
       .limit(100);
     if (error) throw new Error(error.message);
-    return rows ?? [];
+    const ids = [...new Set((rows ?? []).map((r: any) => r.edited_by).filter(Boolean))];
+    let names: Record<string, string> = {};
+    if (ids.length) {
+      const { data: profs } = await context.supabase
+        .from("profiles").select("id, full_name").in("id", ids as string[]);
+      names = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.full_name]));
+    }
+    return (rows ?? []).map((r: any) => ({
+      ...r,
+      profiles: r.edited_by ? { full_name: names[r.edited_by] ?? null } : null,
+    }));
   });
