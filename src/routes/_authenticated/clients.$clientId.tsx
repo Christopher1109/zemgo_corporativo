@@ -1,6 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { getMedicalPassSignedUrl } from "@/lib/incidents.functions";
+import { generateMedicalPass } from "@/lib/pdf/generateMedicalPass";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +86,7 @@ function ClientDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("incidents")
-        .select("id, status, accident_date, hospital, reported_at")
+        .select("id, status, accident_date, hospital, reported_at, medical_passes(id, pdf_url, revoked_at, valid_until, created_at)")
         .eq("client_id", clientId)
         .order("reported_at", { ascending: false });
       if (error) throw error;
@@ -235,18 +240,22 @@ function ClientDetail() {
                   <TableHead>Fecha accidente</TableHead>
                   <TableHead>Hospital</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Carta de aviso</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {incidents.length === 0 && (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Sin siniestros.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Sin siniestros.</TableCell></TableRow>
                 )}
                 {incidents.map((i) => (
                   <TableRow key={i.id}>
                     <TableCell>{i.accident_date ?? "—"}</TableCell>
                     <TableCell>{i.hospital ?? "—"}</TableCell>
                     <TableCell><Badge variant="secondary">{i.status}</Badge></TableCell>
+                    <TableCell>
+                      <AccidentLetterButton passes={(i.medical_passes ?? []) as any[]} />
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button asChild size="sm" variant="outline">
                         <Link to="/incidents/$incidentId" params={{ incidentId: i.id }}>Ver</Link>
@@ -269,5 +278,45 @@ function Field({ label, value }: { label: string; value: string }) {
       <div className="text-xs text-muted-foreground">{label}</div>
       <div>{value}</div>
     </div>
+  );
+}
+
+function AccidentLetterButton({
+  passes,
+}: {
+  passes: Array<{ id: string; pdf_url: string | null; revoked_at: string | null; valid_until: string; created_at?: string }>;
+}) {
+  const signFn = useServerFn(getMedicalPassSignedUrl);
+  const generateFn = useServerFn(generateMedicalPass);
+  const [busy, setBusy] = useState(false);
+
+  const pass = passes
+    .filter((p) => !p.revoked_at)
+    .sort((a, b) => (a.valid_until < b.valid_until ? 1 : -1))[0];
+
+  if (!pass) return <span className="text-xs text-muted-foreground">Sin carta emitida</span>;
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-7 px-2"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          if (!pass.pdf_url) await generateFn({ data: { pass_id: pass.id } });
+          const { url } = await signFn({ data: { pass_id: pass.id } });
+          window.open(url, "_blank", "noopener");
+        } catch (e: any) {
+          toast.error(e?.message ?? "No se pudo descargar la carta");
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      {busy ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1" />}
+      Carta
+    </Button>
   );
 }
