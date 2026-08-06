@@ -88,10 +88,17 @@ function MessagesPage() {
   });
 
   useEffect(() => {
-    if (!selected && conversations && conversations.length > 0) {
-      setSelected(conversations[0].wa_phone);
-    }
-  }, [conversations, selected]);
+    if (selected || !conversations) return;
+    const first = conversations.find((c) =>
+      programFilter === "all"
+        ? true
+        : programFilter === "none"
+          ? !c.program_code
+          : (c.program_code ?? "").toUpperCase() === programFilter,
+    );
+    if (first) setSelected(first.wa_phone);
+  }, [conversations, selected, programFilter]);
+
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
