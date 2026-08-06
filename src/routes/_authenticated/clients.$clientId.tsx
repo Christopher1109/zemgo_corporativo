@@ -81,7 +81,7 @@ function ClientDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("incidents")
-        .select("id, status, accident_date, hospital, reported_at")
+        .select("id, status, accident_date, hospital, reported_at, medical_passes(id, pdf_url, revoked_at, valid_until, created_at)")
         .eq("client_id", clientId)
         .order("reported_at", { ascending: false });
       if (error) throw error;
