@@ -170,9 +170,34 @@ function MessagesPage() {
           )}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Historial de conversaciones del bot y del equipo. Puedes responder manualmente dentro de las 24h
-          posteriores al último mensaje del cliente.
+          Historial de conversaciones del bot y del equipo, segmentado por programa (cada programa tendrá su
+          propia línea de WhatsApp). Puedes responder manualmente dentro de las 24h posteriores al último
+          mensaje del cliente.
         </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[
+            { key: "all", label: "Todos" },
+            { key: "ABC", label: PROGRAM_LABEL.ABC },
+            { key: "FUTCARE", label: PROGRAM_LABEL.FUTCARE },
+            { key: "MCV", label: PROGRAM_LABEL.MCV },
+            { key: "none", label: "Sin programa" },
+          ].map((t) => (
+            <Button
+              key={t.key}
+              size="sm"
+              variant={programFilter === t.key ? "default" : "outline"}
+              onClick={() => {
+                setProgramFilter(t.key);
+                setSelected(null);
+              }}
+            >
+              {t.label}
+              <span className="ml-1.5 text-[11px] opacity-70">
+                {t.key === "all" ? (conversations?.length ?? 0) : countFor(t.key)}
+              </span>
+            </Button>
+          ))}
+        </div>
       </div>
 
       <Card className="flex-1 min-h-0 flex overflow-hidden">
@@ -184,10 +209,15 @@ function MessagesPage() {
             <div className="p-4 text-sm text-destructive">
               No se pudo cargar el historial: {String((listErrorObj as any)?.message ?? "error desconocido")}
             </div>
-          ) : !conversations || conversations.length === 0 ? (
-            <div className="p-4 text-sm text-muted-foreground">Todavía no hay mensajes registrados.</div>
+          ) : filtered.length === 0 ? (
+            <div className="p-4 text-sm text-muted-foreground">
+              {conversations && conversations.length > 0
+                ? "No hay conversaciones de este programa."
+                : "Todavía no hay mensajes registrados."}
+            </div>
           ) : (
-            conversations.map((c) => {
+            filtered.map((c) => {
+
               const paused = isPaused(c.bot_paused_until);
               return (
                 <button
