@@ -58,9 +58,11 @@ function MessagesPage() {
   const qc = useQueryClient();
 
   const [selected, setSelected] = useState<string | null>(null);
+  const [programFilter, setProgramFilter] = useState<string>("all");
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
 
   const {
     data: conversations,
