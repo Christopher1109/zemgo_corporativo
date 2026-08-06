@@ -208,21 +208,73 @@ function PolicyDetail() {
         </TabsList>
 
         <TabsContent value="info">
-          <Card className="p-5 grid md:grid-cols-2 gap-4 text-sm">
-            <Field label="Folio" value={policy.folio} />
-            <Field label="Programa" value={policy.programs?.name} />
-            <Field label="No. de póliza" value={policy.policy_number ?? "—"} />
-            <Field label="No. Certificado" value={policy.certificate_number ?? "—"} />
-            <Field label="Titular" value={`${policy.clients?.first_name} ${policy.clients?.last_name}`} />
-            <Field label="CURP" value={policy.clients?.curp} />
-            <Field label="Contratante" value={policy.contracting_party ?? "—"} />
-            <Field label="Emisión" value={policy.issue_date ?? "—"} />
-            <Field label="Vigencia" value={`${policy.start_date ?? "—"} → ${policy.end_date ?? "—"}`} />
-            <Field label="Prima" value={policy.premium ? `$${Number(policy.premium).toLocaleString("es-MX")}` : "—"} />
-            <Field label="Suma asegurada" value={policy.sum_insured ? `$${Number(policy.sum_insured).toLocaleString("es-MX")}` : "—"} />
-            <Field label="PDF certificado" value={policy.certificate_pdf_url ? <a className="text-primary underline" href={policy.certificate_pdf_url} target="_blank" rel="noreferrer">Abrir</a> : "—"} />
-          </Card>
+          <div className="space-y-4">
+            <Card className="p-5 space-y-3">
+              <h3 className="text-sm font-semibold">Datos del certificado</h3>
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <Field label="Folio" value={policy.folio} />
+                <Field label="Programa" value={policy.programs?.name} />
+                <Field label="No. de póliza" value={policy.policy_number ?? "—"} />
+                <Field label="No. Certificado" value={policy.certificate_number ?? "—"} />
+                <Field label="Contratante" value={policy.contracting_party ?? "—"} />
+                <Field label="Emisión" value={policy.issue_date ?? "—"} />
+                <Field label="Vigencia" value={`${policy.start_date ?? "—"} → ${policy.end_date ?? "—"}`} />
+                <Field label="Prima" value={policy.premium ? `$${Number(policy.premium).toLocaleString("es-MX")}` : "—"} />
+                <Field label="Suma asegurada" value={policy.sum_insured ? `$${Number(policy.sum_insured).toLocaleString("es-MX")}` : "—"} />
+                <Field label="Deducible" value={policy.deductible ? `$${Number(policy.deductible).toLocaleString("es-MX")}` : "—"} />
+                <Field label="PDF certificado" value={policy.certificate_pdf_url ? <a className="text-primary underline" href={policy.certificate_pdf_url} target="_blank" rel="noreferrer">Abrir</a> : "—"} />
+              </div>
+            </Card>
+
+            <Card className="p-5 space-y-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <h3 className="text-sm font-semibold">Información del titular</h3>
+                {policy.client_id && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/clients/$clientId" params={{ clientId: policy.client_id }}>Ver expediente completo</Link>
+                  </Button>
+                )}
+              </div>
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <Field label="Nombre completo" value={`${policy.clients?.first_name ?? ""} ${policy.clients?.last_name ?? ""}`.trim() || "—"} />
+                <Field label="CURP" value={policy.clients?.curp ?? "—"} />
+                <Field label="RFC" value={policy.clients?.rfc ?? "—"} />
+                <Field label="Fecha de nacimiento" value={policy.clients?.date_of_birth ?? "—"} />
+                <Field label="Género" value={policy.clients?.gender ?? "—"} />
+                <Field label="Estado civil" value={policy.clients?.marital_status ?? "—"} />
+                <Field label="Teléfono" value={policy.clients?.phone ?? "—"} />
+                <Field label="Teléfono alterno" value={policy.clients?.phone_alt ?? "—"} />
+                <Field label="Email" value={policy.clients?.email ?? "—"} />
+                <Field label="Vendedor asignado" value={policy.clients?.sales_reps?.full_name ?? "—"} />
+                <Field
+                  label="Alta en sistema"
+                  value={policy.clients?.created_at ? new Date(policy.clients.created_at).toLocaleString("es-MX") : "—"}
+                />
+                <Field
+                  label="Última actualización"
+                  value={policy.clients?.updated_at ? new Date(policy.clients.updated_at).toLocaleString("es-MX") : "—"}
+                />
+                <div className="md:col-span-2">
+                  <div className="text-xs text-muted-foreground">Domicilio</div>
+                  <div className="font-medium">
+                    {policy.clients?.address_full ??
+                      ([
+                        policy.clients?.street,
+                        policy.clients?.number,
+                        policy.clients?.colonia,
+                        policy.clients?.city,
+                        policy.clients?.state,
+                        policy.clients?.zip,
+                      ]
+                        .filter(Boolean)
+                        .join(", ") || "—")}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
         </TabsContent>
+
 
         <TabsContent value="benef">
           <Card className="p-5 space-y-4">
