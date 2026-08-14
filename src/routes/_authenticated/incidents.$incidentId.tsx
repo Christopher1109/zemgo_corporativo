@@ -16,7 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { issueMedicalPass, rejectIncident, revokeMedicalPass, getMedicalPassSignedUrl } from "@/lib/incidents.functions";
+import { issueMedicalPass, rejectIncident, revokeMedicalPass, getMedicalPassBytes } from "@/lib/incidents.functions";
+import { downloadBlob } from "@/lib/pdf/generateCertificate.browser";
 import { generateMedicalPass } from "@/lib/pdf/generateMedicalPass";
 import { INCIDENT_STATUS } from "./incidents.index";
 
@@ -32,7 +33,7 @@ function IncidentDetail() {
   const issueFn = useServerFn(issueMedicalPass);
   const rejectFn = useServerFn(rejectIncident);
   const revokeFn = useServerFn(revokeMedicalPass);
-  const signFn = useServerFn(getMedicalPassSignedUrl);
+  const bytesFn = useServerFn(getMedicalPassBytes);
   const generateFn = useServerFn(generateMedicalPass);
 
   const [approveOpen, setApproveOpen] = useState(false);

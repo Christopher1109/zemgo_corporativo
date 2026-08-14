@@ -11,7 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useProgram } from "@/lib/program-context";
-import { getMedicalPassSignedUrl } from "@/lib/incidents.functions";
+import { getMedicalPassBytes } from "@/lib/incidents.functions";
+import { downloadBlob } from "@/lib/pdf/generateCertificate.browser";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/incidents/")({
@@ -191,7 +192,7 @@ function IncidentsList() {
 }
 
 function PassDownloadButton({ passes }: { passes: Array<{ id: string; pdf_url: string | null; revoked_at: string | null; valid_until: string }> }) {
-  const fn = useServerFn(getMedicalPassSignedUrl);
+  const fn = useServerFn(getMedicalPassBytes);
   const active = passes
     .filter((p) => p.pdf_url && !p.revoked_at)
     .sort((a, b) => (a.valid_until < b.valid_until ? 1 : -1))[0];
