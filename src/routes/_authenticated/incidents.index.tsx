@@ -206,10 +206,12 @@ function PassDownloadButton({ passes }: { passes: Array<{ id: string; pdf_url: s
       title={isExpired ? "Carta vencida (descargar copia)" : "Descargar carta de aviso de accidente"}
       onClick={async () => {
         try {
-          const { url } = await fn({ data: { pass_id: active.id } });
-          window.open(url, "_blank", "noopener");
-        } catch (e: any) {
-          toast.error(e?.message ?? "No se pudo descargar el pase");
+          const { base64, filename } = await fn({ data: { pass_id: active.id } });
+          const bin = atob(base64);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          downloadBlob(new Blob([bytes], { type: "application/pdf" }), filename);
+
         }
       }}
     >
