@@ -4,8 +4,10 @@ import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { getMedicalPassSignedUrl } from "@/lib/incidents.functions";
+import { getMedicalPassBytes } from "@/lib/incidents.functions";
 import { generateMedicalPass } from "@/lib/pdf/generateMedicalPass";
+import { downloadBlob } from "@/lib/pdf/generateCertificate.browser";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
