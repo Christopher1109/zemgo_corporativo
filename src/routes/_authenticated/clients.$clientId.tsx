@@ -117,7 +117,8 @@ function ClientDetail() {
           </h1>
           <p className="text-sm text-muted-foreground font-mono">{client.curp ?? "—"}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <EditClientDialog client={client} />
           {enrollments.map((e) => {
             const st = CP_STATUS[e.status] ?? { label: e.status, cls: "" };
             return (
