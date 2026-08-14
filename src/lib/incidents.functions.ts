@@ -211,3 +211,30 @@ export const getMedicalPassSignedUrl = createServerFn({ method: "POST" })
     if (sErr) throw sErr;
     return { url: signed.signedUrl };
   });
+
+/** Returns the letter PDF bytes (base64) so the browser can download it same-origin. */
+export const getMedicalPassBytes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ pass_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: pass, error } = await context.supabase
+      .from("medical_passes")
+      .select("id, pdf_url, revoked_at")
+      .eq("id", data.pass_id)
+      .single();
+    if (error) throw new Error(error.message);
+    if (!pass.pdf_url) throw new Error("pdf_not_generated");
+    if (pass.revoked_at) throw new Error("pass_revoked");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: file, error: dErr } = await supabaseAdmin.storage
+      .from("medical-passes")
+      .download(pass.pdf_url);
+    if (dErr) throw dErr;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    return {
+      filename: pass.pdf_url.split("/").pop() ?? "carta-aviso-accidente.pdf",
+      base64: Buffer.from(bytes).toString("base64"),
+    };
+  });
+
