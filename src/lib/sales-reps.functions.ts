@@ -338,8 +338,20 @@ export const searchAssignablePolicies = createServerFn({ method: "GET" })
       .limit(30);
     if (data.program_id) q = q.eq("program_id", data.program_id);
     if (data.only_unassigned) q = q.is("sales_rep_id", null);
-    if (data.search && data.search.trim().length >= 2) {
-      q = q.ilike("folio", `%${data.search.trim()}%`);
+    const term = data.search?.trim() ?? "";
+    if (term.length >= 2) {
+      // Match by folio, or by the titular's name / CURP.
+      const cr = await context.supabase
+        .from("clients")
+        .select("id")
+        .or(
+          `first_name.ilike.%${term}%,last_name.ilike.%${term}%,curp.ilike.%${term}%`,
+        )
+        .limit(200);
+      const clientIds = (cr.data ?? []).map((c: any) => c.id);
+      const filters = [`folio.ilike.%${term}%`, `policy_number.ilike.%${term}%`];
+      if (clientIds.length) filters.push(`client_id.in.(${clientIds.join(",")})`);
+      q = q.or(filters.join(","));
     }
     const r = await q;
     if (r.error) throw new Error(r.error.message);
