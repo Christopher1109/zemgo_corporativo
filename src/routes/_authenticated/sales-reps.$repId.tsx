@@ -385,10 +385,10 @@ function SalesRepDetailPage() {
           <DialogHeader>
             <DialogTitle>Agregar certificado a {rep.full_name}</DialogTitle>
             <DialogDescription>
-              Busca por folio. Al asignarlo, el cliente de ese certificado también queda ligado a este vendedor.
+              Busca por folio, número de póliza o nombre del titular. Al asignarlo, el cliente de ese certificado también queda ligado a este vendedor.
             </DialogDescription>
           </DialogHeader>
-          <Input placeholder="Buscar por folio…" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input placeholder="Buscar por folio o nombre…" value={search} onChange={(e) => setSearch(e.target.value)} />
           <div className="max-h-72 overflow-y-auto divide-y rounded-md border">
             {candidates.isLoading ? (
               <div className="p-4 text-sm text-muted-foreground">Cargando…</div>

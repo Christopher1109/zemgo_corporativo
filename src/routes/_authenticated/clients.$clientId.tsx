@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
+import { EditClientDialog } from "@/components/clients/EditClientDialog";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   head: () => ({
@@ -117,7 +118,8 @@ function ClientDetail() {
           </h1>
           <p className="text-sm text-muted-foreground font-mono">{client.curp ?? "—"}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <EditClientDialog client={client} />
           {enrollments.map((e) => {
             const st = CP_STATUS[e.status] ?? { label: e.status, cls: "" };
             return (

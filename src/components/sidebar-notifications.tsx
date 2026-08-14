@@ -89,7 +89,7 @@ export function SidebarNotifications() {
             {items.map((it) => (
               <li key={it.id}>
                 <Link
-                  to={it.href}
+                  to={it.href as any}
                   className="flex items-start gap-2 px-3 py-2 text-xs hover:bg-muted transition"
                 >
                   <span className="mt-0.5 inline-flex shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
