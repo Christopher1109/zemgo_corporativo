@@ -62,7 +62,7 @@ export function EditClientDialog({ client }: { client: ClientRow }) {
     if (payload.curp) payload.curp = String(payload.curp).toUpperCase();
     if (payload.rfc) payload.rfc = String(payload.rfc).toUpperCase();
 
-    const { error } = await supabase.from("clients").update(payload).eq("id", client.id);
+    const { error } = await supabase.from("clients").update(payload as any).eq("id", client.id);
     setBusy(false);
     if (error) {
       if ((error as any).code === "23505") return toast.error("Ya existe otro cliente con esa CURP.");
