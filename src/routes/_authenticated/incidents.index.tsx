@@ -11,7 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useProgram } from "@/lib/program-context";
-import { getMedicalPassSignedUrl } from "@/lib/incidents.functions";
+import { getMedicalPassBytes } from "@/lib/incidents.functions";
+import { downloadBlob } from "@/lib/pdf/generateCertificate.browser";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/incidents/")({
@@ -191,7 +192,7 @@ function IncidentsList() {
 }
 
 function PassDownloadButton({ passes }: { passes: Array<{ id: string; pdf_url: string | null; revoked_at: string | null; valid_until: string }> }) {
-  const fn = useServerFn(getMedicalPassSignedUrl);
+  const fn = useServerFn(getMedicalPassBytes);
   const active = passes
     .filter((p) => p.pdf_url && !p.revoked_at)
     .sort((a, b) => (a.valid_until < b.valid_until ? 1 : -1))[0];
@@ -205,11 +206,15 @@ function PassDownloadButton({ passes }: { passes: Array<{ id: string; pdf_url: s
       title={isExpired ? "Carta vencida (descargar copia)" : "Descargar carta de aviso de accidente"}
       onClick={async () => {
         try {
-          const { url } = await fn({ data: { pass_id: active.id } });
-          window.open(url, "_blank", "noopener");
+          const { base64, filename } = await fn({ data: { pass_id: active.id } });
+          const bin = atob(base64);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          downloadBlob(new Blob([bytes], { type: "application/pdf" }), filename);
         } catch (e: any) {
-          toast.error(e?.message ?? "No se pudo descargar el pase");
+          toast.error(e?.message ?? "No se pudo descargar la carta");
         }
+
       }}
     >
       <Download className="h-3.5 w-3.5 mr-1" /> Pase

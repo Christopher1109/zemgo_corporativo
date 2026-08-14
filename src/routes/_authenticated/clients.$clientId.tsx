@@ -4,8 +4,10 @@ import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { getMedicalPassSignedUrl } from "@/lib/incidents.functions";
+import { getMedicalPassBytes } from "@/lib/incidents.functions";
 import { generateMedicalPass } from "@/lib/pdf/generateMedicalPass";
+import { downloadBlob } from "@/lib/pdf/generateCertificate.browser";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -288,7 +290,7 @@ function AccidentLetterButton({
 }: {
   passes: Array<{ id: string; pdf_url: string | null; revoked_at: string | null; valid_until: string; created_at?: string }>;
 }) {
-  const signFn = useServerFn(getMedicalPassSignedUrl);
+  const bytesFn = useServerFn(getMedicalPassBytes);
   const generateFn = useServerFn(generateMedicalPass);
   const [busy, setBusy] = useState(false);
 
@@ -308,8 +310,11 @@ function AccidentLetterButton({
         setBusy(true);
         try {
           if (!pass.pdf_url) await generateFn({ data: { pass_id: pass.id } });
-          const { url } = await signFn({ data: { pass_id: pass.id } });
-          window.open(url, "_blank", "noopener");
+          const { base64, filename } = await bytesFn({ data: { pass_id: pass.id } });
+          const bin = atob(base64);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          downloadBlob(new Blob([bytes], { type: "application/pdf" }), filename);
         } catch (e: any) {
           toast.error(e?.message ?? "No se pudo descargar la carta");
         } finally {
@@ -317,6 +322,7 @@ function AccidentLetterButton({
         }
       }}
     >
+
       {busy ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1" />}
       Carta
     </Button>

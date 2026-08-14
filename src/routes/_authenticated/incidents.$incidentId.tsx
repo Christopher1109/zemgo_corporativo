@@ -16,7 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { issueMedicalPass, rejectIncident, revokeMedicalPass, getMedicalPassSignedUrl } from "@/lib/incidents.functions";
+import { issueMedicalPass, rejectIncident, revokeMedicalPass, getMedicalPassBytes } from "@/lib/incidents.functions";
+import { downloadBlob } from "@/lib/pdf/generateCertificate.browser";
 import { generateMedicalPass } from "@/lib/pdf/generateMedicalPass";
 import { INCIDENT_STATUS } from "./incidents.index";
 
@@ -32,7 +33,7 @@ function IncidentDetail() {
   const issueFn = useServerFn(issueMedicalPass);
   const rejectFn = useServerFn(rejectIncident);
   const revokeFn = useServerFn(revokeMedicalPass);
-  const signFn = useServerFn(getMedicalPassSignedUrl);
+  const bytesFn = useServerFn(getMedicalPassBytes);
   const generateFn = useServerFn(generateMedicalPass);
 
   const [approveOpen, setApproveOpen] = useState(false);
@@ -181,17 +182,21 @@ function IncidentDetail() {
   async function downloadPass(passId: string) {
     setBusy(true);
     try {
-      let url: string;
+      let res: { base64: string; filename: string };
       try {
-        ({ url } = await signFn({ data: { pass_id: passId } }));
+        res = await bytesFn({ data: { pass_id: passId } });
       } catch (e: any) {
         if (!String(e?.message ?? e).includes("pdf_not_generated")) throw e;
         await generateFn({ data: { pass_id: passId } });
         qc.invalidateQueries({ queryKey: ["incident-passes", incidentId] });
-        ({ url } = await signFn({ data: { pass_id: passId } }));
+        res = await bytesFn({ data: { pass_id: passId } });
       }
-      window.open(url, "_blank");
+      const bin = atob(res.base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      downloadBlob(new Blob([bytes], { type: "application/pdf" }), res.filename);
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
+
   }
 
 

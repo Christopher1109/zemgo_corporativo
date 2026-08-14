@@ -101,8 +101,9 @@ export const saveCertificatePdf = createServerFn({ method: "POST" })
 
     const { error: upErr } = await supabaseAdmin.storage
       .from("certificates")
-      .upload(path, bytes, { contentType: "application/pdf", upsert: true });
+      .upload(path, bytes, { contentType: "application/pdf", upsert: true, cacheControl: "0" });
     if (upErr) throw upErr;
+
 
     const { data: signed, error: sErr } = await supabaseAdmin.storage
       .from("certificates")

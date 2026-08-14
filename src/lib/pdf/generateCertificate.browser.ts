@@ -11,18 +11,34 @@ import { CertificateFutCare } from "./templates/CertificateFutCare";
 import { CertificateMCV } from "./templates/CertificateMCV";
 import { SmokeTestDoc } from "./templates/SmokeTest";
 
+/** Templates read `client.address`; the DB stores the address in parts. */
+function withAddress(client: any) {
+  const c = client ?? {};
+  const parts = [
+    [c.street, c.number].filter(Boolean).join(" "),
+    c.colonia,
+    c.city,
+    c.state,
+    c.zip ? `C.P. ${c.zip}` : null,
+  ].filter((p) => p && String(p).trim() !== "");
+  const address = c.address_full?.trim() || parts.join(", ");
+  return { ...c, address: address || null };
+}
+
 function buildDoc(programCode: string, data: any) {
   const code = (programCode ?? "").toUpperCase();
+  const client = withAddress(data.client);
   const common = {
     folio: data.policy.folio,
     issue_date: data.policy.issue_date,
-    client: data.client,
+    client,
     beneficiaries: data.beneficiaries,
     validity_from: data.policy.start_date,
     validity_to: data.policy.end_date,
-    contractor_signature_url: data.client?.contractor_signature_url ?? null,
-    insured_signature_url: data.client?.signature_url ?? null,
+    contractor_signature_url: client?.contractor_signature_url ?? null,
+    insured_signature_url: client?.signature_url ?? null,
   };
+
   switch (code) {
     case "ABC":
       return createElement(CertificateABC, { ...common, dependents: data.dependents });
@@ -54,6 +70,11 @@ export async function generateCertificateClient(
   const { programCode, payload } = await getCertificatePayload({ data: { policy_id: policyId } });
   const { pdf } = await import("@react-pdf/renderer");
   const blob = await pdf(buildDoc(programCode, payload) as any).toBlob();
+
+  // Save locally first (same-origin blob): extensions/antivirus often block
+  // downloads coming straight from the storage domain (ERR_BLOCKED_BY_CLIENT).
+  downloadBlob(blob, `${payload.policy.folio}.pdf`);
+
   const pdf_base64 = await blobToBase64(blob);
   const res = await saveCertificatePdf({
     data: {
@@ -67,9 +88,23 @@ export async function generateCertificateClient(
   return { url: res.url };
 }
 
+/** Trigger a local download of a blob without touching any external domain. */
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
 /** Render a certificate PDF in the browser and return the raw bytes (used for bulk ZIP downloads). */
 export async function renderCertificateBlob(policyId: string): Promise<Blob> {
   const { programCode, payload } = await getCertificatePayload({ data: { policy_id: policyId } });
   const { pdf } = await import("@react-pdf/renderer");
   return await pdf(buildDoc(programCode, payload) as any).toBlob();
 }
+

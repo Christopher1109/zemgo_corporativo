@@ -145,14 +145,14 @@ function PolicyDetail() {
 
   const pdfMutation = useMutation({
     mutationFn: () => generateCertificateClient(policyId),
-    onSuccess: (res) => {
-      toast.success("Certificado generado");
-      window.open(res.url, "_blank");
+    onSuccess: () => {
+      toast.success("Certificado descargado con la información más reciente");
       qc.invalidateQueries({ queryKey: ["policy", policyId] });
       qc.invalidateQueries({ queryKey: ["policy-audit", policyId] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Error al generar PDF"),
   });
+
 
   if (isLoading || !policy) {
     return <div className="text-muted-foreground">Cargando certificado…</div>;
