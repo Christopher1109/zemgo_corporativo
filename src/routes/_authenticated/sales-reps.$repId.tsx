@@ -31,8 +31,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { SalesRepFormDialog } from "@/components/sales/SalesRepFormDialog";
+import { AssignClientDialog } from "@/components/sales/AssignClientDialog";
 import {
   ArrowLeft,
+  Pencil,
+  UserPlus,
   User,
   Plus,
   Trash2,
@@ -90,6 +94,8 @@ function SalesRepDetailPage() {
   const deleteFn = useServerFn(deleteSalesRep);
 
   const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [assignClientOpen, setAssignClientOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [unlinkPolicy, setUnlinkPolicy] = useState<any | null>(null);
@@ -187,9 +193,17 @@ function SalesRepDetailPage() {
             <ArrowLeft className="h-4 w-4 mr-1" /> Volver
           </Link>
         </Button>
-        <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)}>
-          <Trash2 className="h-4 w-4 mr-1" /> Eliminar vendedor
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+            <Pencil className="h-4 w-4 mr-1" /> Editar datos
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setAssignClientOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-1" /> Asignar cliente
+          </Button>
+          <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)}>
+            <Trash2 className="h-4 w-4 mr-1" /> Eliminar vendedor
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-start gap-4">
@@ -378,6 +392,14 @@ function SalesRepDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <SalesRepFormDialog open={editOpen} onOpenChange={setEditOpen} rep={rep as any} />
+      <AssignClientDialog
+        open={assignClientOpen}
+        onOpenChange={setAssignClientOpen}
+        repId={repId}
+        repName={rep.full_name}
+      />
 
       {/* Agregar certificado */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
