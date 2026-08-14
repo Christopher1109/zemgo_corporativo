@@ -211,8 +211,10 @@ function PassDownloadButton({ passes }: { passes: Array<{ id: string; pdf_url: s
           const bytes = new Uint8Array(bin.length);
           for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
           downloadBlob(new Blob([bytes], { type: "application/pdf" }), filename);
-
+        } catch (e: any) {
+          toast.error(e?.message ?? "No se pudo descargar la carta");
         }
+
       }}
     >
       <Download className="h-3.5 w-3.5 mr-1" /> Pase
