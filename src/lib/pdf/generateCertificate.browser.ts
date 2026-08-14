@@ -11,18 +11,34 @@ import { CertificateFutCare } from "./templates/CertificateFutCare";
 import { CertificateMCV } from "./templates/CertificateMCV";
 import { SmokeTestDoc } from "./templates/SmokeTest";
 
+/** Templates read `client.address`; the DB stores the address in parts. */
+function withAddress(client: any) {
+  const c = client ?? {};
+  const parts = [
+    [c.street, c.number].filter(Boolean).join(" "),
+    c.colonia,
+    c.city,
+    c.state,
+    c.zip ? `C.P. ${c.zip}` : null,
+  ].filter((p) => p && String(p).trim() !== "");
+  const address = c.address_full?.trim() || parts.join(", ");
+  return { ...c, address: address || null };
+}
+
 function buildDoc(programCode: string, data: any) {
   const code = (programCode ?? "").toUpperCase();
+  const client = withAddress(data.client);
   const common = {
     folio: data.policy.folio,
     issue_date: data.policy.issue_date,
-    client: data.client,
+    client,
     beneficiaries: data.beneficiaries,
     validity_from: data.policy.start_date,
     validity_to: data.policy.end_date,
-    contractor_signature_url: data.client?.contractor_signature_url ?? null,
-    insured_signature_url: data.client?.signature_url ?? null,
+    contractor_signature_url: client?.contractor_signature_url ?? null,
+    insured_signature_url: client?.signature_url ?? null,
   };
+
   switch (code) {
     case "ABC":
       return createElement(CertificateABC, { ...common, dependents: data.dependents });
