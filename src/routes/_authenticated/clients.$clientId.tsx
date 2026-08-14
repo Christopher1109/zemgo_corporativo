@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
+import { EditClientDialog } from "@/components/clients/EditClientDialog";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   head: () => ({
