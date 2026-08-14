@@ -41,7 +41,7 @@ export function AssignClientDialog({
     setBusy(clientId);
     try {
       await assignFn({ data: { client_id: clientId, sales_rep_id: repId } });
-      await qc.invalidateQueries({ queryKey: ["sales-rep-detail"] });
+      await qc.invalidateQueries({ queryKey: ["sales-rep"] });
       await qc.invalidateQueries({ queryKey: ["sales-reps"] });
       await q.refetch();
       toast.success("Cliente asignado al vendedor");

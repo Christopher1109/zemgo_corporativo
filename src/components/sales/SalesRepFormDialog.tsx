@@ -85,7 +85,7 @@ export function SalesRepFormDialog({
       if (rep?.id) await updateFn({ data: { id: rep.id, ...payload } });
       else await createFn({ data: payload });
       await qc.invalidateQueries({ queryKey: ["sales-reps"] });
-      await qc.invalidateQueries({ queryKey: ["sales-rep-detail"] });
+      await qc.invalidateQueries({ queryKey: ["sales-rep"] });
       toast.success(rep?.id ? "Vendedor actualizado" : "Vendedor creado");
       onOpenChange(false);
     } catch (e: any) {
