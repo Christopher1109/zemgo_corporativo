@@ -25,7 +25,7 @@ export const listSalesReps = createServerFn({ method: "GET" })
 
     const repsQ = await sb
       .from("sales_reps")
-      .select("id, full_name, referral_source, code, is_active")
+      .select("id, full_name, referral_source, code, ref_slug, program_id, is_active")
       .order("full_name");
     if (repsQ.error) throw new Error(repsQ.error.message);
     const reps = repsQ.data ?? [];
@@ -115,7 +115,7 @@ export const getSalesRepDetail = createServerFn({ method: "GET" })
     const sb = context.supabase;
     const repQ = await sb
       .from("sales_reps")
-      .select("id, full_name, referral_source, code, is_active, metadata")
+      .select("id, full_name, referral_source, code, ref_slug, program_id, is_active, metadata")
       .eq("id", data.sales_rep_id)
       .maybeSingle();
     if (repQ.error) throw new Error(repQ.error.message);
@@ -398,4 +398,126 @@ export const deleteSalesRep = createServerFn({ method: "POST" })
     });
     if (r.error) throw new Error(r.error.message);
     return r.data as any;
+  });
+
+function slugify(s: string) {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+const repSchema = z.object({
+  full_name: z.string().min(3),
+  code: z.string().trim().max(20).nullable().optional(),
+  ref_slug: z.string().trim().max(80).nullable().optional(),
+  program_id: z.string().uuid().nullable().optional(),
+  referral_source: z.string().trim().max(120).nullable().optional(),
+  is_active: z.boolean().optional(),
+});
+
+/** Create a sales rep manually (admins). */
+export const createSalesRep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => repSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const slug = data.ref_slug?.trim() ? slugify(data.ref_slug) : slugify(data.full_name);
+    const i = await context.supabase
+      .from("sales_reps")
+      .insert({
+        full_name: data.full_name.trim(),
+        code: data.code?.trim() || null,
+        ref_slug: slug || null,
+        program_id: data.program_id ?? null,
+        referral_source: data.referral_source?.trim() || null,
+        is_active: data.is_active ?? true,
+        created_by_sheet_sync: false,
+      })
+      .select("id")
+      .maybeSingle();
+    if (i.error) throw new Error(i.error.message);
+    return i.data;
+  });
+
+/** Update a sales rep. */
+export const updateSalesRep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => repSchema.partial().extend({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { id, ...rest } = data;
+    const payload: {
+      full_name?: string;
+      code?: string | null;
+      ref_slug?: string | null;
+      program_id?: string | null;
+      referral_source?: string | null;
+      is_active?: boolean;
+    } = {};
+    if (rest.full_name !== undefined) payload.full_name = rest.full_name.trim();
+    if (rest.code !== undefined) payload.code = rest.code?.trim() || null;
+    if (rest.ref_slug !== undefined)
+      payload.ref_slug = rest.ref_slug?.trim() ? slugify(rest.ref_slug) : null;
+    if (rest.program_id !== undefined) payload.program_id = rest.program_id ?? null;
+    if (rest.referral_source !== undefined)
+      payload.referral_source = rest.referral_source?.trim() || null;
+    if (rest.is_active !== undefined) payload.is_active = rest.is_active;
+    const u = await context.supabase.from("sales_reps").update(payload).eq("id", id).select("id").maybeSingle();
+    if (u.error) throw new Error(u.error.message);
+    if (!u.data) throw new Error("No se pudo actualizar el vendedor (permisos)");
+    return u.data;
+  });
+
+/** Search clients to attach to a sales rep. */
+export const searchAssignableClients = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        search: z.string().optional(),
+        only_unassigned: z.boolean().optional(),
+      })
+      .parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    let q = context.supabase
+      .from("clients")
+      .select("id, first_name, last_name, curp, email, phone, sales_rep_id")
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (data.only_unassigned) q = q.is("sales_rep_id", null);
+    const term = data.search?.trim() ?? "";
+    if (term.length >= 2) {
+      q = q.or(
+        `first_name.ilike.%${term}%,last_name.ilike.%${term}%,curp.ilike.%${term}%,email.ilike.%${term}%`,
+      );
+    }
+    const r = await q;
+    if (r.error) throw new Error(r.error.message);
+    return r.data ?? [];
+  });
+
+/** Assign (or unassign) a client to a sales rep; cascades to their certificates. */
+export const setClientSalesRep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ client_id: z.string().uuid(), sales_rep_id: z.string().uuid().nullable() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase;
+    const u = await sb
+      .from("clients")
+      .update({ sales_rep_id: data.sales_rep_id })
+      .eq("id", data.client_id)
+      .select("id")
+      .maybeSingle();
+    if (u.error) throw new Error(u.error.message);
+    if (!u.data) throw new Error("No se pudo actualizar el cliente (permisos)");
+    const p = await sb
+      .from("policies")
+      .update({ sales_rep_id: data.sales_rep_id })
+      .eq("client_id", data.client_id);
+    if (p.error) throw new Error(p.error.message);
+    return { ok: true };
   });

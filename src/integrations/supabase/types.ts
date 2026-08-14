@@ -1982,6 +1982,8 @@ export type Database = {
           id: string
           is_active: boolean
           metadata: Json | null
+          program_id: string | null
+          ref_slug: string | null
           referral_source: string | null
           updated_at: string
         }
@@ -1994,6 +1996,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           metadata?: Json | null
+          program_id?: string | null
+          ref_slug?: string | null
           referral_source?: string | null
           updated_at?: string
         }
@@ -2006,10 +2010,20 @@ export type Database = {
           id?: string
           is_active?: boolean
           metadata?: Json | null
+          program_id?: string | null
+          ref_slug?: string | null
           referral_source?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sales_reps_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_report_filters: {
         Row: {
@@ -2751,6 +2765,7 @@ export type Database = {
       revoke_portal_session: { Args: { _token: string }; Returns: undefined }
       run_pass_expiration_check: { Args: never; Returns: Json }
       run_payment_housekeeping: { Args: never; Returns: Json }
+      sales_rep_slug: { Args: { _name: string }; Returns: string }
       save_google_sheets_credentials: {
         Args: { _json: Json }
         Returns: undefined

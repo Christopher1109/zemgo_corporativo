@@ -7,7 +7,8 @@ import { useProgram } from "@/lib/program-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, DollarSign, TrendingUp, ArrowRight, Sparkles, RefreshCw } from "lucide-react";
+import { Users, DollarSign, TrendingUp, ArrowRight, Sparkles, RefreshCw, Plus } from "lucide-react";
+import { SalesRepFormDialog } from "@/components/sales/SalesRepFormDialog";
 
 export const Route = createFileRoute("/_authenticated/sales-reps/")({
   head: () => ({ meta: [{ title: "Vendedores — ZEMGO" }] }),
@@ -23,6 +24,7 @@ const MONTH = new Date().toLocaleDateString("es-MX", { month: "long", year: "num
 function SalesRepsPage() {
   const { activeProgram } = useProgram();
   const [scope, setScope] = useState<"active" | "all">("all");
+  const [newOpen, setNewOpen] = useState(false);
   const programId = scope === "active" ? (activeProgram?.id ?? null) : null;
 
   const listFn = useServerFn(listSalesReps);
@@ -57,6 +59,9 @@ function SalesRepsPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button size="sm" onClick={() => setNewOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Nuevo vendedor
+          </Button>
           <Button variant={scope === "all" ? "default" : "outline"} size="sm" onClick={() => setScope("all")}>
             Todos los programas
           </Button>
@@ -131,6 +136,8 @@ function SalesRepsPage() {
           ))
         )}
       </div>
+
+      <SalesRepFormDialog open={newOpen} onOpenChange={setNewOpen} />
     </div>
   );
 }
