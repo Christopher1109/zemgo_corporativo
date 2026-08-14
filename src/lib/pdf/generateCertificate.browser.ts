@@ -54,6 +54,11 @@ export async function generateCertificateClient(
   const { programCode, payload } = await getCertificatePayload({ data: { policy_id: policyId } });
   const { pdf } = await import("@react-pdf/renderer");
   const blob = await pdf(buildDoc(programCode, payload) as any).toBlob();
+
+  // Save locally first (same-origin blob): extensions/antivirus often block
+  // downloads coming straight from the storage domain (ERR_BLOCKED_BY_CLIENT).
+  downloadBlob(blob, `${payload.policy.folio}.pdf`);
+
   const pdf_base64 = await blobToBase64(blob);
   const res = await saveCertificatePdf({
     data: {
@@ -67,9 +72,23 @@ export async function generateCertificateClient(
   return { url: res.url };
 }
 
+/** Trigger a local download of a blob without touching any external domain. */
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
 /** Render a certificate PDF in the browser and return the raw bytes (used for bulk ZIP downloads). */
 export async function renderCertificateBlob(policyId: string): Promise<Blob> {
   const { programCode, payload } = await getCertificatePayload({ data: { policy_id: policyId } });
   const { pdf } = await import("@react-pdf/renderer");
   return await pdf(buildDoc(programCode, payload) as any).toBlob();
 }
+
