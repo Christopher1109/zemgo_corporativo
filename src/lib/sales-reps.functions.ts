@@ -447,7 +447,14 @@ export const updateSalesRep = createServerFn({ method: "POST" })
   .inputValidator((d) => repSchema.partial().extend({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { id, ...rest } = data;
-    const payload: Record<string, string | boolean | null> = {};
+    const payload: {
+      full_name?: string;
+      code?: string | null;
+      ref_slug?: string | null;
+      program_id?: string | null;
+      referral_source?: string | null;
+      is_active?: boolean;
+    } = {};
     if (rest.full_name !== undefined) payload.full_name = rest.full_name.trim();
     if (rest.code !== undefined) payload.code = rest.code?.trim() || null;
     if (rest.ref_slug !== undefined)
