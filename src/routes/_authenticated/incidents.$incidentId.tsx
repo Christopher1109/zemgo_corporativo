@@ -181,17 +181,21 @@ function IncidentDetail() {
   async function downloadPass(passId: string) {
     setBusy(true);
     try {
-      let url: string;
+      let res: { base64: string; filename: string };
       try {
-        ({ url } = await signFn({ data: { pass_id: passId } }));
+        res = await bytesFn({ data: { pass_id: passId } });
       } catch (e: any) {
         if (!String(e?.message ?? e).includes("pdf_not_generated")) throw e;
         await generateFn({ data: { pass_id: passId } });
         qc.invalidateQueries({ queryKey: ["incident-passes", incidentId] });
-        ({ url } = await signFn({ data: { pass_id: passId } }));
+        res = await bytesFn({ data: { pass_id: passId } });
       }
-      window.open(url, "_blank");
+      const bin = atob(res.base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      downloadBlob(new Blob([bytes], { type: "application/pdf" }), res.filename);
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
+
   }
 
 
