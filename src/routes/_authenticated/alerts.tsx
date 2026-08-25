@@ -44,15 +44,17 @@ function matchBucket(days: number, isOverdue: boolean, bucket: Bucket): boolean 
 
 /**
  * Semáforo por periodicidad:
- *  - Mensual (recordatorios de pago): naranja ≤15d, rojo ≤10d o vencido
- *  - Anual   (renovaciones):          naranja ≤30d, rojo ≤15d o vencido
+ *  - Mensual (recordatorios de pago): amarillo ≤15d, naranja ≤10d, rojo ≤5d o vencido, verde fuera de rango
+ *  - Anual   (renovaciones):          amarillo ≤30d, naranja ≤15d, rojo ≤5d o vencido, verde fuera de rango
  */
 function semaforo(days: number, isOverdue: boolean, freq: "monthly" | "annual" = "monthly"): string {
-  const redThreshold = freq === "annual" ? 15 : 10;
-  const orangeThreshold = freq === "annual" ? 30 : 15;
-  if (isOverdue || days <= redThreshold) return "bg-destructive/10 border-l-4 border-l-destructive";
-  if (days <= orangeThreshold) return "bg-orange-500/10 border-l-4 border-l-orange-500";
-  return "";
+  const red = 5;
+  const orange = freq === "annual" ? 15 : 10;
+  const yellow = freq === "annual" ? 30 : 15;
+  if (isOverdue || days <= red) return "bg-destructive/10 border-l-4 border-l-destructive";
+  if (days <= orange) return "bg-orange-500/10 border-l-4 border-l-orange-500";
+  if (days <= yellow) return "bg-yellow-400/10 border-l-4 border-l-yellow-500";
+  return "bg-emerald-500/10 border-l-4 border-l-emerald-500";
 }
 
 /** Sort: vencidos primero (más antiguos arriba), luego próximos a vencer (días asc). */
