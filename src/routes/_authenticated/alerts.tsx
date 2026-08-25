@@ -281,9 +281,13 @@ function RemindersList({ rows }: { rows: any[] }) {
                   <Badge variant="outline" className="font-mono text-[10px]">{r.policies?.folio}</Badge>
                   {isOverdue
                     ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vencido hace {Math.abs(d)}d</Badge>
-                    : d <= 15
-                      ? <Badge className="bg-orange-500 text-white text-[10px]">Vence en {d}d</Badge>
-                      : <Badge variant="secondary" className="text-[10px]">{d}d</Badge>
+                    : d <= 5
+                      ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vence en {d}d</Badge>
+                      : d <= 10
+                        ? <Badge className="bg-orange-500 text-white text-[10px]">Vence en {d}d</Badge>
+                        : d <= 15
+                          ? <Badge className="bg-yellow-500 text-black text-[10px]">Vence en {d}d</Badge>
+                          : <Badge className="bg-emerald-600 text-white text-[10px]">{d}d</Badge>
                   }
                 </div>
                 <ContactBits c={c} />
