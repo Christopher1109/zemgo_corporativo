@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -1104,9 +1104,11 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          auth_code: string | null
           bank_reference: string | null
           bank_reference_expires_at: string | null
           cancellation_reason: string | null
+          control_number: string | null
           created_at: string
           created_by: string | null
           due_date: string | null
@@ -1121,15 +1123,18 @@ export type Database = {
           policy_id: string
           provider: string | null
           provider_transaction_id: string | null
+          raw_response: Json | null
           reconciled: boolean
           status: Database["public"]["Enums"]["payment_status"]
           updated_at: string
         }
         Insert: {
           amount: number
+          auth_code?: string | null
           bank_reference?: string | null
           bank_reference_expires_at?: string | null
           cancellation_reason?: string | null
+          control_number?: string | null
           created_at?: string
           created_by?: string | null
           due_date?: string | null
@@ -1144,15 +1149,18 @@ export type Database = {
           policy_id: string
           provider?: string | null
           provider_transaction_id?: string | null
+          raw_response?: Json | null
           reconciled?: boolean
           status?: Database["public"]["Enums"]["payment_status"]
           updated_at?: string
         }
         Update: {
           amount?: number
+          auth_code?: string | null
           bank_reference?: string | null
           bank_reference_expires_at?: string | null
           cancellation_reason?: string | null
+          control_number?: string | null
           created_at?: string
           created_by?: string | null
           due_date?: string | null
@@ -1167,6 +1175,7 @@ export type Database = {
           policy_id?: string
           provider?: string | null
           provider_transaction_id?: string | null
+          raw_response?: Json | null
           reconciled?: boolean
           status?: Database["public"]["Enums"]["payment_status"]
           updated_at?: string
@@ -2287,6 +2296,38 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_lines: {
+        Row: {
+          display_name: string
+          phone_number_id: string | null
+          program_code: string
+          updated_at: string
+          waba_id: string | null
+        }
+        Insert: {
+          display_name: string
+          phone_number_id?: string | null
+          program_code: string
+          updated_at?: string
+          waba_id?: string | null
+        }
+        Update: {
+          display_name?: string
+          phone_number_id?: string | null
+          program_code?: string
+          updated_at?: string
+          waba_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_lines_program_code_fkey"
+            columns: ["program_code"]
+            isOneToOne: true
+            referencedRelation: "programs"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       whatsapp_messages: {
         Row: {
           body: string | null
@@ -2571,6 +2612,7 @@ export type Database = {
         Returns: undefined
       }
       generate_bank_reference: { Args: { _payment_id: string }; Returns: Json }
+      generate_pending_payments: { Args: never; Returns: undefined }
       get_action_items: { Args: { _program_id: string }; Returns: Json }
       get_dashboard_kpis: { Args: { _program_id: string }; Returns: Json }
       get_google_sheets_credentials: { Args: never; Returns: Json }
@@ -2677,6 +2719,7 @@ export type Database = {
         Args: { _notes: string; _policy_id: string }
         Returns: string
       }
+      mark_overdue_payments: { Args: never; Returns: undefined }
       mark_payment_paid: {
         Args: {
           _amount_change_reason: string
