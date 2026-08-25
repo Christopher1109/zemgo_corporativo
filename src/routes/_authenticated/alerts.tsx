@@ -44,15 +44,17 @@ function matchBucket(days: number, isOverdue: boolean, bucket: Bucket): boolean 
 
 /**
  * Semáforo por periodicidad:
- *  - Mensual (recordatorios de pago): naranja ≤15d, rojo ≤10d o vencido
- *  - Anual   (renovaciones):          naranja ≤30d, rojo ≤15d o vencido
+ *  - Mensual (recordatorios de pago): amarillo ≤15d, naranja ≤10d, rojo ≤5d o vencido, verde fuera de rango
+ *  - Anual   (renovaciones):          amarillo ≤30d, naranja ≤15d, rojo ≤5d o vencido, verde fuera de rango
  */
 function semaforo(days: number, isOverdue: boolean, freq: "monthly" | "annual" = "monthly"): string {
-  const redThreshold = freq === "annual" ? 15 : 10;
-  const orangeThreshold = freq === "annual" ? 30 : 15;
-  if (isOverdue || days <= redThreshold) return "bg-destructive/10 border-l-4 border-l-destructive";
-  if (days <= orangeThreshold) return "bg-orange-500/10 border-l-4 border-l-orange-500";
-  return "";
+  const red = 5;
+  const orange = freq === "annual" ? 15 : 10;
+  const yellow = freq === "annual" ? 30 : 15;
+  if (isOverdue || days <= red) return "bg-destructive/10 border-l-4 border-l-destructive";
+  if (days <= orange) return "bg-orange-500/10 border-l-4 border-l-orange-500";
+  if (days <= yellow) return "bg-yellow-400/10 border-l-4 border-l-yellow-500";
+  return "bg-emerald-500/10 border-l-4 border-l-emerald-500";
 }
 
 /** Sort: vencidos primero (más antiguos arriba), luego próximos a vencer (días asc). */
@@ -161,13 +163,16 @@ function AlertsPage() {
         <div className="flex flex-wrap items-center gap-4 text-xs">
           <span className="font-medium text-muted-foreground uppercase tracking-wide">Semáforo:</span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-3 w-3 rounded-sm bg-destructive" /> Vencidos
+            <span className="inline-block h-3 w-3 rounded-sm bg-destructive" /> Vencidos o ≤ 5 días
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-3 w-3 rounded-sm bg-orange-500" /> Por vencer en ≤ 15 días
+            <span className="inline-block h-3 w-3 rounded-sm bg-orange-500" /> ≤ 10 días
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-3 w-3 rounded-sm border bg-background" /> Más de 15 días
+            <span className="inline-block h-3 w-3 rounded-sm bg-yellow-500" /> ≤ 15 días
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-sm bg-emerald-500" /> Fuera de recordatorios
           </span>
           <span className="text-muted-foreground ml-auto">Orden: vencidos primero, luego los más próximos a vencer.</span>
         </div>
@@ -279,9 +284,13 @@ function RemindersList({ rows }: { rows: any[] }) {
                   <Badge variant="outline" className="font-mono text-[10px]">{r.policies?.folio}</Badge>
                   {isOverdue
                     ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vencido hace {Math.abs(d)}d</Badge>
-                    : d <= 15
-                      ? <Badge className="bg-orange-500 text-white text-[10px]">Vence en {d}d</Badge>
-                      : <Badge variant="secondary" className="text-[10px]">{d}d</Badge>
+                    : d <= 5
+                      ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vence en {d}d</Badge>
+                      : d <= 10
+                        ? <Badge className="bg-orange-500 text-white text-[10px]">Vence en {d}d</Badge>
+                        : d <= 15
+                          ? <Badge className="bg-yellow-500 text-black text-[10px]">Vence en {d}d</Badge>
+                          : <Badge className="bg-emerald-600 text-white text-[10px]">{d}d</Badge>
                   }
                 </div>
                 <ContactBits c={c} />
