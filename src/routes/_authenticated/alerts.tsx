@@ -163,13 +163,16 @@ function AlertsPage() {
         <div className="flex flex-wrap items-center gap-4 text-xs">
           <span className="font-medium text-muted-foreground uppercase tracking-wide">Semáforo:</span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-3 w-3 rounded-sm bg-destructive" /> Vencidos
+            <span className="inline-block h-3 w-3 rounded-sm bg-destructive" /> Vencidos o ≤ 5 días
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-3 w-3 rounded-sm bg-orange-500" /> Por vencer en ≤ 15 días
+            <span className="inline-block h-3 w-3 rounded-sm bg-orange-500" /> ≤ 10 días
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-3 w-3 rounded-sm border bg-background" /> Más de 15 días
+            <span className="inline-block h-3 w-3 rounded-sm bg-yellow-500" /> ≤ 15 días
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-sm bg-emerald-500" /> Fuera de recordatorios
           </span>
           <span className="text-muted-foreground ml-auto">Orden: vencidos primero, luego los más próximos a vencer.</span>
         </div>
