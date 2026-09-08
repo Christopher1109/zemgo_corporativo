@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,9 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Bell, RefreshCw, AlertOctagon, Calendar, CreditCard, ExternalLink, Phone, Mail, MapPin, Search } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Bell, RefreshCw, AlertOctagon, Calendar, CreditCard, ExternalLink, Phone, Mail, MapPin, Search, Send, Check } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { useProgram } from "@/lib/program-context";
 import { getAlertsOverview } from "@/lib/alerts.functions";
+import { getPaymentReminderStatus } from "@/lib/payment-reminders.functions";
+import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
@@ -201,9 +207,12 @@ function AlertsPage() {
       </Card>
 
       <Tabs defaultValue="reminders" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+        <TabsList className="grid w-full grid-cols-4 max-w-3xl">
           <TabsTrigger value="reminders">
             <Bell className="h-4 w-4 mr-2" /> Recordatorios ({remFiltered.length})
+          </TabsTrigger>
+          <TabsTrigger value="payment-reminders">
+            <Send className="h-4 w-4 mr-2" /> Recordatorios de pago
           </TabsTrigger>
           <TabsTrigger value="renewals">
             <RefreshCw className="h-4 w-4 mr-2" /> Renovaciones ({renFiltered.length})
@@ -216,6 +225,9 @@ function AlertsPage() {
         <TabsContent value="reminders" className="mt-4">
           {q.isLoading ? <Skeleton /> : <RemindersList rows={remFiltered} />}
         </TabsContent>
+        <TabsContent value="payment-reminders" className="mt-4">
+          <PaymentRemindersTab programId={programId} search={search} />
+        </TabsContent>
         <TabsContent value="renewals" className="mt-4">
           {q.isLoading ? <Skeleton /> : <RenewalsList rows={renFiltered} />}
         </TabsContent>
@@ -223,6 +235,175 @@ function AlertsPage() {
           {q.isLoading ? <Skeleton /> : <SuspendedList rows={suspFiltered} />}
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function ReminderStatusBadge({ row }: { row: any }) {
+  if (row.reminder_status == null)
+    return <Badge variant="outline" className="bg-muted text-muted-foreground border-muted-foreground/20 text-[10px]">No enviado</Badge>;
+  if (row.reminder_status === "failed")
+    return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 dark:bg-red-950 dark:text-red-200 text-[10px]">Falló</Badge>;
+  if (row.reminder_status === "pending")
+    return <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 text-[10px]">Pendiente</Badge>;
+  if (row.reminder_was_manual)
+    return <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-200 text-[10px]">Reenviado manual</Badge>;
+  return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-200 text-[10px]">Enviado</Badge>;
+}
+
+function PaymentRemindersTab({ programId, search }: { programId: string | null; search: string }) {
+  const queryClient = useQueryClient();
+  const fn = useServerFn(getPaymentReminderStatus);
+  const [remFilter, setRemFilter] = useState<string>("all");
+  const [payFilter, setPayFilter] = useState<string>("all");
+  const [confirmRow, setConfirmRow] = useState<any | null>(null);
+  const [sending, setSending] = useState(false);
+
+  const q = useQuery({
+    queryKey: ["payment-reminder-status", programId],
+    queryFn: () => fn({ data: { program_id: programId } }),
+    staleTime: 30_000,
+  });
+
+  const s = search.trim().toLowerCase();
+  const rows = (q.data ?? []).filter((r: any) => {
+    if (remFilter !== "all") {
+      const st = r.reminder_status ?? "none";
+      if (remFilter === "manual") { if (!r.reminder_was_manual) return false; }
+      else if (st !== remFilter) return false;
+    }
+    if (payFilter !== "all" && r.payment_status !== payFilter) return false;
+    if (s && !(`${r.first_name ?? ""} ${r.last_name ?? ""}`.toLowerCase().includes(s))) return false;
+    return true;
+  });
+
+  async function resend() {
+    const row = confirmRow;
+    if (!row) return;
+    setSending(true);
+    try {
+      const { error } = await supabase.functions.invoke("resend-payment-reminder", {
+        body: { payment_id: row.payment_id },
+      });
+      if (error) throw new Error(error.message);
+      toast.success(`Recordatorio reenviado a ${row.first_name} ${row.last_name}`);
+      setConfirmRow(null);
+      await queryClient.invalidateQueries({ queryKey: ["payment-reminder-status"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo reenviar el recordatorio");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <Card className="p-3">
+        <div className="grid md:grid-cols-2 gap-3 items-end">
+          <div>
+            <label className="text-xs font-medium uppercase text-muted-foreground">Estado del recordatorio</label>
+            <Select value={remFilter} onValueChange={setRemFilter}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="none">No enviado</SelectItem>
+                <SelectItem value="sent">Enviado</SelectItem>
+                <SelectItem value="manual">Reenviado manual</SelectItem>
+                <SelectItem value="pending">Pendiente</SelectItem>
+                <SelectItem value="failed">Falló</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs font-medium uppercase text-muted-foreground">Estado del pago</label>
+            <Select value={payFilter} onValueChange={setPayFilter}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="pending">Pendiente</SelectItem>
+                <SelectItem value="overdue">Vencido</SelectItem>
+                <SelectItem value="paid">Pagado</SelectItem>
+                <SelectItem value="failed">Fallido</SelectItem>
+                <SelectItem value="cancelled">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <CardContent className="p-0">
+          {q.isLoading ? (
+            <div className="p-4"><Skeleton /></div>
+          ) : rows.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">Sin registros para este filtro.</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Vence</TableHead>
+                  <TableHead className="text-right">Monto</TableHead>
+                  <TableHead>Recordatorio</TableHead>
+                  <TableHead className="text-center">Respondió</TableHead>
+                  <TableHead>Pago</TableHead>
+                  <TableHead className="text-right">Acción</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((r: any) => (
+                  <TableRow key={r.payment_id}>
+                    <TableCell>
+                      <div className="font-medium text-sm">{r.first_name} {r.last_name}</div>
+                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        {r.phone && <><Phone className="h-3 w-3" />{r.phone}</>}
+                        {r.program_code && <span className="ml-2 font-mono">{r.program_code}</span>}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm whitespace-nowrap">{r.due_date}</TableCell>
+                    <TableCell className="text-right text-sm font-semibold whitespace-nowrap">${fmtMx(Number(r.amount ?? 0))}</TableCell>
+                    <TableCell><ReminderStatusBadge row={r} /></TableCell>
+                    <TableCell className="text-center">
+                      {r.client_responded
+                        ? <Check className="h-4 w-4 inline text-emerald-600" />
+                        : <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell><PaymentStatusBadge status={r.payment_status} /></TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-xs"
+                        disabled={r.payment_status === "paid"}
+                        onClick={() => setConfirmRow(r)}
+                      >
+                        <Send className="h-3 w-3 mr-1" /> Reenviar recordatorio
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={!!confirmRow} onOpenChange={(open) => { if (!open && !sending) setConfirmRow(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reenviar recordatorio de pago</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Reenviar recordatorio de pago a {confirmRow?.first_name} {confirmRow?.last_name}? Esto genera un cargo de WhatsApp.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={sending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); resend(); }} disabled={sending}>
+              {sending ? "Enviando…" : "Reenviar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -111,6 +111,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bank_reconciliation_log_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["payment_id"]
+          },
           {
             foreignKeyName: "bank_reconciliation_log_payment_id_fkey"
             columns: ["payment_id"]
@@ -220,6 +227,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_programs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "client_programs_program_id_fkey"
@@ -566,6 +580,13 @@ export type Database = {
             referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contractors_linked_client_id_fkey"
+            columns: ["linked_client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
+          },
         ]
       }
       dependents: {
@@ -701,6 +722,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duplicate_curp_attempts_existing_client_id_fkey"
+            columns: ["existing_client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
           },
         ]
       }
@@ -858,6 +886,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "incidents_hospital_id_fkey"
@@ -1049,6 +1084,13 @@ export type Database = {
             foreignKeyName: "payment_reconciliations_payment_id_fkey"
             columns: ["payment_id"]
             isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["payment_id"]
+          },
+          {
+            foreignKeyName: "payment_reconciliations_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
             referencedRelation: "payments"
             referencedColumns: ["id"]
           },
@@ -1097,6 +1139,57 @@ export type Database = {
             columns: ["policy_id"]
             isOneToOne: false
             referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_vce_sessions: {
+        Row: {
+          consumed_at: string | null
+          control_number: string
+          created_at: string
+          expires_at: string
+          id: string
+          passphrase: string
+          payment_id: string
+          salt_hex: string
+          vi_hex: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          control_number: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          passphrase: string
+          payment_id: string
+          salt_hex: string
+          vi_hex: string
+        }
+        Update: {
+          consumed_at?: string | null
+          control_number?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          passphrase?: string
+          payment_id?: string
+          salt_hex?: string
+          vi_hex?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_vce_sessions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["payment_id"]
+          },
+          {
+            foreignKeyName: "payment_vce_sessions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
             referencedColumns: ["id"]
           },
         ]
@@ -1318,6 +1411,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "policies_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "policies_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
@@ -1484,6 +1584,13 @@ export type Database = {
             referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "portal_access_codes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
+          },
         ]
       }
       portal_login_attempts: {
@@ -1594,6 +1701,13 @@ export type Database = {
             referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "portal_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
+          },
         ]
       }
       profiles: {
@@ -1684,6 +1798,7 @@ export type Database = {
           name: string
           payment_alert_offsets: number[]
           policy_number: string | null
+          whatsapp_reminder_offset_days: number
         }
         Insert: {
           billing_note?: string | null
@@ -1698,6 +1813,7 @@ export type Database = {
           name: string
           payment_alert_offsets?: number[]
           policy_number?: string | null
+          whatsapp_reminder_offset_days?: number
         }
         Update: {
           billing_note?: string | null
@@ -1712,6 +1828,7 @@ export type Database = {
           name?: string
           payment_alert_offsets?: number[]
           policy_number?: string | null
+          whatsapp_reminder_offset_days?: number
         }
         Relationships: []
       }
@@ -1883,6 +2000,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sales_commissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "sales_commissions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: true
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["payment_id"]
+          },
+          {
             foreignKeyName: "sales_commissions_payment_id_fkey"
             columns: ["payment_id"]
             isOneToOne: true
@@ -1971,6 +2102,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_rep_match_review_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "sales_rep_match_review_resolved_sales_rep_id_fkey"
@@ -2211,6 +2349,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sheet_synced_rows_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "sheet_synced_rows_policy_id_fkey"
             columns: ["policy_id"]
             isOneToOne: false
@@ -2323,6 +2468,13 @@ export type Database = {
             foreignKeyName: "whatsapp_lines_program_code_fkey"
             columns: ["program_code"]
             isOneToOne: true
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["program_code"]
+          },
+          {
+            foreignKeyName: "whatsapp_lines_program_code_fkey"
+            columns: ["program_code"]
+            isOneToOne: true
             referencedRelation: "programs"
             referencedColumns: ["code"]
           },
@@ -2393,6 +2545,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "manos_con_valor_clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
           },
         ]
       }
@@ -2553,6 +2712,43 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "client_programs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_reminder_status: {
+        Row: {
+          amount: number | null
+          client_id: string | null
+          client_responded: boolean | null
+          due_date: string | null
+          first_name: string | null
+          last_name: string | null
+          notification_id: string | null
+          payment_id: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"] | null
+          phone: string | null
+          policy_id: string | null
+          program_code: string | null
+          program_id: string | null
+          program_name: string | null
+          reminder_sent_at: string | null
+          reminder_status: string | null
+          reminder_was_manual: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policies_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
@@ -2927,12 +3123,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2956,11 +3152,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2981,11 +3177,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3006,11 +3202,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3023,11 +3219,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
