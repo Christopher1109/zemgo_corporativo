@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { EditClientDialog } from "@/components/clients/EditClientDialog";
+import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   head: () => ({
@@ -40,6 +41,12 @@ const POLICY_STATUS: Record<string, string> = {
   expired: "Vencida",
   cancelled: "Cancelada",
   suspended: "Suspendida",
+};
+
+const FREQUENCY_LABELS: Record<string, string> = {
+  monthly: "Mensual",
+  yearly: "Anual",
+  one_time: "Pago único",
 };
 
 function ClientDetail() {
@@ -76,13 +83,31 @@ function ClientDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("policies")
-        .select("id, folio, policy_number, certificate_number, status, start_date, end_date, premium, programs(code, name)")
+        .select("id, folio, policy_number, certificate_number, status, start_date, end_date, premium, programs(code, name), payment_schedules(*)")
         .eq("client_id", clientId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as any[];
     },
   });
+
+  const policyIds = policies.map((p) => p.id);
+  const { data: urgentPayments = [] } = useQuery({
+    queryKey: ["client-urgent-payments", policyIds],
+    queryFn: async () => {
+      if (policyIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("payments")
+        .select("id, policy_id, status, due_date, amount")
+        .in("policy_id", policyIds)
+        .in("status", ["pending", "overdue"]);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+    enabled: policyIds.length > 0,
+  });
+
+  const urgentByPolicy = Object.fromEntries(urgentPayments.map((p) => [p.policy_id, p]));
 
   const { data: incidents = [] } = useQuery({
     queryKey: ["client-incidents", clientId],
@@ -202,35 +227,56 @@ function ClientDetail() {
           <Card>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Folio</TableHead>
-                  <TableHead>Programa</TableHead>
-                  <TableHead>No. póliza</TableHead>
-                  <TableHead>Vigencia</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead />
-                </TableRow>
+              <TableRow>
+                <TableHead>Folio</TableHead>
+                <TableHead>Programa</TableHead>
+                <TableHead>No. póliza</TableHead>
+                <TableHead>Vigencia</TableHead>
+                <TableHead>Próximo pago</TableHead>
+                <TableHead>Frecuencia</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead />
+              </TableRow>
               </TableHeader>
               <TableBody>
                 {policies.length === 0 && (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     Este cliente todavía no tiene certificado emitido (prospecto).
                   </TableCell></TableRow>
                 )}
-                {policies.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-mono text-xs">{p.folio}</TableCell>
-                    <TableCell>{p.programs?.name}</TableCell>
-                    <TableCell className="font-mono text-xs">{p.policy_number ?? "—"}</TableCell>
-                    <TableCell>{p.start_date ?? "—"} → {p.end_date ?? "—"}</TableCell>
-                    <TableCell><Badge variant="secondary">{POLICY_STATUS[p.status] ?? p.status}</Badge></TableCell>
-                    <TableCell className="text-right">
-                      <Button asChild size="sm" variant="outline">
-                        <Link to="/policies/$policyId" params={{ policyId: p.id }}>Ver</Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {policies.map((p) => {
+                  const schedule = p.payment_schedules?.[0];
+                  const urgent = urgentByPolicy[p.id];
+                  return (
+                    <TableRow key={p.id}>
+                      <TableCell className="font-mono text-xs">{p.folio}</TableCell>
+                      <TableCell>{p.programs?.name}</TableCell>
+                      <TableCell className="font-mono text-xs">{p.policy_number ?? "—"}</TableCell>
+                      <TableCell>{p.start_date ?? "—"} → {p.end_date ?? "—"}</TableCell>
+                      <TableCell>
+                        {urgent ? (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-red-600 dark:text-red-400 font-medium">
+                              {new Date(urgent.due_date).toLocaleDateString("es-MX")}
+                            </span>
+                            <PaymentStatusBadge status={urgent.status} />
+                          </div>
+                        ) : schedule?.next_due_date ? (
+                          new Date(schedule.next_due_date).toLocaleDateString("es-MX")
+                        ) : (
+                          <span className="text-muted-foreground text-xs">Sin programación de pago</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{FREQUENCY_LABELS[schedule?.frequency] ?? (schedule ? schedule.frequency : "—")}</TableCell>
+                      <TableCell><Badge variant="secondary">{POLICY_STATUS[p.status] ?? p.status}</Badge></TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild size="sm" variant="outline">
+                          <Link to="/policies/$policyId" params={{ policyId: p.id }}>Ver</Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </Card>
