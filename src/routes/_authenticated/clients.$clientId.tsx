@@ -147,14 +147,9 @@ function ClientDetail() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <EditClientDialog client={client} />
-          {enrollments.map((e) => {
-            const st = CP_STATUS[e.status] ?? { label: e.status, cls: "" };
-            return (
-              <Badge key={e.id} variant="outline" className={st.cls}>
-                {e.programs?.code}: {st.label}
-              </Badge>
-            );
-          })}
+          {enrollments.map((e) => (
+            <EnrollmentStatusControl key={e.id} enrollment={e} clientId={clientId} />
+          ))}
         </div>
       </div>
 
