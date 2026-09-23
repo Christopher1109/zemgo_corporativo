@@ -467,6 +467,19 @@ function CompanyDetailPage() {
               <Input inputMode="decimal" value={terms.sum_insured} onChange={(e) => setTerms({ ...terms, sum_insured: e.target.value })} />
             </div>
           </div>
+          {importErrors.length > 0 && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 max-h-48 overflow-auto">
+              <div className="text-xs font-semibold text-amber-900 mb-1">
+                Filas no procesadas ({importErrors.length})
+              </div>
+              <ul className="text-[11px] text-amber-900 space-y-0.5 list-disc pl-4">
+                {importErrors.map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <input
             ref={fileRef}
             type="file"
