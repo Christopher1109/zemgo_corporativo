@@ -44,10 +44,18 @@ function attemptInfo(p: any): { label: string; tone: string } {
   return { label: "Sin intento de pago", tone: "bg-muted text-muted-foreground border-border" };
 }
 
+const VIEWS: Array<{ value: string; label: string; statuses: string[] }> = [
+  { value: "open", label: "Por cobrar", statuses: ["pending", "overdue", "failed"] },
+  { value: "paid", label: "Ya pagados", statuses: ["paid"] },
+  { value: "attempted", label: "Con intento de pago", statuses: ["failed", "paid", "refunded"] },
+  { value: "all", label: "Todos", statuses: [] },
+];
+
 function PaymentsList() {
   const { activeProgram, programs } = useProgram();
   const navigate = useNavigate();
   const [scope, setScope] = useState<"active" | "all">("active");
+  const [view, setView] = useState("open");
   const [statuses, setStatuses] = useState<string[]>(["pending", "overdue", "failed"]);
   const [search, setSearch] = useState("");
   const [from, setFrom] = useState("");
@@ -56,16 +64,17 @@ function PaymentsList() {
   const PAGE_SIZE = 25;
 
   const programId = scope === "active" ? activeProgram?.id : null;
+  const paidView = view === "paid" || view === "attempted";
 
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["payments-list", programId, statuses, from, to, search, page],
+    queryKey: ["payments-list", programId, statuses, from, to, search, page, paidView],
     queryFn: async () => {
       let q = supabase
         .from("payments")
         .select(
           "id, amount, paid_amount, due_date, status, method, paid_at, provider, provider_transaction_id, control_number, failure_reason, policies!inner(id, folio, program_id, clients!inner(id, first_name, last_name, curp)), programs:policies(programs(id,name,code,color_primary))",
         )
-        .order("due_date", { ascending: true })
+        .order(paidView ? "paid_at" : "due_date", { ascending: !paidView, nullsFirst: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       if (statuses.length) q = q.in("status", statuses as any);
       if (from) q = q.gte("due_date", from);
@@ -85,17 +94,28 @@ function PaymentsList() {
           );
         });
       }
-      list.sort((a, b) => {
-        const rank = (x: any) => (x.status === "overdue" ? 0 : x.status === "failed" ? 1 : 2);
-        if (rank(a) !== rank(b)) return rank(a) - rank(b);
-        return (a.due_date ?? "").localeCompare(b.due_date ?? "");
-      });
+      if (paidView) {
+        list.sort((a, b) => (b.paid_at ?? "").localeCompare(a.paid_at ?? ""));
+      } else {
+        list.sort((a, b) => {
+          const rank = (x: any) => (x.status === "overdue" ? 0 : x.status === "failed" ? 1 : 2);
+          if (rank(a) !== rank(b)) return rank(a) - rank(b);
+          return (a.due_date ?? "").localeCompare(b.due_date ?? "");
+        });
+      }
       return list;
     },
   });
 
   const toggleStatus = (s: string) =>
     setStatuses((cur) => (cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]));
+
+  const applyView = (v: string) => {
+    setView(v);
+    setPage(0);
+    setStatuses(VIEWS.find((x) => x.value === v)?.statuses ?? []);
+  };
+
 
   return (
     <div className="space-y-4">
@@ -108,6 +128,20 @@ function PaymentsList() {
           </p>
         </div>
       </div>
+
+      <div className="flex flex-wrap gap-2">
+        {VIEWS.map((v) => (
+          <Button
+            key={v.value}
+            size="sm"
+            variant={view === v.value ? "default" : "outline"}
+            onClick={() => applyView(v.value)}
+          >
+            {v.label}
+          </Button>
+        ))}
+      </div>
+
 
       <Card className="p-4 space-y-3">
         <div className="grid md:grid-cols-3 gap-3">
@@ -155,16 +189,18 @@ function PaymentsList() {
               <TableHead>Programa</TableHead>
               <TableHead className="text-right">Monto</TableHead>
               <TableHead>Vencimiento</TableHead>
+              <TableHead>Pagado el</TableHead>
               <TableHead>Días</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Intento de pago</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && <TableRow><TableCell colSpan={8} className="text-center py-6 text-muted-foreground">Cargando…</TableCell></TableRow>}
+            {isLoading && <TableRow><TableCell colSpan={9} className="text-center py-6 text-muted-foreground">Cargando…</TableCell></TableRow>}
             {!isLoading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={8} className="text-center py-6 text-muted-foreground">Sin pagos.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-6 text-muted-foreground">Sin pagos.</TableCell></TableRow>
             )}
+
             {rows.map((r: any) => {
               const c = r.policies?.clients;
               const prog = r.policies?.programs;
@@ -197,6 +233,10 @@ function PaymentsList() {
                   </TableCell>
                   <TableCell className="text-right font-mono">${Number(r.amount).toLocaleString("es-MX")}</TableCell>
                   <TableCell>{r.due_date ?? "—"}</TableCell>
+                  <TableCell className="text-xs">
+                    {r.paid_at ? new Date(r.paid_at).toLocaleDateString("es-MX") : "—"}
+                  </TableCell>
+
                   <TableCell className={days !== null && days < 0 ? "text-red-600 font-medium" : ""}>
                     {days === null ? "—" : days < 0 ? `${Math.abs(days)} atras.` : `${days}`}
                   </TableCell>
