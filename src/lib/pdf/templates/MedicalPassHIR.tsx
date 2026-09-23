@@ -145,11 +145,32 @@ function Pill({ label, value }: { label: string; value: string }) {
   );
 }
 
+function pick(...vals: unknown[]): string | null {
+  for (const v of vals) {
+    if (v !== undefined && v !== null && String(v).trim() !== "") return String(v);
+  }
+  return null;
+}
+
 export function MedicalPassHIR(props: MedicalPassHIRProps) {
-  const snap = props.snapshot ?? {};
+  const snap = (props.snapshot ?? {}) as Record<string, unknown>;
   const sum = snap.sum_insured != null && snap.sum_insured !== "" ? formatCurrency(snap.sum_insured as any) : "—";
   const ded = snap.deductible != null && snap.deductible !== "" ? formatCurrency(snap.deductible as any) : "—";
   const directorName = props.director_name || "Graciela Rivera Bersoza";
+
+  // El portal del cliente y el CRM guardan los mismos datos con nombres
+  // ligeramente distintos; aceptamos ambos para reproducir tal cual el reporte.
+  const dob = pick(snap.date_of_birth, snap.insured_dob);
+  const curp = pick(snap.curp, snap.insured_curp);
+  const certificate = pick(snap.certificate_number, snap.folio);
+  const accidentDate = pick(snap.incident_date, snap.accident_date);
+  const accidentTime = (pick(snap.incident_time, snap.accident_time) ?? "—").slice(0, 5);
+  const hospital = pick(snap.hospital_name, snap.hospital);
+  const location = pick(snap.accident_location, snap.location_description, snap.location);
+  const description = pick(snap.incident_description, snap.accident_description);
+  const fullDescription = [location ? `Lugar: ${location}` : null, description]
+    .filter(Boolean)
+    .join("\n");
 
   return (
     <Document>
@@ -189,28 +210,28 @@ export function MedicalPassHIR(props: MedicalPassHIRProps) {
           </View>
 
           <View style={s.row}>
-            <Pill label="Fecha de nacimiento:" value={formatDate(snap.date_of_birth)} />
-            <Pill label="CURP:" value={safe(snap.curp)} />
+            <Pill label="Fecha de nacimiento:" value={formatDate(dob)} />
+            <Pill label="CURP:" value={safe(curp)} />
           </View>
 
           <View style={s.row}>
-            <Pill label="N° de Certificado:" value={safe(snap.certificate_number)} />
+            <Pill label="N° de Certificado:" value={safe(certificate)} />
             <Pill label="Suma Asegurada:" value={sum} />
           </View>
 
           <View style={s.row}>
             <Pill label="Deducible:" value={ded} />
-            <Pill label="Fecha del accidente:" value={formatDate(snap.incident_date)} />
-            <Pill label="Hora:" value={safe(snap.incident_time)} />
+            <Pill label="Fecha del accidente:" value={formatDate(accidentDate)} />
+            <Pill label="Hora:" value={accidentTime} />
           </View>
 
           <View style={s.descBox}>
             <Text style={s.descLabel}>Descripción detallada del accidente (lugar y cómo ocurrió):</Text>
-            <Text style={s.descText}>{safe(snap.incident_description)}</Text>
+            <Text style={s.descText}>{safe(fullDescription)}</Text>
           </View>
 
           <View style={s.row}>
-            <Pill label="Hospital al que se dirige:" value={safe(snap.hospital_name)} />
+            <Pill label="Hospital al que se dirige:" value={safe(hospital)} />
           </View>
         </View>
 
