@@ -342,21 +342,30 @@ function PolicyDetail() {
         <TabsContent value="documents">
           <Card>
             <Table>
-              <TableHeader><TableRow><TableHead>Archivo</TableHead><TableHead>Tipo</TableHead><TableHead>Fecha</TableHead><TableHead></TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Documento</TableHead><TableHead>Tipo</TableHead><TableHead>Fecha</TableHead><TableHead></TableHead></TableRow></TableHeader>
               <TableBody>
-                {documents.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-6 text-muted-foreground">Sin documentos.</TableCell></TableRow>}
-                {documents.map((d: any) => (
-                  <TableRow key={d.id}>
-                    <TableCell>{d.file_name ?? "—"}</TableCell>
-                    <TableCell>{d.kind ?? "—"}</TableCell>
-                    <TableCell>{new Date(d.created_at).toLocaleDateString("es-MX")}</TableCell>
-                    <TableCell><a href={d.file_url} target="_blank" rel="noreferrer" className="text-primary text-xs underline">Abrir</a></TableCell>
+                {docRows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-6 text-muted-foreground">Sin documentos.</TableCell></TableRow>}
+                {docRows.map((d) => (
+                  <TableRow key={d.key}>
+                    <TableCell>{d.name}</TableCell>
+                    <TableCell><Badge variant="outline">{d.kind}</Badge></TableCell>
+                    <TableCell className="text-xs">{d.date ? new Date(d.date).toLocaleDateString("es-MX") : "—"}</TableCell>
+                    <TableCell className="text-right">
+                      {d.url ? (
+                        <a href={d.url} target="_blank" rel="noreferrer" className="text-primary text-xs underline">Abrir</a>
+                      ) : d.incidentId ? (
+                        <Link to="/incidents/$incidentId" params={{ incidentId: d.incidentId }} className="text-primary text-xs underline">Ver siniestro</Link>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Pendiente de generar</span>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </Card>
         </TabsContent>
+
 
         <TabsContent value="history">
           <div className="space-y-4">
