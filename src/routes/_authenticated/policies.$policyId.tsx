@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { ArrowLeft, FileDown, Loader2, Pencil, RefreshCw } from "lucide-react";
+import { ArrowLeft, FileDown, Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,6 @@ import { generateCertificateClient } from "@/lib/pdf/generateCertificate.browser
 import { listPolicyRevisions } from "@/lib/policies-edit.functions";
 import { PolicyPaymentsTab } from "@/components/payments/policy-payments-tab";
 import { EditPolicyDialog } from "@/components/policies/EditPolicyDialog";
-import { RenewPolicyDialog } from "@/components/policies/RenewPolicyDialog";
 
 export const Route = createFileRoute("/_authenticated/policies/$policyId")({
   head: () => ({ meta: [{ title: "Detalle de certificado — ZEMGO" }] }),
@@ -118,7 +117,6 @@ function PolicyDetail() {
   const [nextStatus, setNextStatus] = useState<string>("");
   const [reason, setReason] = useState("");
   const [editOpen, setEditOpen] = useState(false);
-  const [renewOpen, setRenewOpen] = useState(false);
 
   const { data: policy, isLoading } = useQuery({
     queryKey: ["policy", policyId],
@@ -236,16 +234,15 @@ function PolicyDetail() {
 
   // Documentos = archivos subidos + certificado generado + cartas de aviso de accidente
   const docRows = useMemo(() => {
-    const rows: Array<{ key: string; name: string; kind: string; date: string | null; url?: string | null; incidentId?: string | null }> = [];
-    if (policy?.certificate_pdf_url) {
-      rows.push({
-        key: "cert",
-        name: `Certificado ${policy.folio}.pdf`,
-        kind: "Certificado",
-        date: policy.updated_at ?? policy.created_at ?? null,
-        url: policy.certificate_pdf_url,
-      });
-    }
+    const rows: Array<{ key: string; name: string; kind: string; date: string | null; url?: string | null; incidentId?: string | null; isCert?: boolean }> = [];
+    rows.push({
+      key: "cert",
+      name: `Certificado ${policy?.folio ?? ""}.pdf`,
+      kind: "Certificado",
+      date: policy?.updated_at ?? policy?.created_at ?? null,
+      isCert: true,
+    });
+
     for (const p of passes as any[]) {
       rows.push({
         key: `pass-${p.id}`,
@@ -306,13 +303,8 @@ function PolicyDetail() {
           {!["expired","cancelled"].includes(policy.status) && (
             <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4 mr-2" /> Editar</Button>
           )}
-          {["active","expired"].includes(policy.status) && policy.end_date && (() => {
-            const days = Math.floor((Date.parse(policy.end_date) - Date.now()) / 86400000);
-            return (days <= 60 && days >= -30) ? (
-              <Button variant="outline" onClick={() => setRenewOpen(true)}><RefreshCw className="h-4 w-4 mr-2" /> Renovar</Button>
-            ) : null;
-          })()}
           {allowed.length > 0 && (
+
             <Button variant="outline" onClick={() => setStatusDialog(true)}>Cambiar estado</Button>
           )}
           <Button onClick={() => pdfMutation.mutate()} disabled={pdfMutation.isPending}>
@@ -476,7 +468,12 @@ function PolicyDetail() {
                     <TableCell><Badge variant="outline">{d.kind}</Badge></TableCell>
                     <TableCell className="text-xs">{d.date ? new Date(d.date).toLocaleDateString("es-MX") : "—"}</TableCell>
                     <TableCell className="text-right">
-                      {d.url ? (
+                      {d.isCert ? (
+                        <Button size="sm" variant="outline" onClick={() => pdfMutation.mutate()} disabled={pdfMutation.isPending}>
+                          {pdfMutation.isPending ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5 mr-1.5" />}
+                          Descargar
+                        </Button>
+                      ) : d.url ? (
                         <a href={d.url} target="_blank" rel="noreferrer" className="text-primary text-xs underline">Abrir</a>
                       ) : d.incidentId ? (
                         <Link to="/incidents/$incidentId" params={{ incidentId: d.incidentId }} className="text-primary text-xs underline">Ver siniestro</Link>
@@ -484,6 +481,7 @@ function PolicyDetail() {
                         <span className="text-xs text-muted-foreground">Pendiente de generar</span>
                       )}
                     </TableCell>
+
                   </TableRow>
                 ))}
               </TableBody>
@@ -551,7 +549,6 @@ function PolicyDetail() {
       </Tabs>
 
       <EditPolicyDialog open={editOpen} onOpenChange={setEditOpen} policy={policy} />
-      <RenewPolicyDialog open={renewOpen} onOpenChange={setRenewOpen} policy={policy} />
 
       <Dialog open={statusDialog} onOpenChange={setStatusDialog}>
         <DialogContent>
