@@ -468,7 +468,12 @@ function PolicyDetail() {
                     <TableCell><Badge variant="outline">{d.kind}</Badge></TableCell>
                     <TableCell className="text-xs">{d.date ? new Date(d.date).toLocaleDateString("es-MX") : "—"}</TableCell>
                     <TableCell className="text-right">
-                      {d.url ? (
+                      {d.isCert ? (
+                        <Button size="sm" variant="outline" onClick={() => pdfMutation.mutate()} disabled={pdfMutation.isPending}>
+                          {pdfMutation.isPending ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5 mr-1.5" />}
+                          Descargar
+                        </Button>
+                      ) : d.url ? (
                         <a href={d.url} target="_blank" rel="noreferrer" className="text-primary text-xs underline">Abrir</a>
                       ) : d.incidentId ? (
                         <Link to="/incidents/$incidentId" params={{ incidentId: d.incidentId }} className="text-primary text-xs underline">Ver siniestro</Link>
@@ -476,6 +481,7 @@ function PolicyDetail() {
                         <span className="text-xs text-muted-foreground">Pendiente de generar</span>
                       )}
                     </TableCell>
+
                   </TableRow>
                 ))}
               </TableBody>
