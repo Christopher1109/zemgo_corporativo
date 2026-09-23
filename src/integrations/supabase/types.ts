@@ -2793,6 +2793,10 @@ export type Database = {
       }
       delete_sales_rep: { Args: { _sales_rep_id: string }; Returns: Json }
       delete_user_account: { Args: { _user_id: string }; Returns: Json }
+      ensure_accident_letter: {
+        Args: { _incident_id: string }
+        Returns: string
+      }
       finish_sheet_sync: {
         Args: {
           _details?: Json
