@@ -233,6 +233,10 @@ function PaymentsList() {
                   </TableCell>
                   <TableCell className="text-right font-mono">${Number(r.amount).toLocaleString("es-MX")}</TableCell>
                   <TableCell>{r.due_date ?? "—"}</TableCell>
+                  <TableCell className="text-xs">
+                    {r.paid_at ? new Date(r.paid_at).toLocaleDateString("es-MX") : "—"}
+                  </TableCell>
+
                   <TableCell className={days !== null && days < 0 ? "text-red-600 font-medium" : ""}>
                     {days === null ? "—" : days < 0 ? `${Math.abs(days)} atras.` : `${days}`}
                   </TableCell>
