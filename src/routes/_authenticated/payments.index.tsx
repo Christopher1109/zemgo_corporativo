@@ -129,6 +129,20 @@ function PaymentsList() {
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {VIEWS.map((v) => (
+          <Button
+            key={v.value}
+            size="sm"
+            variant={view === v.value ? "default" : "outline"}
+            onClick={() => applyView(v.value)}
+          >
+            {v.label}
+          </Button>
+        ))}
+      </div>
+
+
       <Card className="p-4 space-y-3">
         <div className="grid md:grid-cols-3 gap-3">
           <div>
