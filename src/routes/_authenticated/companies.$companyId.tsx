@@ -81,6 +81,8 @@ function CompanyDetailPage() {
 
   const [importOpen, setImportOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+
   const [zipProgress, setZipProgress] = useState<string | null>(null);
   const today = new Date().toISOString().slice(0, 10);
   const nextYear = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().slice(0, 10);
@@ -115,33 +117,102 @@ function CompanyDetailPage() {
       const wb = new (ExcelJS as any).Workbook();
       await wb.xlsx.load(await file.arrayBuffer());
       const ws = wb.worksheets[0];
+      if (!ws) {
+        toast.error("El archivo no tiene ninguna hoja de cálculo.");
+        return;
+      }
+
+      // Localiza la fila de encabezados y mapea columnas por nombre (tolera orden distinto,
+      // acentos, mayúsculas y columnas extra que agregue la empresa).
+      const norm = (s: string) =>
+        s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z]/g, "");
+      const FIELD_ALIASES: Record<string, string[]> = {
+        first_name: ["nombres", "nombre", "nombredelasegurado", "nombrescompletos"],
+        last_name: ["apellidos", "apellido", "apellidopaterno", "apellidosnombre"],
+        curp: ["curp"],
+        rfc: ["rfc"],
+        date_of_birth: ["fechadenacimiento", "fechanacimiento", "nacimiento", "fechadenacimientoaaaammdd"],
+        gender: ["genero", "sexo", "generomf"],
+        email: ["email", "correo", "correoelectronico"],
+        phone: ["telefono", "celular", "tel"],
+        address_full: ["domicilio", "direccion"],
+        beneficiary_name: ["beneficiario", "nombredelbeneficiario"],
+        beneficiary_relationship: ["parentesco", "relacion"],
+      };
+
+      let headerRowIdx = 0;
+      const colOf: Record<string, number> = {};
+      for (let i = 1; i <= Math.min(ws.rowCount, 15); i++) {
+        const row = ws.getRow(i);
+        const found: Record<string, number> = {};
+        row.eachCell((cell: any, col: number) => {
+          const key = norm(cellText(cell.value));
+          if (!key) return;
+          for (const [field, aliases] of Object.entries(FIELD_ALIASES)) {
+            if (found[field] == null && aliases.some((a) => key === a || key.startsWith(a))) {
+              found[field] = col;
+            }
+          }
+        });
+        if (found.curp != null && (found.first_name != null || found.last_name != null)) {
+          headerRowIdx = i;
+          Object.assign(colOf, found);
+          break;
+        }
+      }
+
+      if (!headerRowIdx) {
+        toast.error(
+          "No se encontraron los encabezados. Usa la plantilla: debe haber columnas Nombre(s), Apellidos y CURP.",
+        );
+        return;
+      }
+
       const rows: any[] = [];
-      ws.eachRow((row: any, idx: number) => {
-        if (idx === 1) return; // header
-        const v = (n: number) => cellText(row.getCell(n).value);
-        const first_name = v(1);
-        const last_name = v(2);
-        const curp = v(3);
-        if (!first_name || !last_name || !curp) return;
+      const skipped: string[] = [];
+      for (let i = headerRowIdx + 1; i <= ws.rowCount; i++) {
+        const row = ws.getRow(i);
+        const v = (field: string) => (colOf[field] ? cellText(row.getCell(colOf[field]).value) : "");
+        let first_name = v("first_name");
+        let last_name = v("last_name");
+        const curp = v("curp").toUpperCase().replace(/\s+/g, "");
+        if (!first_name && !last_name && !curp) continue; // fila vacía
+        // Si viene el nombre completo en una sola columna, lo partimos.
+        if (!last_name && first_name.includes(" ")) {
+          const parts = first_name.split(/\s+/);
+          first_name = parts.shift() as string;
+          last_name = parts.join(" ");
+        }
+        if (!first_name || !last_name || curp.length < 10) {
+          skipped.push(
+            `Fila ${i}: ${!first_name ? "falta nombre" : !last_name ? "faltan apellidos" : "CURP inválido"}` +
+              (curp ? ` (${curp})` : ""),
+          );
+          continue;
+        }
         rows.push({
           first_name,
           last_name,
           curp,
-          rfc: v(4) || null,
-          date_of_birth: v(5) || null,
-          gender: v(6) || null,
-          email: v(7) || null,
-          phone: v(8) || null,
-          address_full: v(9) || null,
-          beneficiary_name: v(10) || null,
-          beneficiary_relationship: v(11) || null,
+          rfc: v("rfc") || null,
+          date_of_birth: v("date_of_birth") || null,
+          gender: v("gender") || null,
+          email: v("email") || null,
+          phone: v("phone") || null,
+          address_full: v("address_full") || null,
+          beneficiary_name: v("beneficiary_name") || null,
+          beneficiary_relationship: v("beneficiary_relationship") || null,
         });
-      });
+      }
 
       if (rows.length === 0) {
-        toast.error("No se encontraron filas válidas (Nombre, Apellidos y CURP son obligatorios).");
+        setImportErrors(
+          skipped.length ? skipped : ["El archivo no tiene filas con datos debajo de los encabezados."],
+        );
+        toast.error("No se detectó ningún asegurado válido. Revisa el detalle.");
         return;
       }
+
 
       const res = await importFn({
         data: {
@@ -156,10 +227,17 @@ function CompanyDetailPage() {
         },
       });
 
+      const rowErrors = (res.details ?? [])
+        .filter((d: any) => !d.ok)
+        .map((d: any) => `${d.name || d.curp}: ${d.error}`);
+      const allErrors = [...skipped, ...rowErrors];
+      setImportErrors(allErrors);
       toast.success(`${res.created} certificado(s) generado(s)${res.failed ? ` · ${res.failed} con error` : ""}`);
-      setImportOpen(false);
+      if (allErrors.length === 0) setImportOpen(false);
       await qc.invalidateQueries({ queryKey: ["company", companyId] });
     } catch (e: any) {
+      setImportErrors([e?.message ?? "No se pudo procesar el archivo"]);
+
       toast.error(e?.message ?? "No se pudo procesar el archivo");
     } finally {
       setBusy(false);
@@ -389,6 +467,19 @@ function CompanyDetailPage() {
               <Input inputMode="decimal" value={terms.sum_insured} onChange={(e) => setTerms({ ...terms, sum_insured: e.target.value })} />
             </div>
           </div>
+          {importErrors.length > 0 && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 max-h-48 overflow-auto">
+              <div className="text-xs font-semibold text-amber-900 mb-1">
+                Filas no procesadas ({importErrors.length})
+              </div>
+              <ul className="text-[11px] text-amber-900 space-y-0.5 list-disc pl-4">
+                {importErrors.map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <input
             ref={fileRef}
             type="file"
