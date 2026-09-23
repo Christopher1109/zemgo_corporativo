@@ -210,28 +210,28 @@ export function MedicalPassHIR(props: MedicalPassHIRProps) {
           </View>
 
           <View style={s.row}>
-            <Pill label="Fecha de nacimiento:" value={formatDate(snap.date_of_birth)} />
-            <Pill label="CURP:" value={safe(snap.curp)} />
+            <Pill label="Fecha de nacimiento:" value={formatDate(dob)} />
+            <Pill label="CURP:" value={safe(curp)} />
           </View>
 
           <View style={s.row}>
-            <Pill label="N° de Certificado:" value={safe(snap.certificate_number)} />
+            <Pill label="N° de Certificado:" value={safe(certificate)} />
             <Pill label="Suma Asegurada:" value={sum} />
           </View>
 
           <View style={s.row}>
             <Pill label="Deducible:" value={ded} />
-            <Pill label="Fecha del accidente:" value={formatDate(snap.incident_date)} />
-            <Pill label="Hora:" value={safe(snap.incident_time)} />
+            <Pill label="Fecha del accidente:" value={formatDate(accidentDate)} />
+            <Pill label="Hora:" value={accidentTime} />
           </View>
 
           <View style={s.descBox}>
             <Text style={s.descLabel}>Descripción detallada del accidente (lugar y cómo ocurrió):</Text>
-            <Text style={s.descText}>{safe(snap.incident_description)}</Text>
+            <Text style={s.descText}>{safe(fullDescription)}</Text>
           </View>
 
           <View style={s.row}>
-            <Pill label="Hospital al que se dirige:" value={safe(snap.hospital_name)} />
+            <Pill label="Hospital al que se dirige:" value={safe(hospital)} />
           </View>
         </View>
 
