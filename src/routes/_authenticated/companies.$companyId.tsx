@@ -227,10 +227,17 @@ function CompanyDetailPage() {
         },
       });
 
+      const rowErrors = (res.details ?? [])
+        .filter((d: any) => !d.ok)
+        .map((d: any) => `${d.name || d.curp}: ${d.error}`);
+      const allErrors = [...skipped, ...rowErrors];
+      setImportErrors(allErrors);
       toast.success(`${res.created} certificado(s) generado(s)${res.failed ? ` · ${res.failed} con error` : ""}`);
-      setImportOpen(false);
+      if (allErrors.length === 0) setImportOpen(false);
       await qc.invalidateQueries({ queryKey: ["company", companyId] });
     } catch (e: any) {
+      setImportErrors([e?.message ?? "No se pudo procesar el archivo"]);
+
       toast.error(e?.message ?? "No se pudo procesar el archivo");
     } finally {
       setBusy(false);
