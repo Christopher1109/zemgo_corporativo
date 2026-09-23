@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowLeft, FileDown, Loader2, Pencil, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -108,6 +108,21 @@ function PolicyDetail() {
       return data ?? [];
     },
   });
+
+  // Cartas de aviso de accidente emitidas para este certificado.
+  const { data: passes = [] } = useQuery({
+    queryKey: ["policy-passes", policyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medical_passes")
+        .select("id, created_at, pdf_url, incident_id, revoked_at")
+        .eq("policy_id", policyId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
 
   const { data: history = [] } = useQuery({
     queryKey: ["policy-audit", policyId],
