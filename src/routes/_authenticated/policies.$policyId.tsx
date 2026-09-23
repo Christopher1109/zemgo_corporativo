@@ -234,16 +234,15 @@ function PolicyDetail() {
 
   // Documentos = archivos subidos + certificado generado + cartas de aviso de accidente
   const docRows = useMemo(() => {
-    const rows: Array<{ key: string; name: string; kind: string; date: string | null; url?: string | null; incidentId?: string | null }> = [];
-    if (policy?.certificate_pdf_url) {
-      rows.push({
-        key: "cert",
-        name: `Certificado ${policy.folio}.pdf`,
-        kind: "Certificado",
-        date: policy.updated_at ?? policy.created_at ?? null,
-        url: policy.certificate_pdf_url,
-      });
-    }
+    const rows: Array<{ key: string; name: string; kind: string; date: string | null; url?: string | null; incidentId?: string | null; isCert?: boolean }> = [];
+    rows.push({
+      key: "cert",
+      name: `Certificado ${policy?.folio ?? ""}.pdf`,
+      kind: "Certificado",
+      date: policy?.updated_at ?? policy?.created_at ?? null,
+      isCert: true,
+    });
+
     for (const p of passes as any[]) {
       rows.push({
         key: `pass-${p.id}`,
