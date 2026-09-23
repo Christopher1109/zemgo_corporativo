@@ -168,6 +168,50 @@ function PolicyDetail() {
     onError: (e: any) => toast.error(e?.message ?? "Error al generar PDF"),
   });
 
+  // Documentos = archivos subidos + certificado generado + cartas de aviso de accidente
+  const docRows = useMemo(() => {
+    const rows: Array<{ key: string; name: string; kind: string; date: string | null; url?: string | null; incidentId?: string | null }> = [];
+    if (policy?.certificate_pdf_url) {
+      rows.push({
+        key: "cert",
+        name: `Certificado ${policy.folio}.pdf`,
+        kind: "Certificado",
+        date: policy.updated_at ?? policy.created_at ?? null,
+        url: policy.certificate_pdf_url,
+      });
+    }
+    for (const p of passes as any[]) {
+      rows.push({
+        key: `pass-${p.id}`,
+        name: p.revoked_at ? "Carta de aviso de accidente (revocada)" : "Carta de aviso de accidente",
+        kind: "Carta de aviso",
+        date: p.created_at,
+        url: p.pdf_url,
+        incidentId: p.incident_id,
+      });
+    }
+    for (const i of incidents as any[]) {
+      rows.push({
+        key: `inc-${i.id}`,
+        name: `Siniestro del ${i.accident_date ?? new Date(i.occurred_at).toLocaleDateString("es-MX")}`,
+        kind: "Siniestro",
+        date: i.reported_at ?? i.created_at ?? null,
+        incidentId: i.id,
+      });
+    }
+    for (const d of documents as any[]) {
+      rows.push({
+        key: `doc-${d.id}`,
+        name: d.file_name ?? "Documento",
+        kind: d.kind ?? "Archivo",
+        date: d.created_at,
+        url: d.file_url,
+      });
+    }
+    return rows.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+  }, [policy, passes, incidents, documents]);
+
+
 
   if (isLoading || !policy) {
     return <div className="text-muted-foreground">Cargando certificado…</div>;
