@@ -44,10 +44,18 @@ function attemptInfo(p: any): { label: string; tone: string } {
   return { label: "Sin intento de pago", tone: "bg-muted text-muted-foreground border-border" };
 }
 
+const VIEWS: Array<{ value: string; label: string; statuses: string[] }> = [
+  { value: "open", label: "Por cobrar", statuses: ["pending", "overdue", "failed"] },
+  { value: "paid", label: "Ya pagados", statuses: ["paid"] },
+  { value: "attempted", label: "Con intento de pago", statuses: ["failed", "paid", "refunded"] },
+  { value: "all", label: "Todos", statuses: [] },
+];
+
 function PaymentsList() {
   const { activeProgram, programs } = useProgram();
   const navigate = useNavigate();
   const [scope, setScope] = useState<"active" | "all">("active");
+  const [view, setView] = useState("open");
   const [statuses, setStatuses] = useState<string[]>(["pending", "overdue", "failed"]);
   const [search, setSearch] = useState("");
   const [from, setFrom] = useState("");
@@ -56,16 +64,17 @@ function PaymentsList() {
   const PAGE_SIZE = 25;
 
   const programId = scope === "active" ? activeProgram?.id : null;
+  const paidView = view === "paid" || view === "attempted";
 
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["payments-list", programId, statuses, from, to, search, page],
+    queryKey: ["payments-list", programId, statuses, from, to, search, page, paidView],
     queryFn: async () => {
       let q = supabase
         .from("payments")
         .select(
           "id, amount, paid_amount, due_date, status, method, paid_at, provider, provider_transaction_id, control_number, failure_reason, policies!inner(id, folio, program_id, clients!inner(id, first_name, last_name, curp)), programs:policies(programs(id,name,code,color_primary))",
         )
-        .order("due_date", { ascending: true })
+        .order(paidView ? "paid_at" : "due_date", { ascending: !paidView, nullsFirst: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       if (statuses.length) q = q.in("status", statuses as any);
       if (from) q = q.gte("due_date", from);
@@ -85,17 +94,28 @@ function PaymentsList() {
           );
         });
       }
-      list.sort((a, b) => {
-        const rank = (x: any) => (x.status === "overdue" ? 0 : x.status === "failed" ? 1 : 2);
-        if (rank(a) !== rank(b)) return rank(a) - rank(b);
-        return (a.due_date ?? "").localeCompare(b.due_date ?? "");
-      });
+      if (paidView) {
+        list.sort((a, b) => (b.paid_at ?? "").localeCompare(a.paid_at ?? ""));
+      } else {
+        list.sort((a, b) => {
+          const rank = (x: any) => (x.status === "overdue" ? 0 : x.status === "failed" ? 1 : 2);
+          if (rank(a) !== rank(b)) return rank(a) - rank(b);
+          return (a.due_date ?? "").localeCompare(b.due_date ?? "");
+        });
+      }
       return list;
     },
   });
 
   const toggleStatus = (s: string) =>
     setStatuses((cur) => (cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]));
+
+  const applyView = (v: string) => {
+    setView(v);
+    setPage(0);
+    setStatuses(VIEWS.find((x) => x.value === v)?.statuses ?? []);
+  };
+
 
   return (
     <div className="space-y-4">
