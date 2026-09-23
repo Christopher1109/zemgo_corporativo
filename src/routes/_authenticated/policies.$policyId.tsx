@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowLeft, FileDown, Loader2, Pencil, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -40,6 +40,72 @@ const NEXT_STATUS: Record<string, string[]> = {
   active: ["expired", "cancelled", "suspended"],
   suspended: ["active", "cancelled"],
 };
+
+const ACTION_LABELS: Record<string, string> = {
+  POLICY_CREATED: "Certificado creado",
+  POLICY_UPDATED: "Certificado actualizado",
+  POLICY_STATUS_CHANGED: "Cambio de estado del certificado",
+  POLICY_RENEWED: "Certificado renovado",
+  POLICY_AUTO_SUSPENDED: "Certificado suspendido por cobranza",
+  CERTIFICATE_PDF_GENERATED: "Certificado PDF generado",
+  PAYMENT_REGISTERED: "Pago registrado",
+  PAYMENT_CANCELLED: "Pago cancelado",
+  PAYMENT_REFUNDED: "Pago reembolsado",
+  INCIDENT_REPORTED: "Siniestro reportado",
+  INCIDENT_APPROVED: "Siniestro autorizado",
+  INCIDENT_REJECTED: "Siniestro rechazado",
+  PASS_ISSUED: "Carta de aviso de accidente emitida",
+  PASS_REVOKED: "Carta de aviso de accidente revocada",
+  PASS_PDF_GENERATED: "Carta de aviso de accidente generada",
+  PASS_AUTO_EXPIRED: "Carta de aviso de accidente vencida",
+};
+
+const FIELD_LABELS: Record<string, string> = {
+  status: "Estado",
+  premium: "Prima",
+  sum_insured: "Suma asegurada",
+  deductible: "Deducible",
+  start_date: "Inicio de vigencia",
+  end_date: "Fin de vigencia",
+  issue_date: "Fecha de emisión",
+  policy_number: "No. de póliza",
+  certificate_number: "No. de certificado",
+  contracting_party: "Contratante",
+  sales_rep_id: "Vendedor",
+  reason: "Motivo",
+  method: "Forma de pago",
+  amount: "Monto",
+  paid_at: "Fecha de pago",
+  from: "Antes",
+  to: "Después",
+  hospital: "Hospital",
+};
+
+function humanizeAction(action: string) {
+  const s = action.toLowerCase().replace(/_/g, " ");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function formatValue(v: any): string {
+  if (v === null || v === undefined || v === "") return "—";
+  if (typeof v === "boolean") return v ? "Sí" : "No";
+  if (typeof v === "object") {
+    return Object.entries(v)
+      .map(([k, val]) => `${FIELD_LABELS[k] ?? k}: ${formatValue(val)}`)
+      .join(" · ");
+  }
+  return String(v);
+}
+
+function describeDiff(diff: any) {
+  if (!diff || typeof diff !== "object") return "—";
+  const parts = Object.entries(diff).map(
+    ([k, v]) => `${FIELD_LABELS[k] ?? humanizeAction(k)}: ${formatValue(v)}`,
+  );
+  return parts.length ? parts.join(" · ") : "—";
+}
+
+
 
 function PolicyDetail() {
   const { policyId } = Route.useParams();
@@ -109,6 +175,21 @@ function PolicyDetail() {
     },
   });
 
+  // Cartas de aviso de accidente emitidas para este certificado.
+  const { data: passes = [] } = useQuery({
+    queryKey: ["policy-passes", policyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medical_passes")
+        .select("id, created_at, pdf_url, incident_id, revoked_at")
+        .eq("policy_id", policyId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+
   const { data: history = [] } = useQuery({
     queryKey: ["policy-audit", policyId],
     queryFn: async () => {
@@ -152,6 +233,50 @@ function PolicyDetail() {
     },
     onError: (e: any) => toast.error(e?.message ?? "Error al generar PDF"),
   });
+
+  // Documentos = archivos subidos + certificado generado + cartas de aviso de accidente
+  const docRows = useMemo(() => {
+    const rows: Array<{ key: string; name: string; kind: string; date: string | null; url?: string | null; incidentId?: string | null }> = [];
+    if (policy?.certificate_pdf_url) {
+      rows.push({
+        key: "cert",
+        name: `Certificado ${policy.folio}.pdf`,
+        kind: "Certificado",
+        date: policy.updated_at ?? policy.created_at ?? null,
+        url: policy.certificate_pdf_url,
+      });
+    }
+    for (const p of passes as any[]) {
+      rows.push({
+        key: `pass-${p.id}`,
+        name: p.revoked_at ? "Carta de aviso de accidente (revocada)" : "Carta de aviso de accidente",
+        kind: "Carta de aviso",
+        date: p.created_at,
+        url: p.pdf_url,
+        incidentId: p.incident_id,
+      });
+    }
+    for (const i of incidents as any[]) {
+      rows.push({
+        key: `inc-${i.id}`,
+        name: `Siniestro del ${i.accident_date ?? new Date(i.occurred_at).toLocaleDateString("es-MX")}`,
+        kind: "Siniestro",
+        date: i.reported_at ?? i.created_at ?? null,
+        incidentId: i.id,
+      });
+    }
+    for (const d of documents as any[]) {
+      rows.push({
+        key: `doc-${d.id}`,
+        name: d.file_name ?? "Documento",
+        kind: d.kind ?? "Archivo",
+        date: d.created_at,
+        url: d.file_url,
+      });
+    }
+    return rows.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+  }, [policy, passes, incidents, documents]);
+
 
 
   if (isLoading || !policy) {
@@ -203,7 +328,7 @@ function PolicyDetail() {
           <TabsTrigger value="benef">Beneficiarios</TabsTrigger>
           <TabsTrigger value="payments">Pagos ({payments.length})</TabsTrigger>
           <TabsTrigger value="incidents">Siniestros ({incidents.length})</TabsTrigger>
-          <TabsTrigger value="documents">Documentos ({documents.length})</TabsTrigger>
+          <TabsTrigger value="documents">Documentos ({docRows.length})</TabsTrigger>
           <TabsTrigger value="history">Historial</TabsTrigger>
         </TabsList>
 
@@ -342,21 +467,30 @@ function PolicyDetail() {
         <TabsContent value="documents">
           <Card>
             <Table>
-              <TableHeader><TableRow><TableHead>Archivo</TableHead><TableHead>Tipo</TableHead><TableHead>Fecha</TableHead><TableHead></TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Documento</TableHead><TableHead>Tipo</TableHead><TableHead>Fecha</TableHead><TableHead></TableHead></TableRow></TableHeader>
               <TableBody>
-                {documents.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-6 text-muted-foreground">Sin documentos.</TableCell></TableRow>}
-                {documents.map((d: any) => (
-                  <TableRow key={d.id}>
-                    <TableCell>{d.file_name ?? "—"}</TableCell>
-                    <TableCell>{d.kind ?? "—"}</TableCell>
-                    <TableCell>{new Date(d.created_at).toLocaleDateString("es-MX")}</TableCell>
-                    <TableCell><a href={d.file_url} target="_blank" rel="noreferrer" className="text-primary text-xs underline">Abrir</a></TableCell>
+                {docRows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-6 text-muted-foreground">Sin documentos.</TableCell></TableRow>}
+                {docRows.map((d) => (
+                  <TableRow key={d.key}>
+                    <TableCell>{d.name}</TableCell>
+                    <TableCell><Badge variant="outline">{d.kind}</Badge></TableCell>
+                    <TableCell className="text-xs">{d.date ? new Date(d.date).toLocaleDateString("es-MX") : "—"}</TableCell>
+                    <TableCell className="text-right">
+                      {d.url ? (
+                        <a href={d.url} target="_blank" rel="noreferrer" className="text-primary text-xs underline">Abrir</a>
+                      ) : d.incidentId ? (
+                        <Link to="/incidents/$incidentId" params={{ incidentId: d.incidentId }} className="text-primary text-xs underline">Ver siniestro</Link>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Pendiente de generar</span>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </Card>
         </TabsContent>
+
 
         <TabsContent value="history">
           <div className="space-y-4">
@@ -404,8 +538,9 @@ function PolicyDetail() {
                   {history.map((h: any) => (
                     <TableRow key={h.id}>
                       <TableCell className="text-xs whitespace-nowrap">{new Date(h.created_at).toLocaleString("es-MX")}</TableCell>
-                      <TableCell className="font-mono text-xs">{h.action}</TableCell>
-                      <TableCell className="text-xs"><pre className="whitespace-pre-wrap font-mono">{h.diff ? JSON.stringify(h.diff, null, 0) : ""}</pre></TableCell>
+                      <TableCell className="text-xs">{ACTION_LABELS[h.action] ?? humanizeAction(h.action)}</TableCell>
+                      <TableCell className="text-xs">{describeDiff(h.diff)}</TableCell>
+
                     </TableRow>
                   ))}
                 </TableBody>

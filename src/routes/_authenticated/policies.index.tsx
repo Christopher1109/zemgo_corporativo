@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Search, FileText } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -36,7 +37,9 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
 
 function PoliciesList() {
   const { activeProgram, programs } = useProgram();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
+
   const [programFilter, setProgramFilter] = useState<string>("active");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [validityFilter, setValidityFilter] = useState<string>("all");
@@ -149,18 +152,22 @@ function PoliciesList() {
               <TableHead>Vigencia</TableHead>
               <TableHead>Prima</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Cargando…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Cargando…</TableCell></TableRow>
             )}
             {!isLoading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Sin certificados registrados.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Sin certificados registrados.</TableCell></TableRow>
             )}
+
             {rows.map((r: any) => (
-              <TableRow key={r.id}>
+              <TableRow
+                key={r.id}
+                className="cursor-pointer"
+                onClick={() => navigate({ to: "/policies/$policyId", params: { policyId: r.id } })}
+              >
                 <TableCell className="font-mono text-xs">{r.folio}</TableCell>
                 <TableCell className="font-medium">{r.clients?.first_name} {r.clients?.last_name}</TableCell>
                 <TableCell>
@@ -177,15 +184,9 @@ function PoliciesList() {
                 <TableCell>
                   <Badge variant={STATUS_VARIANT[r.status] ?? "secondary"}>{STATUS_LABELS[r.status] ?? r.status}</Badge>
                 </TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/policies/$policyId" params={{ policyId: r.id }}>
-                      <FileText className="h-4 w-4 mr-1" /> Ver
-                    </Link>
-                  </Button>
-                </TableCell>
               </TableRow>
             ))}
+
           </TableBody>
         </Table>
       </Card>
