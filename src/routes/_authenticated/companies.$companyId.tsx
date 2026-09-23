@@ -81,6 +81,8 @@ function CompanyDetailPage() {
 
   const [importOpen, setImportOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+
   const [zipProgress, setZipProgress] = useState<string | null>(null);
   const today = new Date().toISOString().slice(0, 10);
   const nextYear = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().slice(0, 10);
