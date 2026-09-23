@@ -41,6 +41,72 @@ const NEXT_STATUS: Record<string, string[]> = {
   suspended: ["active", "cancelled"],
 };
 
+const ACTION_LABELS: Record<string, string> = {
+  POLICY_CREATED: "Certificado creado",
+  POLICY_UPDATED: "Certificado actualizado",
+  POLICY_STATUS_CHANGED: "Cambio de estado del certificado",
+  POLICY_RENEWED: "Certificado renovado",
+  POLICY_AUTO_SUSPENDED: "Certificado suspendido por cobranza",
+  CERTIFICATE_PDF_GENERATED: "Certificado PDF generado",
+  PAYMENT_REGISTERED: "Pago registrado",
+  PAYMENT_CANCELLED: "Pago cancelado",
+  PAYMENT_REFUNDED: "Pago reembolsado",
+  INCIDENT_REPORTED: "Siniestro reportado",
+  INCIDENT_APPROVED: "Siniestro autorizado",
+  INCIDENT_REJECTED: "Siniestro rechazado",
+  PASS_ISSUED: "Carta de aviso de accidente emitida",
+  PASS_REVOKED: "Carta de aviso de accidente revocada",
+  PASS_PDF_GENERATED: "Carta de aviso de accidente generada",
+  PASS_AUTO_EXPIRED: "Carta de aviso de accidente vencida",
+};
+
+const FIELD_LABELS: Record<string, string> = {
+  status: "Estado",
+  premium: "Prima",
+  sum_insured: "Suma asegurada",
+  deductible: "Deducible",
+  start_date: "Inicio de vigencia",
+  end_date: "Fin de vigencia",
+  issue_date: "Fecha de emisión",
+  policy_number: "No. de póliza",
+  certificate_number: "No. de certificado",
+  contracting_party: "Contratante",
+  sales_rep_id: "Vendedor",
+  reason: "Motivo",
+  method: "Forma de pago",
+  amount: "Monto",
+  paid_at: "Fecha de pago",
+  from: "Antes",
+  to: "Después",
+  hospital: "Hospital",
+};
+
+function humanizeAction(action: string) {
+  const s = action.toLowerCase().replace(/_/g, " ");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function formatValue(v: any): string {
+  if (v === null || v === undefined || v === "") return "—";
+  if (typeof v === "boolean") return v ? "Sí" : "No";
+  if (typeof v === "object") {
+    return Object.entries(v)
+      .map(([k, val]) => `${FIELD_LABELS[k] ?? k}: ${formatValue(val)}`)
+      .join(" · ");
+  }
+  return String(v);
+}
+
+function describeDiff(diff: any) {
+  if (!diff || typeof diff !== "object") return "—";
+  const parts = Object.entries(diff).map(
+    ([k, v]) => `${FIELD_LABELS[k] ?? humanizeAction(k)}: ${formatValue(v)}`,
+  );
+  return parts.length ? parts.join(" · ") : "—";
+}
+
+
+
 function PolicyDetail() {
   const { policyId } = Route.useParams();
   const qc = useQueryClient();
