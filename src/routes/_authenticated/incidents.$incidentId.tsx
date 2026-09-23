@@ -262,7 +262,17 @@ function IncidentDetail() {
 
         <TabsContent value="passes">
           <Card className="p-4 space-y-3">
-            {passes.length === 0 && <div className="text-sm text-muted-foreground">Aún no hay carta de aviso de accidente para este siniestro.</div>}
+            {passes.length === 0 && (
+              <div className="space-y-2">
+                <div className="text-sm text-muted-foreground">Aún no hay carta de aviso de accidente para este siniestro.</div>
+                {canDecide && incident.status !== "rejected" && (
+                  <Button size="sm" onClick={() => setApproveOpen(true)}>
+                    <FileDown className="h-4 w-4 mr-1" /> Generar carta de aviso de accidente
+                  </Button>
+                )}
+              </div>
+            )}
+
             {passes.map((p: any) => {
               const expired = new Date(p.valid_until).getTime() < Date.now();
               const revoked = !!p.revoked_at;
