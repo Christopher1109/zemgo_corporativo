@@ -262,7 +262,7 @@ function PolicyDetail() {
           <TabsTrigger value="benef">Beneficiarios</TabsTrigger>
           <TabsTrigger value="payments">Pagos ({payments.length})</TabsTrigger>
           <TabsTrigger value="incidents">Siniestros ({incidents.length})</TabsTrigger>
-          <TabsTrigger value="documents">Documentos ({documents.length})</TabsTrigger>
+          <TabsTrigger value="documents">Documentos ({docRows.length})</TabsTrigger>
           <TabsTrigger value="history">Historial</TabsTrigger>
         </TabsList>
 
@@ -472,8 +472,9 @@ function PolicyDetail() {
                   {history.map((h: any) => (
                     <TableRow key={h.id}>
                       <TableCell className="text-xs whitespace-nowrap">{new Date(h.created_at).toLocaleString("es-MX")}</TableCell>
-                      <TableCell className="font-mono text-xs">{h.action}</TableCell>
-                      <TableCell className="text-xs"><pre className="whitespace-pre-wrap font-mono">{h.diff ? JSON.stringify(h.diff, null, 0) : ""}</pre></TableCell>
+                      <TableCell className="text-xs">{ACTION_LABELS[h.action] ?? humanizeAction(h.action)}</TableCell>
+                      <TableCell className="text-xs">{describeDiff(h.diff)}</TableCell>
+
                     </TableRow>
                   ))}
                 </TableBody>
