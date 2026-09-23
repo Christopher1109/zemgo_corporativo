@@ -189,16 +189,18 @@ function PaymentsList() {
               <TableHead>Programa</TableHead>
               <TableHead className="text-right">Monto</TableHead>
               <TableHead>Vencimiento</TableHead>
+              <TableHead>Pagado el</TableHead>
               <TableHead>Días</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Intento de pago</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && <TableRow><TableCell colSpan={8} className="text-center py-6 text-muted-foreground">Cargando…</TableCell></TableRow>}
+            {isLoading && <TableRow><TableCell colSpan={9} className="text-center py-6 text-muted-foreground">Cargando…</TableCell></TableRow>}
             {!isLoading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={8} className="text-center py-6 text-muted-foreground">Sin pagos.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-6 text-muted-foreground">Sin pagos.</TableCell></TableRow>
             )}
+
             {rows.map((r: any) => {
               const c = r.policies?.clients;
               const prog = r.policies?.programs;
