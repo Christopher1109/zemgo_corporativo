@@ -3,25 +3,21 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
-} from "recharts";
-import {
-  Users, CreditCard, AlertTriangle, RefreshCw, Wallet, TrendingDown, Bell,
-  UserPlus, FileText, FilePlus, Stethoscope, ArrowRight, Activity,
+  Users, CreditCard, Wallet, TrendingDown, Bell,
+  UserPlus, FilePlus, Stethoscope, ArrowRight,
 } from "lucide-react";
+
 import { useProgram } from "@/lib/program-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActionItemsPanel } from "@/components/dashboard/ActionItems";
-import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
-import {
-  fetchKpis, fetchMonthlyCollection, fetchActionItems, fetchRecentActivity,
-} from "@/lib/dashboard-queries";
+import { fetchKpis, fetchActionItems } from "@/lib/dashboard-queries";
 import { getAlertsOverview } from "@/lib/alerts.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { format, parseISO, formatDistanceToNow } from "date-fns";
+import { parseISO, formatDistanceToNow } from "date-fns";
+
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -40,9 +36,8 @@ function Dashboard() {
 
   const opts = { staleTime: 5 * 60_000 };
   const kpiQ = useQuery({ queryKey: ["dash-kpi", scopeKey], queryFn: () => fetchKpis(scope), ...opts });
-  const colQ = useQuery({ queryKey: ["dash-col", scopeKey], queryFn: () => fetchMonthlyCollection(scope), ...opts });
   const actQ = useQuery({ queryKey: ["dash-act", scopeKey], queryFn: () => fetchActionItems(scope), ...opts });
-  const feedQ = useQuery({ queryKey: ["dash-feed", scopeKey], queryFn: () => fetchRecentActivity(scope, 12), staleTime: 0 });
+
 
   const alertsFn = useServerFn(getAlertsOverview);
   const alertsQ = useQuery({
@@ -73,42 +68,6 @@ function Dashboard() {
     },
   });
 
-  // Pending incidents / passes
-  const opsQ = useQuery({
-    queryKey: ["dash-ops", scopeKey],
-    queryFn: async () => {
-      let incQ = supabase
-        .from("incidents")
-        .select("id, status, policies!inner(program_id)")
-        .limit(2000);
-      if (scope) incQ = incQ.eq("policies.program_id", scope);
-      const { data: incs, error: incErr } = await incQ;
-      if (incErr) throw incErr;
-      const byStatus: Record<string, number> = {};
-      for (const i of incs ?? []) {
-        const s = (i as any).status as string;
-        byStatus[s] = (byStatus[s] ?? 0) + 1;
-      }
-      // Active medical passes (valid + not revoked)
-      const today = new Date().toISOString().slice(0, 10);
-      let passQ = supabase
-        .from("medical_passes")
-        .select("id, valid_until, revoked_at, policies!inner(program_id)")
-        .is("revoked_at", null)
-        .gte("valid_until", today)
-        .limit(2000);
-      if (scope) passQ = passQ.eq("policies.program_id", scope);
-      const { data: passes, error: passErr } = await passQ;
-      if (passErr) throw passErr;
-      return {
-        toReview: byStatus["pending_review"] ?? 0,
-        reported: byStatus["reported"] ?? 0,
-        inTreatment: byStatus["in_treatment"] ?? 0,
-        closed: byStatus["closed"] ?? 0,
-        activePasses: (passes ?? []).length,
-      };
-    },
-  });
 
   // Latest clients
   const latestClientsQ = useQuery({
@@ -141,28 +100,6 @@ function Dashboard() {
 
   const kpi = kpiQ.data;
 
-  // Build pivot for collection time-series (one series per program)
-  const programById = useMemo(() => Object.fromEntries(programs.map((p) => [p.id, p])), [programs]);
-  const colSeries = useMemo(() => {
-    const rows = colQ.data ?? [];
-    if (rows.length === 0) return [];
-    const months = Array.from(new Set(rows.map((r) => r.month))).sort();
-    return months.map((m) => {
-      const out: any = { month: format(parseISO(m), "MMM yy", { locale: es }) };
-      rows.filter((r) => r.month === m).forEach((r) => {
-        const p = programById[r.program_id];
-        out[p?.code ?? "?"] = r.total;
-      });
-      return out;
-    });
-  }, [colQ.data, programById]);
-  const seriesPrograms = useMemo(() => {
-    if (scope) {
-      const p = programs.find((x) => x.id === scope);
-      return p ? [p] : [];
-    }
-    return programs;
-  }, [scope, programs]);
 
   // Alerts top items
   const alertItems = useMemo(() => {
@@ -205,7 +142,7 @@ function Dashboard() {
       </div>
 
       {/* Alerts + Pending ops */}
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -250,27 +187,6 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Stethoscope className="h-4 w-4" /> Pendientes operativos
-            </CardTitle>
-            <Button asChild size="sm" variant="ghost">
-              <Link to="/incidents">Ver siniestros <ArrowRight className="h-3 w-3 ml-1" /></Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3">
-              <OpsTile icon={AlertTriangle} label="Por revisar" value={opsQ.data?.toReview ?? 0} color="#dc2626" loading={opsQ.isLoading} />
-              <OpsTile icon={AlertTriangle} label="Reportados" value={opsQ.data?.reported ?? 0} color="#ea580c" loading={opsQ.isLoading} />
-              <OpsTile icon={Stethoscope} label="En tratamiento" value={opsQ.data?.inTreatment ?? 0} loading={opsQ.isLoading} />
-              <OpsTile icon={FileText} label="Pases vigentes" value={opsQ.data?.activePasses ?? 0} color="var(--program-primary)" loading={opsQ.isLoading} />
-            </div>
-            <div className="text-xs text-muted-foreground mt-3">
-              Renovaciones próximas (≤30 días): <strong>{kpi?.renewals_30d ?? 0}</strong> · Siniestros cerrados: <strong>{opsQ.data?.closed ?? 0}</strong>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Atención inmediata + Latest clients */}
@@ -311,39 +227,6 @@ function Dashboard() {
         </Card>
       </div>
 
-      {/* Collection chart compact + Activity */}
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <CreditCard className="h-4 w-4" /> Cobranza por mes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {colQ.isLoading ? (
-              <div className="h-48 rounded bg-muted/40 animate-pulse" />
-            ) : colSeries.length === 0 ? (
-              <div className="h-48 grid place-items-center text-sm text-muted-foreground">Sin cobranza registrada aún.</div>
-            ) : (
-              <div style={{ width: "100%", height: 200 }}>
-                <ResponsiveContainer>
-                  <LineChart data={colSeries} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" fontSize={11} />
-                    <YAxis fontSize={11} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} />
-                    <Legend />
-                    {seriesPrograms.map((p) => (
-                      <Line key={p.id} type="monotone" dataKey={p.code} stroke={p.color_primary} strokeWidth={2} dot={{ r: 3 }} />
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <ActivityFeed rows={feedQ.data} loading={feedQ.isLoading} />
-      </div>
     </div>
   );
 }
@@ -381,18 +264,3 @@ function KpiBlock({ label, value, icon: Icon, color, loading }: { label: string;
   );
 }
 
-function OpsTile({ icon: Icon, label, value, color, loading }: any) {
-  return (
-    <div className="rounded-md border p-3">
-      <div className="flex items-center justify-between">
-        <div className="text-xs text-muted-foreground">{label}</div>
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-      </div>
-      {loading ? (
-        <div className="h-6 w-12 rounded bg-muted animate-pulse mt-1.5" />
-      ) : (
-        <div className="text-xl font-bold mt-1" style={{ color }}>{value}</div>
-      )}
-    </div>
-  );
-}
