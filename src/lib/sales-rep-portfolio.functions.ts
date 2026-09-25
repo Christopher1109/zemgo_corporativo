@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from "zod";
 
 export type PortfolioClient = {
   id: string;
@@ -81,8 +82,10 @@ export type SalesRepPortfolio = {
 
 export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<SalesRepPortfolio | null> => {
+  .inputValidator((d: unknown) => z.object({ programId: z.string().uuid().nullable().optional() }).parse(d ?? {}))
+  .handler(async ({ context, data: input }): Promise<SalesRepPortfolio | null> => {
     const { supabase } = context;
+    const programId = input.programId ?? null;
 
     const { data: repId } = await supabase.rpc("current_sales_rep_id");
     if (!repId) return null;
@@ -103,25 +106,27 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
     const [clientsRes, policiesRes, paymentsRes, commissionsRes] = await Promise.all([
       supabase
         .from("clients")
-        .select("id, first_name, last_name, email, phone, client_programs(status, programs(name))")
+        .select("id, first_name, last_name, email, phone, client_programs(status, program_id, programs(name))")
         .eq("sales_rep_id", repId),
       supabase
         .from("policies")
-        .select("id, folio, status, start_date, end_date, metadata, client_id, clients(first_name, last_name, phone, email)")
-        .eq("sales_rep_id", repId),
+        .select("id, folio, status, start_date, end_date, metadata, client_id, program_id, clients(first_name, last_name, phone, email)")
+        .eq("sales_rep_id", repId)
+        .match(programId ? { program_id: programId } : {}),
       supabase
         .from("payments")
-        .select("id, amount, due_date, status, policy_id, policies(folio, clients(full_name))")
+        .select("id, amount, due_date, status, policy_id, policies(folio, clients(first_name, last_name))")
         .in(
           "policy_id",
           (
-            await supabase.from("policies").select("id").eq("sales_rep_id", repId)
+            await supabase.from("policies").select("id").eq("sales_rep_id", repId).match(programId ? { program_id: programId } : {})
           ).data?.map((p) => p.id) ?? ["00000000-0000-0000-0000-000000000000"],
         ),
       supabase
         .from("sales_commissions")
         .select("id, amount, base_amount, percentage, kind, created_at, earned_at, payments(paid_at, policies(folio, clients(first_name, last_name)))")
-        .eq("sales_rep_id", repId),
+        .eq("sales_rep_id", repId)
+        .match(programId ? { program_id: programId } : {}),
     ]);
 
     const policies = policiesRes.data ?? [];
@@ -136,8 +141,10 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
       }
     }
 
-    const clients: PortfolioClient[] = (clientsRes.data ?? []).map((c) => {
-      const cp = Array.isArray(c.client_programs) ? c.client_programs[0] : c.client_programs;
+    const clients: PortfolioClient[] = (clientsRes.data ?? []).flatMap((c) => {
+      const cps = (Array.isArray(c.client_programs) ? c.client_programs : c.client_programs ? [c.client_programs] : []) as any[];
+      const cp = programId ? cps.find((x) => x.program_id === programId) : cps[0];
+      if (programId && !cp) return [];
       const prog = cp?.programs;
       return {
         id: c.id,
@@ -147,7 +154,7 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
         status: cp?.status ?? null,
         program_name: prog && !Array.isArray(prog) ? prog.name : null,
         active_policies: 0,
-      };
+      } as PortfolioClient];
     });
     const activeByClient = new Map<string, number>();
     for (const p of activePolicies) {
