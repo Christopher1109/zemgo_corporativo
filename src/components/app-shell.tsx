@@ -151,6 +151,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 p-2 space-y-1">
@@ -190,13 +191,19 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-3">
             <span
               className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: "var(--program-primary)" }}
+              style={{ backgroundColor: "var(--program-primary, #0f2a4a)" }}
             />
-            <span className="font-medium">{activeProgram?.name}</span>
-            <Badge variant="outline">{activeProgram?.insurance_branch}</Badge>
+            {isSalesRepOnly ? (
+              <span className="font-medium">{user?.user_metadata?.full_name ?? user?.email}</span>
+            ) : (
+              <>
+                <span className="font-medium">{activeProgram?.name}</span>
+                <Badge variant="outline">{activeProgram?.insurance_branch}</Badge>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            <SidebarNotifications />
+            {!isSalesRepOnly && <SidebarNotifications />}
             <AccountMenu />
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" /> Salir
