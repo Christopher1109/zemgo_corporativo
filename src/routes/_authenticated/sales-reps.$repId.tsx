@@ -1,3 +1,4 @@
+import { useProgram } from "@/lib/program-context";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -102,9 +103,11 @@ function SalesRepDetailPage() {
   const [busy, setBusy] = useState(false);
   const [filter, setFilter] = useState<GroupKey | "all">("all");
 
+  const { activeProgram } = useProgram();
   const q = useQuery({
-    queryKey: ["sales-rep", repId],
-    queryFn: () => fn({ data: { sales_rep_id: repId } }),
+    queryKey: ["sales-rep", repId, activeProgram?.id ?? null],
+    queryFn: () => fn({ data: { sales_rep_id: repId, program_id: activeProgram?.id ?? null } }),
+    enabled: !!activeProgram?.id,
   });
 
   const candidates = useQuery({
