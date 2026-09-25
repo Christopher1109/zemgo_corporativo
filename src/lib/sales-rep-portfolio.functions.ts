@@ -103,7 +103,7 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
     const [clientsRes, policiesRes, paymentsRes, commissionsRes] = await Promise.all([
       supabase
         .from("clients")
-        .select("id, full_name, email, phone, status, client_programs(status, programs(name))")
+        .select("id, first_name, last_name, email, phone, client_programs(status, programs(name))")
         .eq("sales_rep_id", repId),
       supabase
         .from("policies")
@@ -141,10 +141,10 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
       const prog = cp?.programs;
       return {
         id: c.id,
-        full_name: c.full_name,
+        full_name: [c.first_name, c.last_name].filter(Boolean).join(" "),
         email: c.email,
         phone: c.phone,
-        status: cp?.status ?? c.status,
+        status: cp?.status ?? null,
         program_name: prog && !Array.isArray(prog) ? prog.name : null,
         active_policies: 0,
       };
