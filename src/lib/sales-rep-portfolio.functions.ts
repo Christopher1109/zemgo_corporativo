@@ -146,7 +146,7 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
       const cp = programId ? cps.find((x) => x.program_id === programId) : cps[0];
       if (programId && !cp) return [];
       const prog = cp?.programs;
-      return {
+      return [{
         id: c.id,
         full_name: [c.first_name, c.last_name].filter(Boolean).join(" "),
         email: c.email,
