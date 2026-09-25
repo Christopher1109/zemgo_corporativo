@@ -1,7 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Download, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { CertificateBadge } from "@/components/certificates/CertificateBadge";
+import { fetchProgramClients, newWorkbook, styleHeader, downloadWorkbook, EMPTY_FILL, GENDER_LABEL, MARITAL_LABEL, fullName, slugDate } from "@/lib/client-excel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -32,7 +35,7 @@ function ClientsList() {
       let q = supabase
         .from("client_programs")
         .select(
-          "status, enrolled_at, programs(id,code,name,color_primary), clients(id,first_name,last_name,curp,phone,email,created_at,company_id)",
+          "status, enrolled_at, programs(id,code,name,color_primary), clients(id,first_name,last_name,curp,phone,email,created_at,company_id,policies(certificate_number,program_id))",
         )
         .order("enrolled_at", { ascending: false })
         .limit(200);
@@ -54,6 +57,40 @@ function ClientsList() {
     },
   });
 
+  const [downloading, setDownloading] = useState(false);
+  async function downloadMissing() {
+    if (!activeProgram) return toast.error("Selecciona un programa.");
+    setDownloading(true);
+    try {
+      const clients = await fetchProgramClients(activeProgram.id);
+      const cols: Array<[string, (c: any) => any]> = [
+        ["CURP", (c) => c.curp],
+        ["Género", (c) => (c.gender ? GENDER_LABEL[c.gender] ?? c.gender : "")],
+        ["Fecha de nacimiento", (c) => c.date_of_birth],
+        ["Estado civil", (c) => (c.marital_status ? MARITAL_LABEL[c.marital_status] ?? c.marital_status : "")],
+        ["Teléfono", (c) => c.phone],
+        ["Email", (c) => c.email],
+      ];
+      const rowsX = clients.map((c) => {
+        const vals = cols.map(([, f]) => (f(c) ?? "").toString().trim());
+        const name = fullName(c);
+        const missing = [name ? null : "Nombre completo", ...cols.map(([h], i) => (vals[i] ? null : h))].filter(Boolean) as string[];
+        return { vals: [name, ...vals], missing };
+      }).sort((a, b) => b.missing.length - a.missing.length || a.vals[0].localeCompare(b.vals[0]));
+      const wb = await newWorkbook();
+      const ws = wb.addWorksheet("Datos de clientes");
+      ws.columns = ["Nombre completo", ...cols.map(([h]) => h), "Datos faltantes"].map((h) => ({ header: h, key: h }));
+      for (const r of rowsX) {
+        const row = ws.addRow([...r.vals, r.missing.join(", ") || "Completo"]);
+        r.vals.forEach((v, i) => { if (!v) row.getCell(i + 1).fill = EMPTY_FILL as any; });
+      }
+      styleHeader(ws);
+      ws.getColumn(1).width = 36; ws.getColumn(8).width = 50;
+      await downloadWorkbook(wb, `datos-clientes-${activeProgram.code}-${slugDate()}.xlsx`);
+    } catch (e: any) { toast.error(e.message ?? "No se pudo generar el archivo"); }
+    finally { setDownloading(false); }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -61,11 +98,17 @@ function ClientsList() {
           <h1 className="text-2xl font-semibold">Clientes</h1>
           <p className="text-sm text-muted-foreground">Clientes individuales y sus afiliaciones. Los asegurados de empresas se consolidan en <Link to="/companies" className="underline">Empresas</Link>.</p>
         </div>
+        <div className="flex gap-2">
+        <Button variant="outline" onClick={downloadMissing} disabled={downloading}>
+          {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          Descargar datos de clientes
+        </Button>
         <Button asChild>
           <Link to="/clients/new">
             <Plus className="h-4 w-4 mr-2" /> Nuevo cliente
           </Link>
         </Button>
+        </div>
       </div>
 
       <Card className="p-4">
@@ -120,16 +163,17 @@ function ClientsList() {
               <TableHead>Teléfono</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Programa</TableHead>
+              <TableHead>Certificado</TableHead>
               <TableHead>Alta</TableHead>
               <TableHead>Estado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Cargando…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Cargando…</TableCell></TableRow>
             )}
             {!isLoading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Sin clientes registrados.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Sin clientes registrados.</TableCell></TableRow>
             )}
             {rows.map((r: any) => (
               <TableRow
@@ -146,6 +190,13 @@ function ClientsList() {
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: r.programs?.color_primary }} />
                     {r.programs?.name}
                   </span>
+                </TableCell>
+                <TableCell>
+                  {(() => {
+                    const ps = (r.clients?.policies ?? []).filter((p: any) => p.program_id === r.programs?.id);
+                    if (ps.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+                    return <div className="flex flex-wrap gap-1">{ps.map((p: any, i: number) => <CertificateBadge key={i} number={p.certificate_number} />)}</div>;
+                  })()}
                 </TableCell>
                 <TableCell>{new Date(r.enrolled_at).toLocaleDateString("es-MX")}</TableCell>
                 <TableCell>

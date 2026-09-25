@@ -1,3 +1,4 @@
+import { CertificateBadge } from "@/components/certificates/CertificateBadge";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -53,7 +54,7 @@ function PoliciesList() {
       let q = supabase
         .from("policies")
         .select(
-          "id, folio, status, start_date, end_date, premium, programs(id,name,color_primary), clients(id,first_name,last_name)",
+          "id, folio, certificate_number, status, start_date, end_date, premium, programs(id,name,color_primary), clients(id,first_name,last_name)",
         )
         // Corporate certificates are managed inside the company folder.
         .is("company_id", null)
@@ -149,6 +150,7 @@ function PoliciesList() {
               <TableHead>Folio</TableHead>
               <TableHead>Titular</TableHead>
               <TableHead>Programa</TableHead>
+              <TableHead>Certificado</TableHead>
               <TableHead>Vigencia</TableHead>
               <TableHead>Prima</TableHead>
               <TableHead>Estado</TableHead>
@@ -156,10 +158,10 @@ function PoliciesList() {
           </TableHeader>
           <TableBody>
             {isLoading && (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Cargando…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Cargando…</TableCell></TableRow>
             )}
             {!isLoading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Sin certificados registrados.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Sin certificados registrados.</TableCell></TableRow>
             )}
 
             {rows.map((r: any) => (
@@ -176,6 +178,7 @@ function PoliciesList() {
                     {r.programs?.name}
                   </span>
                 </TableCell>
+                <TableCell><CertificateBadge number={r.certificate_number} /></TableCell>
                 <TableCell className="text-xs">
                   {r.start_date ? new Date(r.start_date).toLocaleDateString("es-MX") : "—"} →{" "}
                   {r.end_date ? new Date(r.end_date).toLocaleDateString("es-MX") : "—"}
