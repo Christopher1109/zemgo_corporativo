@@ -107,7 +107,7 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
         .eq("sales_rep_id", repId),
       supabase
         .from("policies")
-        .select("id, folio, status, start_date, end_date, metadata, client_id, clients(full_name, phone, email)")
+        .select("id, folio, status, start_date, end_date, metadata, client_id, clients(first_name, last_name, phone, email)")
         .eq("sales_rep_id", repId),
       supabase
         .from("payments")
@@ -158,10 +158,14 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
     const days = (d: string | null) =>
       d ? Math.ceil((new Date(d).getTime() - now.getTime()) / 86400000) : null;
 
+    const clientName = (c: any) =>
+      c ? [c.first_name, c.last_name].filter(Boolean).join(" ") || "—" : "—";
+    const metaOf = (p: any) => (p.metadata && typeof p.metadata === "object" && !Array.isArray(p.metadata) ? p.metadata : {}) as Record<string, any>;
+
     const toRenewal = (p: any): PortfolioRenewal => ({
       policy_id: p.id,
       folio: p.folio,
-      client_name: p.clients?.full_name ?? "—",
+      client_name: clientName(p.clients),
       client_phone: p.clients?.phone ?? null,
       client_email: p.clients?.email ?? null,
       start_date: p.start_date,
