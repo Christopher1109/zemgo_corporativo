@@ -1,0 +1,3 @@
+REVOKE EXECUTE ON FUNCTION public.current_sales_rep_id(), public.is_my_client(uuid), public.is_my_policy(uuid), public.is_my_program(uuid), public.is_sales_rep_only(), public.resolve_sales_rep_ref(text), public.upsert_sales_rep_by_name(text,uuid,text), public.backfill_commissions_on_assign() FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.backfill_commissions_on_assign(), public.upsert_sales_rep_by_name(text,uuid,text) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.current_sales_rep_id(), public.is_my_client(uuid), public.is_my_policy(uuid), public.is_my_program(uuid), public.is_sales_rep_only(), public.resolve_sales_rep_ref(text) TO authenticated;
