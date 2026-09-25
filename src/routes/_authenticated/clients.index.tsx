@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Plus, Search, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { CertificateBadge } from "@/components/certificates/CertificateBadge";
-import { fetchProgramClients, newWorkbook, styleHeader, downloadWorkbook, EMPTY_FILL, GENDER_LABEL, MARITAL_LABEL, fullName, slugDate } from "@/lib/client-excel";
+import { downloadClientDataSheet } from "@/lib/client-data-sheet";
+import { ClientDataUploadDialog } from "@/components/clients/ClientDataUploadDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -62,31 +63,7 @@ function ClientsList() {
     if (!activeProgram) return toast.error("Selecciona un programa.");
     setDownloading(true);
     try {
-      const clients = await fetchProgramClients(activeProgram.id);
-      const cols: Array<[string, (c: any) => any]> = [
-        ["CURP", (c) => c.curp],
-        ["Género", (c) => (c.gender ? GENDER_LABEL[c.gender] ?? c.gender : "")],
-        ["Fecha de nacimiento", (c) => c.date_of_birth],
-        ["Estado civil", (c) => (c.marital_status ? MARITAL_LABEL[c.marital_status] ?? c.marital_status : "")],
-        ["Teléfono", (c) => c.phone],
-        ["Email", (c) => c.email],
-      ];
-      const rowsX = clients.map((c) => {
-        const vals = cols.map(([, f]) => (f(c) ?? "").toString().trim());
-        const name = fullName(c);
-        const missing = [name ? null : "Nombre completo", ...cols.map(([h], i) => (vals[i] ? null : h))].filter(Boolean) as string[];
-        return { vals: [name, ...vals], missing };
-      }).sort((a, b) => b.missing.length - a.missing.length || a.vals[0].localeCompare(b.vals[0]));
-      const wb = await newWorkbook();
-      const ws = wb.addWorksheet("Datos de clientes");
-      ws.columns = ["Nombre completo", ...cols.map(([h]) => h), "Datos faltantes"].map((h) => ({ header: h, key: h }));
-      for (const r of rowsX) {
-        const row = ws.addRow([...r.vals, r.missing.join(", ") || "Completo"]);
-        r.vals.forEach((v, i) => { if (!v) row.getCell(i + 1).fill = EMPTY_FILL as any; });
-      }
-      styleHeader(ws);
-      ws.getColumn(1).width = 36; ws.getColumn(8).width = 50;
-      await downloadWorkbook(wb, `datos-clientes-${activeProgram.code}-${slugDate()}.xlsx`);
+      await downloadClientDataSheet(activeProgram as any);
     } catch (e: any) { toast.error(e.message ?? "No se pudo generar el archivo"); }
     finally { setDownloading(false); }
   }
@@ -103,6 +80,7 @@ function ClientsList() {
           {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
           Descargar datos de clientes
         </Button>
+        <ClientDataUploadDialog programId={activeProgram?.id} />
         <Button asChild>
           <Link to="/clients/new">
             <Plus className="h-4 w-4 mr-2" /> Nuevo cliente
