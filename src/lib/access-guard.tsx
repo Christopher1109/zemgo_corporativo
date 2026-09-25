@@ -1,4 +1,6 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useIsSalesRepOnly } from "@/lib/use-is-sales-rep-only";
 import type { ReactNode } from "react";
 import { ShieldAlert } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

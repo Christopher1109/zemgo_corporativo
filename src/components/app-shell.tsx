@@ -22,6 +22,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyAccess, useAuthLevel, modulesForProgram, canAccessModule, type ModuleKey } from "@/lib/use-my-access";
 import { RouteAccessGuard } from "@/lib/access-guard";
+import { useIsSalesRepOnly } from "@/lib/use-is-sales-rep-only";
 
 type NavItem = {
   to: string;
