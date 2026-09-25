@@ -22,6 +22,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyAccess, useAuthLevel, modulesForProgram, canAccessModule, type ModuleKey } from "@/lib/use-my-access";
 import { RouteAccessGuard } from "@/lib/access-guard";
+import { useIsSalesRepOnly } from "@/lib/use-is-sales-rep-only";
 
 type NavItem = {
   to: string;
@@ -70,14 +71,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data: level } = useAuthLevel();
   const isSuperAdmin = !!level?.isSuperAdmin;
   const { data: myAccess } = useMyAccess();
+  const { data: isSalesRepOnly } = useIsSalesRepOnly();
   // Permisos del PROGRAMA ACTIVO (no la unión de todos)
   const programModules = modulesForProgram(myAccess, activeProgram?.id);
-  const visibleNav = NAV.filter((n) => {
-    if (n.requires === "manage_users") return !!level?.canManageUsers;
-    if (isSuperAdmin) return true;
-    if (n.module === null) return true;
-    return canAccessModule(programModules, n.module);
-  });
+  const visibleNav = isSalesRepOnly
+    ? [{ to: "/mi-cartera", label: "Mi cartera", icon: Briefcase, module: null } as NavItem]
+    : NAV.filter((n) => {
+        if (n.requires === "manage_users") return !!level?.canManageUsers;
+        if (isSuperAdmin) return true;
+        if (n.module === null) return true;
+        return canAccessModule(programModules, n.module);
+      });
 
 
 
@@ -92,7 +96,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside
         className="w-64 shrink-0 flex flex-col text-white h-screen sticky top-0 overflow-y-auto"
-        style={{ backgroundColor: "var(--program-primary)" }}
+        style={{ backgroundColor: "var(--program-primary, #0f2a4a)" }}
       >
         <div className="p-4 border-b border-white/10">
           <div className="rounded-md bg-white/95 px-3 py-4 flex items-center justify-center h-24">
@@ -106,11 +110,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           </div>
           <div className="mt-2 text-[10px] uppercase tracking-widest opacity-70 text-center">
-            Administración
+            {isSalesRepOnly ? "Portal de vendedores" : "Administración"}
           </div>
         </div>
 
         {/* Program selector */}
+        {!isSalesRepOnly && (
         <div className="p-4 border-b border-white/10">
           <div className="text-xs uppercase tracking-wider opacity-75 mb-2">Programa activo</div>
           <DropdownMenu>
@@ -146,6 +151,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 p-2 space-y-1">
@@ -185,13 +191,19 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-3">
             <span
               className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: "var(--program-primary)" }}
+              style={{ backgroundColor: "var(--program-primary, #0f2a4a)" }}
             />
-            <span className="font-medium">{activeProgram?.name}</span>
-            <Badge variant="outline">{activeProgram?.insurance_branch}</Badge>
+            {isSalesRepOnly ? (
+              <span className="font-medium">{user?.user_metadata?.full_name ?? user?.email}</span>
+            ) : (
+              <>
+                <span className="font-medium">{activeProgram?.name}</span>
+                <Badge variant="outline">{activeProgram?.insurance_branch}</Badge>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            <SidebarNotifications />
+            {!isSalesRepOnly && <SidebarNotifications />}
             <AccountMenu />
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" /> Salir

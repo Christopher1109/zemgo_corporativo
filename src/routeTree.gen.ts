@@ -16,6 +16,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedPoliciesRouteImport } from './routes/_authenticated/policies'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
+import { Route as AuthenticatedMiCarteraRouteImport } from './routes/_authenticated/mi-cartera'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedIncidentsRouteImport } from './routes/_authenticated/incidents'
 import { Route as AuthenticatedHospitalsRouteImport } from './routes/_authenticated/hospitals'
@@ -79,6 +80,11 @@ const AuthenticatedPoliciesRoute = AuthenticatedPoliciesRouteImport.update({
 const AuthenticatedPaymentsRoute = AuthenticatedPaymentsRouteImport.update({
   id: '/payments',
   path: '/payments',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMiCarteraRoute = AuthenticatedMiCarteraRouteImport.update({
+  id: '/mi-cartera',
+  path: '/mi-cartera',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/hospitals': typeof AuthenticatedHospitalsRoute
   '/incidents': typeof AuthenticatedIncidentsRouteWithChildren
   '/messages': typeof AuthenticatedMessagesRoute
+  '/mi-cartera': typeof AuthenticatedMiCarteraRoute
   '/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/finance': typeof AuthenticatedFinanceRoute
   '/hospitals': typeof AuthenticatedHospitalsRoute
   '/messages': typeof AuthenticatedMessagesRoute
+  '/mi-cartera': typeof AuthenticatedMiCarteraRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
@@ -336,6 +344,7 @@ export interface FileRoutesById {
   '/_authenticated/hospitals': typeof AuthenticatedHospitalsRoute
   '/_authenticated/incidents': typeof AuthenticatedIncidentsRouteWithChildren
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
+  '/_authenticated/mi-cartera': typeof AuthenticatedMiCarteraRoute
   '/_authenticated/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/_authenticated/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -376,6 +385,7 @@ export interface FileRouteTypes {
     | '/hospitals'
     | '/incidents'
     | '/messages'
+    | '/mi-cartera'
     | '/payments'
     | '/policies'
     | '/reports'
@@ -412,6 +422,7 @@ export interface FileRouteTypes {
     | '/finance'
     | '/hospitals'
     | '/messages'
+    | '/mi-cartera'
     | '/reports'
     | '/settings'
     | '/clients/$clientId'
@@ -449,6 +460,7 @@ export interface FileRouteTypes {
     | '/_authenticated/hospitals'
     | '/_authenticated/incidents'
     | '/_authenticated/messages'
+    | '/_authenticated/mi-cartera'
     | '/_authenticated/payments'
     | '/_authenticated/policies'
     | '/_authenticated/reports'
@@ -539,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/payments'
       fullPath: '/payments'
       preLoaderRoute: typeof AuthenticatedPaymentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mi-cartera': {
+      id: '/_authenticated/mi-cartera'
+      path: '/mi-cartera'
+      fullPath: '/mi-cartera'
+      preLoaderRoute: typeof AuthenticatedMiCarteraRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/messages': {
@@ -830,6 +849,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHospitalsRoute: typeof AuthenticatedHospitalsRoute
   AuthenticatedIncidentsRoute: typeof AuthenticatedIncidentsRouteWithChildren
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
+  AuthenticatedMiCarteraRoute: typeof AuthenticatedMiCarteraRoute
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRouteWithChildren
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -849,6 +869,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHospitalsRoute: AuthenticatedHospitalsRoute,
   AuthenticatedIncidentsRoute: AuthenticatedIncidentsRouteWithChildren,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
+  AuthenticatedMiCarteraRoute: AuthenticatedMiCarteraRoute,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRouteWithChildren,
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
