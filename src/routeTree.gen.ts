@@ -27,6 +27,7 @@ import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSalesRepsIndexRouteImport } from './routes/_authenticated/sales-reps.index'
 import { Route as AuthenticatedPoliciesIndexRouteImport } from './routes/_authenticated/policies.index'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments.index'
+import { Route as AuthenticatedMiCarteraIndexRouteImport } from './routes/_authenticated/mi-cartera.index'
 import { Route as AuthenticatedIncidentsIndexRouteImport } from './routes/_authenticated/incidents.index'
 import { Route as AuthenticatedCompaniesIndexRouteImport } from './routes/_authenticated/companies.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
@@ -36,6 +37,10 @@ import { Route as AuthenticatedSalesRepsRepIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedPoliciesNewRouteImport } from './routes/_authenticated/policies.new'
 import { Route as AuthenticatedPoliciesPolicyIdRouteImport } from './routes/_authenticated/policies.$policyId'
 import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
+import { Route as AuthenticatedMiCarteraRenovacionesRouteImport } from './routes/_authenticated/mi-cartera.renovaciones'
+import { Route as AuthenticatedMiCarteraPagosRouteImport } from './routes/_authenticated/mi-cartera.pagos'
+import { Route as AuthenticatedMiCarteraComisionesRouteImport } from './routes/_authenticated/mi-cartera.comisiones'
+import { Route as AuthenticatedMiCarteraClientesRouteImport } from './routes/_authenticated/mi-cartera.clientes'
 import { Route as AuthenticatedIncidentsNewRouteImport } from './routes/_authenticated/incidents.new'
 import { Route as AuthenticatedIncidentsDashboardRouteImport } from './routes/_authenticated/incidents.dashboard'
 import { Route as AuthenticatedIncidentsIncidentIdRouteImport } from './routes/_authenticated/incidents.$incidentId'
@@ -140,6 +145,12 @@ const AuthenticatedPaymentsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedPaymentsRoute,
   } as any)
+const AuthenticatedMiCarteraIndexRoute =
+  AuthenticatedMiCarteraIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMiCarteraRoute,
+  } as any)
 const AuthenticatedIncidentsIndexRoute =
   AuthenticatedIncidentsIndexRouteImport.update({
     id: '/',
@@ -191,6 +202,30 @@ const AuthenticatedPaymentsPaymentIdRoute =
     id: '/$paymentId',
     path: '/$paymentId',
     getParentRoute: () => AuthenticatedPaymentsRoute,
+  } as any)
+const AuthenticatedMiCarteraRenovacionesRoute =
+  AuthenticatedMiCarteraRenovacionesRouteImport.update({
+    id: '/renovaciones',
+    path: '/renovaciones',
+    getParentRoute: () => AuthenticatedMiCarteraRoute,
+  } as any)
+const AuthenticatedMiCarteraPagosRoute =
+  AuthenticatedMiCarteraPagosRouteImport.update({
+    id: '/pagos',
+    path: '/pagos',
+    getParentRoute: () => AuthenticatedMiCarteraRoute,
+  } as any)
+const AuthenticatedMiCarteraComisionesRoute =
+  AuthenticatedMiCarteraComisionesRouteImport.update({
+    id: '/comisiones',
+    path: '/comisiones',
+    getParentRoute: () => AuthenticatedMiCarteraRoute,
+  } as any)
+const AuthenticatedMiCarteraClientesRoute =
+  AuthenticatedMiCarteraClientesRouteImport.update({
+    id: '/clientes',
+    path: '/clientes',
+    getParentRoute: () => AuthenticatedMiCarteraRoute,
   } as any)
 const AuthenticatedIncidentsNewRoute =
   AuthenticatedIncidentsNewRouteImport.update({
@@ -268,7 +303,7 @@ export interface FileRoutesByFullPath {
   '/hospitals': typeof AuthenticatedHospitalsRoute
   '/incidents': typeof AuthenticatedIncidentsRouteWithChildren
   '/messages': typeof AuthenticatedMessagesRoute
-  '/mi-cartera': typeof AuthenticatedMiCarteraRoute
+  '/mi-cartera': typeof AuthenticatedMiCarteraRouteWithChildren
   '/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
@@ -279,6 +314,10 @@ export interface FileRoutesByFullPath {
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/incidents/new': typeof AuthenticatedIncidentsNewRoute
+  '/mi-cartera/clientes': typeof AuthenticatedMiCarteraClientesRoute
+  '/mi-cartera/comisiones': typeof AuthenticatedMiCarteraComisionesRoute
+  '/mi-cartera/pagos': typeof AuthenticatedMiCarteraPagosRoute
+  '/mi-cartera/renovaciones': typeof AuthenticatedMiCarteraRenovacionesRoute
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
@@ -288,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/companies/': typeof AuthenticatedCompaniesIndexRoute
   '/incidents/': typeof AuthenticatedIncidentsIndexRoute
+  '/mi-cartera/': typeof AuthenticatedMiCarteraIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/policies/': typeof AuthenticatedPoliciesIndexRoute
   '/sales-reps/': typeof AuthenticatedSalesRepsIndexRoute
@@ -305,7 +345,6 @@ export interface FileRoutesByTo {
   '/finance': typeof AuthenticatedFinanceRoute
   '/hospitals': typeof AuthenticatedHospitalsRoute
   '/messages': typeof AuthenticatedMessagesRoute
-  '/mi-cartera': typeof AuthenticatedMiCarteraRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
@@ -314,6 +353,10 @@ export interface FileRoutesByTo {
   '/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/incidents/new': typeof AuthenticatedIncidentsNewRoute
+  '/mi-cartera/clientes': typeof AuthenticatedMiCarteraClientesRoute
+  '/mi-cartera/comisiones': typeof AuthenticatedMiCarteraComisionesRoute
+  '/mi-cartera/pagos': typeof AuthenticatedMiCarteraPagosRoute
+  '/mi-cartera/renovaciones': typeof AuthenticatedMiCarteraRenovacionesRoute
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/policies/new': typeof AuthenticatedPoliciesNewRoute
@@ -323,6 +366,7 @@ export interface FileRoutesByTo {
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/companies': typeof AuthenticatedCompaniesIndexRoute
   '/incidents': typeof AuthenticatedIncidentsIndexRoute
+  '/mi-cartera': typeof AuthenticatedMiCarteraIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/policies': typeof AuthenticatedPoliciesIndexRoute
   '/sales-reps': typeof AuthenticatedSalesRepsIndexRoute
@@ -344,7 +388,7 @@ export interface FileRoutesById {
   '/_authenticated/hospitals': typeof AuthenticatedHospitalsRoute
   '/_authenticated/incidents': typeof AuthenticatedIncidentsRouteWithChildren
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
-  '/_authenticated/mi-cartera': typeof AuthenticatedMiCarteraRoute
+  '/_authenticated/mi-cartera': typeof AuthenticatedMiCarteraRouteWithChildren
   '/_authenticated/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/_authenticated/policies': typeof AuthenticatedPoliciesRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -355,6 +399,10 @@ export interface FileRoutesById {
   '/_authenticated/incidents/$incidentId': typeof AuthenticatedIncidentsIncidentIdRoute
   '/_authenticated/incidents/dashboard': typeof AuthenticatedIncidentsDashboardRoute
   '/_authenticated/incidents/new': typeof AuthenticatedIncidentsNewRoute
+  '/_authenticated/mi-cartera/clientes': typeof AuthenticatedMiCarteraClientesRoute
+  '/_authenticated/mi-cartera/comisiones': typeof AuthenticatedMiCarteraComisionesRoute
+  '/_authenticated/mi-cartera/pagos': typeof AuthenticatedMiCarteraPagosRoute
+  '/_authenticated/mi-cartera/renovaciones': typeof AuthenticatedMiCarteraRenovacionesRoute
   '/_authenticated/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/_authenticated/policies/$policyId': typeof AuthenticatedPoliciesPolicyIdRoute
   '/_authenticated/policies/new': typeof AuthenticatedPoliciesNewRoute
@@ -364,6 +412,7 @@ export interface FileRoutesById {
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/companies/': typeof AuthenticatedCompaniesIndexRoute
   '/_authenticated/incidents/': typeof AuthenticatedIncidentsIndexRoute
+  '/_authenticated/mi-cartera/': typeof AuthenticatedMiCarteraIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/policies/': typeof AuthenticatedPoliciesIndexRoute
   '/_authenticated/sales-reps/': typeof AuthenticatedSalesRepsIndexRoute
@@ -396,6 +445,10 @@ export interface FileRouteTypes {
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
     | '/incidents/new'
+    | '/mi-cartera/clientes'
+    | '/mi-cartera/comisiones'
+    | '/mi-cartera/pagos'
+    | '/mi-cartera/renovaciones'
     | '/payments/$paymentId'
     | '/policies/$policyId'
     | '/policies/new'
@@ -405,6 +458,7 @@ export interface FileRouteTypes {
     | '/clients/'
     | '/companies/'
     | '/incidents/'
+    | '/mi-cartera/'
     | '/payments/'
     | '/policies/'
     | '/sales-reps/'
@@ -422,7 +476,6 @@ export interface FileRouteTypes {
     | '/finance'
     | '/hospitals'
     | '/messages'
-    | '/mi-cartera'
     | '/reports'
     | '/settings'
     | '/clients/$clientId'
@@ -431,6 +484,10 @@ export interface FileRouteTypes {
     | '/incidents/$incidentId'
     | '/incidents/dashboard'
     | '/incidents/new'
+    | '/mi-cartera/clientes'
+    | '/mi-cartera/comisiones'
+    | '/mi-cartera/pagos'
+    | '/mi-cartera/renovaciones'
     | '/payments/$paymentId'
     | '/policies/$policyId'
     | '/policies/new'
@@ -440,6 +497,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/companies'
     | '/incidents'
+    | '/mi-cartera'
     | '/payments'
     | '/policies'
     | '/sales-reps'
@@ -471,6 +529,10 @@ export interface FileRouteTypes {
     | '/_authenticated/incidents/$incidentId'
     | '/_authenticated/incidents/dashboard'
     | '/_authenticated/incidents/new'
+    | '/_authenticated/mi-cartera/clientes'
+    | '/_authenticated/mi-cartera/comisiones'
+    | '/_authenticated/mi-cartera/pagos'
+    | '/_authenticated/mi-cartera/renovaciones'
     | '/_authenticated/payments/$paymentId'
     | '/_authenticated/policies/$policyId'
     | '/_authenticated/policies/new'
@@ -480,6 +542,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clients/'
     | '/_authenticated/companies/'
     | '/_authenticated/incidents/'
+    | '/_authenticated/mi-cartera/'
     | '/_authenticated/payments/'
     | '/_authenticated/policies/'
     | '/_authenticated/sales-reps/'
@@ -630,6 +693,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPaymentsIndexRouteImport
       parentRoute: typeof AuthenticatedPaymentsRoute
     }
+    '/_authenticated/mi-cartera/': {
+      id: '/_authenticated/mi-cartera/'
+      path: '/'
+      fullPath: '/mi-cartera/'
+      preLoaderRoute: typeof AuthenticatedMiCarteraIndexRouteImport
+      parentRoute: typeof AuthenticatedMiCarteraRoute
+    }
     '/_authenticated/incidents/': {
       id: '/_authenticated/incidents/'
       path: '/'
@@ -692,6 +762,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/payments/$paymentId'
       preLoaderRoute: typeof AuthenticatedPaymentsPaymentIdRouteImport
       parentRoute: typeof AuthenticatedPaymentsRoute
+    }
+    '/_authenticated/mi-cartera/renovaciones': {
+      id: '/_authenticated/mi-cartera/renovaciones'
+      path: '/renovaciones'
+      fullPath: '/mi-cartera/renovaciones'
+      preLoaderRoute: typeof AuthenticatedMiCarteraRenovacionesRouteImport
+      parentRoute: typeof AuthenticatedMiCarteraRoute
+    }
+    '/_authenticated/mi-cartera/pagos': {
+      id: '/_authenticated/mi-cartera/pagos'
+      path: '/pagos'
+      fullPath: '/mi-cartera/pagos'
+      preLoaderRoute: typeof AuthenticatedMiCarteraPagosRouteImport
+      parentRoute: typeof AuthenticatedMiCarteraRoute
+    }
+    '/_authenticated/mi-cartera/comisiones': {
+      id: '/_authenticated/mi-cartera/comisiones'
+      path: '/comisiones'
+      fullPath: '/mi-cartera/comisiones'
+      preLoaderRoute: typeof AuthenticatedMiCarteraComisionesRouteImport
+      parentRoute: typeof AuthenticatedMiCarteraRoute
+    }
+    '/_authenticated/mi-cartera/clientes': {
+      id: '/_authenticated/mi-cartera/clientes'
+      path: '/clientes'
+      fullPath: '/mi-cartera/clientes'
+      preLoaderRoute: typeof AuthenticatedMiCarteraClientesRouteImport
+      parentRoute: typeof AuthenticatedMiCarteraRoute
     }
     '/_authenticated/incidents/new': {
       id: '/_authenticated/incidents/new'
@@ -809,6 +907,30 @@ const AuthenticatedIncidentsRouteWithChildren =
     AuthenticatedIncidentsRouteChildren,
   )
 
+interface AuthenticatedMiCarteraRouteChildren {
+  AuthenticatedMiCarteraClientesRoute: typeof AuthenticatedMiCarteraClientesRoute
+  AuthenticatedMiCarteraComisionesRoute: typeof AuthenticatedMiCarteraComisionesRoute
+  AuthenticatedMiCarteraPagosRoute: typeof AuthenticatedMiCarteraPagosRoute
+  AuthenticatedMiCarteraRenovacionesRoute: typeof AuthenticatedMiCarteraRenovacionesRoute
+  AuthenticatedMiCarteraIndexRoute: typeof AuthenticatedMiCarteraIndexRoute
+}
+
+const AuthenticatedMiCarteraRouteChildren: AuthenticatedMiCarteraRouteChildren =
+  {
+    AuthenticatedMiCarteraClientesRoute: AuthenticatedMiCarteraClientesRoute,
+    AuthenticatedMiCarteraComisionesRoute:
+      AuthenticatedMiCarteraComisionesRoute,
+    AuthenticatedMiCarteraPagosRoute: AuthenticatedMiCarteraPagosRoute,
+    AuthenticatedMiCarteraRenovacionesRoute:
+      AuthenticatedMiCarteraRenovacionesRoute,
+    AuthenticatedMiCarteraIndexRoute: AuthenticatedMiCarteraIndexRoute,
+  }
+
+const AuthenticatedMiCarteraRouteWithChildren =
+  AuthenticatedMiCarteraRoute._addFileChildren(
+    AuthenticatedMiCarteraRouteChildren,
+  )
+
 interface AuthenticatedPaymentsRouteChildren {
   AuthenticatedPaymentsPaymentIdRoute: typeof AuthenticatedPaymentsPaymentIdRoute
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
@@ -849,7 +971,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHospitalsRoute: typeof AuthenticatedHospitalsRoute
   AuthenticatedIncidentsRoute: typeof AuthenticatedIncidentsRouteWithChildren
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
-  AuthenticatedMiCarteraRoute: typeof AuthenticatedMiCarteraRoute
+  AuthenticatedMiCarteraRoute: typeof AuthenticatedMiCarteraRouteWithChildren
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRouteWithChildren
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -869,7 +991,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHospitalsRoute: AuthenticatedHospitalsRoute,
   AuthenticatedIncidentsRoute: AuthenticatedIncidentsRouteWithChildren,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
-  AuthenticatedMiCarteraRoute: AuthenticatedMiCarteraRoute,
+  AuthenticatedMiCarteraRoute: AuthenticatedMiCarteraRouteWithChildren,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRouteWithChildren,
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,

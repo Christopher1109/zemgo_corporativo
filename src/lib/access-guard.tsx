@@ -54,7 +54,7 @@ export function RouteAccessGuard({ children }: { children: ReactNode }) {
   const { data: isSalesRepOnly, isLoading: loadingRep } = useIsSalesRepOnly();
   const navigate = useNavigate();
 
-  const mustRedirect = !!isSalesRepOnly && pathname !== "/mi-cartera";
+  const mustRedirect = !!isSalesRepOnly && !pathname.startsWith("/mi-cartera");
   useEffect(() => {
     if (mustRedirect) navigate({ to: "/mi-cartera", replace: true });
   }, [mustRedirect, navigate]);

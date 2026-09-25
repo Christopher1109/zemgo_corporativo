@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Hospital, Briefcase, MessageCircle, Building2 } from "lucide-react";
+import { RefreshCw, LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Hospital, Briefcase, MessageCircle, Building2 } from "lucide-react";
 import { useProgram } from "@/lib/program-context";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -75,7 +75,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Permisos del PROGRAMA ACTIVO (no la unión de todos)
   const programModules = modulesForProgram(myAccess, activeProgram?.id);
   const visibleNav = isSalesRepOnly
-    ? [{ to: "/mi-cartera", label: "Mi cartera", icon: Briefcase, module: null } as NavItem]
+    ? ([
+        { to: "/mi-cartera", label: "Resumen", icon: LayoutDashboard, module: null },
+        { to: "/mi-cartera/clientes", label: "Mis clientes", icon: Users, module: null },
+        { to: "/mi-cartera/renovaciones", label: "Renovaciones", icon: RefreshCw, module: null },
+        { to: "/mi-cartera/pagos", label: "Pagos", icon: CreditCard, module: null },
+        { to: "/mi-cartera/comisiones", label: "Comisiones", icon: Wallet, module: null },
+      ] as NavItem[])
     : NAV.filter((n) => {
         if (n.requires === "manage_users") return !!level?.canManageUsers;
         if (isSuperAdmin) return true;
@@ -115,7 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         {/* Program selector */}
-        {!isSalesRepOnly && (
+        {(!isSalesRepOnly || programs.length > 1) && (
         <div className="p-4 border-b border-white/10">
           <div className="text-xs uppercase tracking-wider opacity-75 mb-2">Programa activo</div>
           <DropdownMenu>
@@ -157,7 +163,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="flex-1 p-2 space-y-1">
           {visibleNav.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.to || pathname.startsWith(item.to + "/");
+            const active = item.to === "/mi-cartera"
+              ? pathname === "/mi-cartera" || pathname === "/mi-cartera/"
+              : pathname === item.to || pathname.startsWith(item.to + "/");
             return (
               <Link
                 key={item.to}
@@ -194,7 +202,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               style={{ backgroundColor: "var(--program-primary, #0f2a4a)" }}
             />
             {isSalesRepOnly ? (
-              <span className="font-medium">{user?.user_metadata?.full_name ?? user?.email}</span>
+              <>
+                <span className="font-medium">{activeProgram?.name}</span>
+                <Badge variant="outline">Vendedor</Badge>
+              </>
             ) : (
               <>
                 <span className="font-medium">{activeProgram?.name}</span>
