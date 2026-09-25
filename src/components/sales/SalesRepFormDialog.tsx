@@ -183,7 +183,7 @@ export function SalesRepFormDialog({
     ].filter(Boolean).join("\n");
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Vendedor creado</DialogTitle>
             <DialogDescription>Copia estas ligas y accesos para enviárselos al vendedor.</DialogDescription>
