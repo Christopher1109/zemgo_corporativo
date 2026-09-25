@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { BarChart3, Users, CreditCard, AlertTriangle, RefreshCw, TrendingUp, Activity, Map as MapIcon, FilePlus2 } from "lucide-react";
+import { BarChart3, Users, CreditCard, AlertTriangle, RefreshCw, TrendingUp, Activity, Map as MapIcon, FilePlus2, FolderOpen, ShieldCheck } from "lucide-react";
 import { ReportPanel } from "@/components/reports/ReportPanel";
 import { GeoReport } from "@/components/reports/GeoReport";
+import { InternalPortfolioReport, InsurerReport } from "@/components/reports/PortfolioReports";
 
 const tabSchema = z.object({
-  tab: z.enum(["cartera", "emisiones", "cobranza", "siniestralidad", "renovaciones", "ventas", "actividad", "geo"]).optional(),
+  tab: z.enum(["cartera", "emisiones", "cobranza", "siniestralidad", "renovaciones", "ventas", "actividad", "geo", "cartera-interna", "aseguradora"]).optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/reports")({
@@ -24,6 +25,8 @@ const TABS = [
   { value: "ventas", label: "Ventas", icon: TrendingUp },
   { value: "actividad", label: "Actividad", icon: Activity },
   { value: "geo", label: "Análisis geográfico", icon: MapIcon },
+  { value: "cartera-interna", label: "Cartera – reporte interno", icon: FolderOpen },
+  { value: "aseguradora", label: "Reporte para aseguradora", icon: ShieldCheck },
 ] as const;
 
 function ReportsPage() {
@@ -60,7 +63,7 @@ function ReportsPage() {
           })}
         </TabsList>
 
-        {TABS.filter((t) => t.value !== "geo").map((t) => (
+        {TABS.filter((t) => !["geo", "cartera-interna", "aseguradora"].includes(t.value)).map((t) => (
           <TabsContent key={t.value} value={t.value} className="mt-5">
             <ReportPanel reportCode={t.value} />
           </TabsContent>
@@ -68,6 +71,8 @@ function ReportsPage() {
         <TabsContent value="geo" className="mt-5">
           <GeoReport />
         </TabsContent>
+        <TabsContent value="cartera-interna" className="mt-5"><InternalPortfolioReport /></TabsContent>
+        <TabsContent value="aseguradora" className="mt-5"><InsurerReport /></TabsContent>
       </Tabs>
     </div>
   );

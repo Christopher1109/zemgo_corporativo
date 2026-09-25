@@ -1,3 +1,4 @@
+import { CertificateBadge } from "@/components/certificates/CertificateBadge";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Download, Loader2 } from "lucide-react";
@@ -156,6 +157,9 @@ function ClientDetail() {
             {client.first_name} {client.last_name}
           </h1>
           <p className="text-sm text-muted-foreground font-mono">{client.curp ?? "—"}</p>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {policies.map((p: any) => <CertificateBadge key={p.id} number={p.certificate_number} />)}
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <EditClientDialog client={client} />
@@ -190,6 +194,13 @@ function ClientDetail() {
             <div className="sm:col-span-2">
               <div className="text-xs text-muted-foreground">Domicilio</div>
               <div>{address || "—"}</div>
+            </div>
+            <div className="sm:col-span-2 border-t pt-3 mt-1">
+              <div className="text-xs font-medium mb-2">Responsable de pago (opcional)</div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Nombre" value={client.payer_name ?? "—"} />
+                <Field label="Celular" value={client.payer_phone ?? "—"} />
+              </div>
             </div>
           </Card>
         </TabsContent>
@@ -238,6 +249,7 @@ function ClientDetail() {
                 <TableHead>Folio</TableHead>
                 <TableHead>Programa</TableHead>
                 <TableHead>No. póliza</TableHead>
+                <TableHead>Certificado</TableHead>
                 <TableHead>Vigencia</TableHead>
                 <TableHead>Próximo pago</TableHead>
                 <TableHead>Frecuencia</TableHead>
@@ -247,7 +259,7 @@ function ClientDetail() {
               </TableHeader>
               <TableBody>
                 {policies.length === 0 && (
-                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     Este cliente todavía no tiene certificado emitido (prospecto).
                   </TableCell></TableRow>
                 )}
@@ -259,6 +271,7 @@ function ClientDetail() {
                       <TableCell className="font-mono text-xs">{p.folio}</TableCell>
                       <TableCell>{p.programs?.name}</TableCell>
                       <TableCell className="font-mono text-xs">{p.policy_number ?? "—"}</TableCell>
+                      <TableCell><CertificateBadge number={p.certificate_number} /></TableCell>
                       <TableCell>{p.start_date ?? "—"} → {p.end_date ?? "—"}</TableCell>
                       <TableCell>
                         {urgent ? (

@@ -262,6 +262,8 @@ export type Database = {
           marital_status: string | null
           metadata: Json
           number: string | null
+          payer_name: string | null
+          payer_phone: string | null
           phone: string | null
           phone_alt: string | null
           referral_source_id: string | null
@@ -289,6 +291,8 @@ export type Database = {
           marital_status?: string | null
           metadata?: Json
           number?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
           phone?: string | null
           phone_alt?: string | null
           referral_source_id?: string | null
@@ -316,6 +320,8 @@ export type Database = {
           marital_status?: string | null
           metadata?: Json
           number?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
           phone?: string | null
           phone_alt?: string | null
           referral_source_id?: string | null
@@ -906,6 +912,44 @@ export type Database = {
             columns: ["policy_id"]
             isOneToOne: false
             referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      insurer_report_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          fields: Json
+          id: string
+          name: string
+          program_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          fields?: Json
+          id?: string
+          name: string
+          program_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          fields?: Json
+          id?: string
+          name?: string
+          program_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurer_report_templates_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
             referencedColumns: ["id"]
           },
         ]
@@ -2764,6 +2808,16 @@ export type Database = {
       }
     }
     Functions: {
+      apply_certificate_assignments: {
+        Args: {
+          _file_name: string
+          _items: Json
+          _overwrite?: boolean
+          _policy_number: string
+          _program_id: string
+        }
+        Returns: Json
+      }
       apply_invite_access_matrix: {
         Args: { _access: Json; _phone: string; _user_id: string }
         Returns: Json

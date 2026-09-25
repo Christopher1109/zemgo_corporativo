@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { RefreshCw, LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Hospital, Briefcase, MessageCircle, Building2 } from "lucide-react";
+import { FileCheck2, RefreshCw, LayoutDashboard, Users, FileText, CreditCard, AlertTriangle, BarChart3, Settings, LogOut, ChevronDown, Bell, Wallet, Hospital, Briefcase, MessageCircle, Building2 } from "lucide-react";
 import { useProgram } from "@/lib/program-context";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ const NAV: NavItem[] = [
   { to: "/clients", label: "Clientes", icon: Users, module: "clients" },
   { to: "/companies", label: "Empresas", icon: Building2, module: "clients" },
   { to: "/policies", label: "Certificados", icon: FileText, module: "policies" },
+  { to: "/certificates", label: "Asignación de certificados", icon: FileCheck2, module: "policies" },
   { to: "/payments", label: "Pagos", icon: CreditCard, module: "payments" },
   { to: "/finance", label: "Finanzas", icon: Wallet, module: "finance" },
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, module: "incidents" },
