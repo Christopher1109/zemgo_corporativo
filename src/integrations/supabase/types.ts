@@ -2125,6 +2125,7 @@ export type Database = {
           commission_rate: number | null
           created_at: string
           created_by_sheet_sync: boolean
+          email: string | null
           full_name: string
           id: string
           is_active: boolean
@@ -2133,12 +2134,14 @@ export type Database = {
           ref_slug: string | null
           referral_source: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           code?: string | null
           commission_rate?: number | null
           created_at?: string
           created_by_sheet_sync?: boolean
+          email?: string | null
           full_name: string
           id?: string
           is_active?: boolean
@@ -2147,12 +2150,14 @@ export type Database = {
           ref_slug?: string | null
           referral_source?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           code?: string | null
           commission_rate?: number | null
           created_at?: string
           created_by_sheet_sync?: boolean
+          email?: string | null
           full_name?: string
           id?: string
           is_active?: boolean
@@ -2161,6 +2166,7 @@ export type Database = {
           ref_slug?: string | null
           referral_source?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -2787,6 +2793,7 @@ export type Database = {
         Args: { _policy_id: string }
         Returns: string
       }
+      current_sales_rep_id: { Args: never; Returns: string }
       deactivate_user: {
         Args: { _reason: string; _user_id: string }
         Returns: undefined
@@ -2905,10 +2912,14 @@ export type Database = {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
       }
+      is_my_client: { Args: { _client_id: string }; Returns: boolean }
+      is_my_policy: { Args: { _policy_id: string }; Returns: boolean }
+      is_my_program: { Args: { _program_id: string }; Returns: boolean }
       is_program_admin: {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
       }
+      is_sales_rep_only: { Args: never; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       is_valid_curp: { Args: { _curp: string }; Returns: boolean }
       issue_medical_pass: {
@@ -3000,6 +3011,7 @@ export type Database = {
         Returns: Json
       }
       resolve_portal_session: { Args: { _token: string }; Returns: string }
+      resolve_sales_rep_ref: { Args: { _ref: string }; Returns: string }
       resume_whatsapp_bot: { Args: { _wa_phone: string }; Returns: undefined }
       revoke_medical_pass: {
         Args: { _pass_id: string; _reason: string }
@@ -3052,12 +3064,10 @@ export type Database = {
             }
             Returns: Json
           }
-      upsert_sales_rep_by_name:
-        | { Args: { _name: string }; Returns: string }
-        | {
-            Args: { _client_id?: string; _name: string; _source?: string }
-            Returns: string
-          }
+      upsert_sales_rep_by_name: {
+        Args: { _client_id?: string; _name: string; _source?: string }
+        Returns: string
+      }
       verify_portal_code: {
         Args: { _client_id: string; _code: string; _ip: string; _ua: string }
         Returns: Json
