@@ -96,7 +96,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside
         className="w-64 shrink-0 flex flex-col text-white h-screen sticky top-0 overflow-y-auto"
-        style={{ backgroundColor: "var(--program-primary)" }}
+        style={{ backgroundColor: "var(--program-primary, #0f2a4a)" }}
       >
         <div className="p-4 border-b border-white/10">
           <div className="rounded-md bg-white/95 px-3 py-4 flex items-center justify-center h-24">
@@ -110,11 +110,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           </div>
           <div className="mt-2 text-[10px] uppercase tracking-widest opacity-70 text-center">
-            Administración
+            {isSalesRepOnly ? "Portal de vendedores" : "Administración"}
           </div>
         </div>
 
         {/* Program selector */}
+        {!isSalesRepOnly && (
         <div className="p-4 border-b border-white/10">
           <div className="text-xs uppercase tracking-wider opacity-75 mb-2">Programa activo</div>
           <DropdownMenu>
