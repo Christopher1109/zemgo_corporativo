@@ -1,19 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Users, CreditCard, Wallet, TrendingDown, Bell,
-  UserPlus, FilePlus, Stethoscope, ArrowRight,
+  UserPlus, FilePlus, Stethoscope, ArrowRight, ShieldCheck,
 } from "lucide-react";
 
 import { useProgram } from "@/lib/program-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ActionItemsPanel } from "@/components/dashboard/ActionItems";
-import { fetchKpis, fetchActionItems } from "@/lib/dashboard-queries";
+import { fetchKpis } from "@/lib/dashboard-queries";
 import { getAlertsOverview } from "@/lib/alerts.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { parseISO, formatDistanceToNow } from "date-fns";
@@ -29,20 +27,20 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 const fmtMoney = (n: number) => `$${(n ?? 0).toLocaleString("es-MX", { maximumFractionDigits: 0 })}`;
 
 function Dashboard() {
-  const { activeProgram, programs } = useProgram();
-  const [scopeMode, setScopeMode] = useState<"current" | "all">("current");
-  const scope = scopeMode === "all" ? null : activeProgram?.id ?? null;
-  const scopeKey = scope ?? "all";
+  const { activeProgram } = useProgram();
+  const scope = activeProgram?.id ?? null;
+  const scopeKey = scope ?? "none";
+  const on = !!scope;
 
   const opts = { staleTime: 5 * 60_000 };
-  const kpiQ = useQuery({ queryKey: ["dash-kpi", scopeKey], queryFn: () => fetchKpis(scope), ...opts });
-  const actQ = useQuery({ queryKey: ["dash-act", scopeKey], queryFn: () => fetchActionItems(scope), ...opts });
+  const kpiQ = useQuery({ queryKey: ["dash-kpi", scopeKey], queryFn: () => fetchKpis(scope), enabled: on, ...opts });
 
 
   const alertsFn = useServerFn(getAlertsOverview);
   const alertsQ = useQuery({
     queryKey: ["dash-alerts", scopeKey],
     queryFn: () => alertsFn({ data: { program_id: scope } }),
+    enabled: on,
     staleTime: 60_000,
   });
 
@@ -55,7 +53,7 @@ function Dashboard() {
         .select("amount, status, due_date, policies!inner(program_id)")
         .in("status", ["pending", "overdue"])
         .limit(5000);
-      if (scope) q = q.eq("policies.program_id", scope);
+      q = q.eq("policies.program_id", scope!);
       const { data, error } = await q;
       if (error) throw error;
       let receivable = 0, overdue = 0;
@@ -66,6 +64,7 @@ function Dashboard() {
       }
       return { receivable, overdue };
     },
+    enabled: on,
   });
 
 
@@ -73,15 +72,33 @@ function Dashboard() {
   const latestClientsQ = useQuery({
     queryKey: ["dash-latest-clients", scopeKey],
     queryFn: async () => {
-      let q = supabase
-        .from("clients")
-        .select("id, first_name, last_name, state, created_at")
-        .order("created_at", { ascending: false })
+      const { data, error } = await supabase
+        .from("client_programs")
+        .select("enrolled_at, clients!inner(id, first_name, last_name, state, created_at)")
+        .eq("program_id", scope!)
+        .order("enrolled_at", { ascending: false })
         .limit(6);
-      const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []) as any[];
+      return (data ?? []).map((r: any) => ({ ...r.clients, created_at: r.enrolled_at ?? r.clients.created_at }));
     },
+    enabled: on,
+  });
+
+  // Program summary
+  const summaryQ = useQuery({
+    queryKey: ["dash-summary", scopeKey],
+    queryFn: async () => {
+      const cnt = async (status: string) => {
+        const { count } = await supabase.from("client_programs").select("id", { count: "exact", head: true }).eq("program_id", scope!).eq("status", status as any);
+        return count ?? 0;
+      };
+      const [active, prospect, inactive] = await Promise.all([cnt("active"), cnt("prospect"), cnt("inactive")]);
+      const { count: vigentes } = await supabase.from("policies").select("id", { count: "exact", head: true }).eq("program_id", scope!).eq("status", "active");
+      const { count: sinCert } = await supabase.from("policies").select("id", { count: "exact", head: true }).eq("program_id", scope!).is("certificate_number", null).neq("status", "cancelled");
+      const { count: siniestros } = await supabase.from("incidents").select("id, policies!inner(program_id)", { count: "exact", head: true }).eq("policies.program_id", scope!).not("status", "in", "(closed,rejected)");
+      return { active, prospect, inactive, vigentes: vigentes ?? 0, sinCert: sinCert ?? 0, siniestros: siniestros ?? 0 };
+    },
+    enabled: on,
   });
 
   // New clients this month (simple count, MTD)
@@ -90,12 +107,14 @@ function Dashboard() {
     queryFn: async () => {
       const start = new Date(); start.setDate(1); start.setHours(0, 0, 0, 0);
       const { count, error } = await supabase
-        .from("clients")
+        .from("client_programs")
         .select("id", { count: "exact", head: true })
-        .gte("created_at", start.toISOString());
+        .eq("program_id", scope!)
+        .gte("enrolled_at", start.toISOString());
       if (error) throw error;
       return count ?? 0;
     },
+    enabled: on,
   });
 
   const kpi = kpiQ.data;
@@ -114,15 +133,9 @@ function Dashboard() {
         <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight truncate">Dashboard</h1>
           <p className="text-sm text-muted-foreground truncate">
-            {scope ? `Programa ${activeProgram?.name}` : `Vista consolidada de los ${programs.length} programas`}
+            {scope ? `Programa ${activeProgram?.name}` : "Selecciona un programa"}
           </p>
         </div>
-        <Tabs value={scopeMode} onValueChange={(v) => setScopeMode(v as any)}>
-          <TabsList>
-            <TabsTrigger value="current" disabled={!activeProgram}>Programa actual</TabsTrigger>
-            <TabsTrigger value="all">Todos</TabsTrigger>
-          </TabsList>
-        </Tabs>
       </div>
 
       {/* Shortcuts */}
@@ -189,11 +202,28 @@ function Dashboard() {
 
       </div>
 
-      {/* Atención inmediata + Latest clients */}
+      {/* Resumen + Latest clients */}
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <ActionItemsPanel data={actQ.data} loading={actQ.isLoading} />
-        </div>
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Resumen del programa</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {([
+              ["Clientes activos", summaryQ.data?.active, "/clients"],
+              ["Prospectos", summaryQ.data?.prospect, "/clients"],
+              ["Inactivos", summaryQ.data?.inactive, "/clients"],
+              ["Certificados vigentes", summaryQ.data?.vigentes, "/policies"],
+              ["Sin número de certificado", summaryQ.data?.sinCert, "/certificates"],
+              ["Siniestros abiertos", summaryQ.data?.siniestros, "/incidents"],
+            ] as const).map(([label, v, to]) => (
+              <Link key={label} to={to} className="rounded-lg border p-3 hover:border-primary/50 transition">
+                <div className="text-xs text-muted-foreground">{label}</div>
+                {summaryQ.isLoading ? <div className="h-7 w-12 rounded bg-muted animate-pulse mt-1" /> : <div className="text-2xl font-bold mt-1" style={{ color: "var(--program-primary)" }}>{v ?? 0}</div>}
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-base flex items-center gap-2"><Users className="h-4 w-4" /> Últimos clientes</CardTitle>
