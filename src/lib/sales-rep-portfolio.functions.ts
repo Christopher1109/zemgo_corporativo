@@ -120,7 +120,7 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
         ),
       supabase
         .from("sales_commissions")
-        .select("id, amount, base_amount, rate, kind, created_at, payments(paid_at, policies(folio, clients(full_name)))")
+        .select("id, amount, base_amount, percentage, kind, created_at, earned_at, payments(paid_at, policies(folio, clients(first_name, last_name)))")
         .eq("sales_rep_id", repId),
     ]);
 
@@ -189,7 +189,7 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
       const rate = paidCount === 0 ? 0.2 : 0.1;
       return {
         id: pay.id,
-        client_name: pay.policies?.clients?.full_name ?? "—",
+        client_name: clientName(pay.policies?.clients),
         folio: pay.policies?.folio ?? null,
         amount: pay.amount ?? 0,
         due_date: pay.due_date,
