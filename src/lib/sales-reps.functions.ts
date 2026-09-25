@@ -115,7 +115,7 @@ export const getSalesRepDetail = createServerFn({ method: "GET" })
     const sb = context.supabase;
     const repQ = await sb
       .from("sales_reps")
-      .select("id, full_name, referral_source, code, ref_slug, program_id, is_active, metadata")
+      .select("id, full_name, referral_source, code, ref_slug, program_id, is_active, metadata, user_id, email")
       .eq("id", data.sales_rep_id)
       .maybeSingle();
     if (repQ.error) throw new Error(repQ.error.message);
