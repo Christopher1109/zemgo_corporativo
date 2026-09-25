@@ -107,7 +107,7 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
         .eq("sales_rep_id", repId),
       supabase
         .from("policies")
-        .select("id, folio, status, start_date, end_date, metadata, clients(full_name, phone, email)")
+        .select("id, folio, status, start_date, end_date, metadata, client_id, clients(full_name, phone, email)")
         .eq("sales_rep_id", repId),
       supabase
         .from("payments")
