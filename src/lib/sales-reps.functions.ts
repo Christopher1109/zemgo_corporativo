@@ -84,7 +84,11 @@ export const listSalesReps = createServerFn({ method: "GET" })
       comStats.set(rid, s);
     }
 
-    return reps.map((r) => {
+    const withPolicies = new Set((pol.data ?? []).map((p: any) => p.sales_rep_id as string));
+    const visible = programId
+      ? reps.filter((r: any) => r.program_id == null || r.program_id === programId || withPolicies.has(r.id))
+      : reps;
+    return visible.map((r) => {
       const s = stats.get(r.id) ?? { active: 0, total: 0, premium: 0, clients: new Set<string>() };
       const c =
         comStats.get(r.id) ??
@@ -109,10 +113,11 @@ export const listSalesReps = createServerFn({ method: "GET" })
 export const getSalesRepDetail = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
-    z.object({ sales_rep_id: z.string().uuid() }).parse(d),
+    z.object({ sales_rep_id: z.string().uuid(), program_id: z.string().uuid().nullable().optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
+    const programId = data.program_id ?? null;
     const repQ = await sb
       .from("sales_reps")
       .select("id, full_name, referral_source, code, ref_slug, program_id, is_active, metadata, user_id, email")
@@ -121,22 +126,26 @@ export const getSalesRepDetail = createServerFn({ method: "GET" })
     if (repQ.error) throw new Error(repQ.error.message);
     if (!repQ.data) throw new Error("Vendedor no encontrado");
 
-    const polQ = await sb
+    let polB = sb
       .from("policies")
       .select(
         "id, folio, status, premium, start_date, end_date, program_id, client_id, programs(code, name, color_primary), clients(id, first_name, last_name, email, phone, state)",
       )
       .eq("sales_rep_id", data.sales_rep_id)
       .order("start_date", { ascending: false });
+    if (programId) polB = polB.eq("program_id", programId);
+    const polQ = await polB;
     if (polQ.error) throw new Error(polQ.error.message);
     const policies = polQ.data ?? [];
     const policyIds = policies.map((p: any) => p.id);
 
-    const comQ = await sb
+    let comB = sb
       .from("sales_commissions")
       .select("id, policy_id, payment_id, kind, percentage, base_amount, amount, earned_at, period")
       .eq("sales_rep_id", data.sales_rep_id)
       .order("earned_at", { ascending: false });
+    if (programId) comB = comB.eq("program_id", programId);
+    const comQ = await comB;
     if (comQ.error) throw new Error(comQ.error.message);
     const commissions = comQ.data ?? [];
 

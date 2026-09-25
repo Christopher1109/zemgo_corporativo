@@ -23,15 +23,15 @@ const MONTH = new Date().toLocaleDateString("es-MX", { month: "long", year: "num
 
 function SalesRepsPage() {
   const { activeProgram } = useProgram();
-  const [scope, setScope] = useState<"active" | "all">("all");
   const [newOpen, setNewOpen] = useState(false);
-  const programId = scope === "active" ? (activeProgram?.id ?? null) : null;
+  const programId = activeProgram?.id ?? null;
 
   const listFn = useServerFn(listSalesReps);
   const reps = useQuery({
     queryKey: ["sales-reps", programId],
     queryFn: () => listFn({ data: { program_id: programId } }),
     staleTime: 30_000,
+    enabled: !!programId,
   });
 
   const rows = reps.data ?? [];
@@ -62,12 +62,6 @@ function SalesRepsPage() {
           <Button size="sm" onClick={() => setNewOpen(true)}>
             <Plus className="h-4 w-4 mr-1" /> Nuevo vendedor
           </Button>
-          <Button variant={scope === "all" ? "default" : "outline"} size="sm" onClick={() => setScope("all")}>
-            Todos los programas
-          </Button>
-          <Button variant={scope === "active" ? "default" : "outline"} size="sm" onClick={() => setScope("active")}>
-            {activeProgram?.name ?? "Programa activo"}
-          </Button>
         </div>
       </div>
 
@@ -84,12 +78,12 @@ function SalesRepsPage() {
       </div>
 
       <div className="grid gap-3">
-        {reps.isLoading ? (
+        {reps.isLoading || !programId ? (
           [...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-md bg-muted/40 animate-pulse" />)
         ) : rows.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center text-sm text-muted-foreground">
-              Sin vendedores registrados.
+              Sin vendedores asignados a este programa.
             </CardContent>
           </Card>
         ) : (
