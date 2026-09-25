@@ -171,7 +171,7 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
       start_date: p.start_date,
       end_date: p.end_date,
       days_to_expire: days(p.end_date),
-      renewed: !!p.metadata?.replaced_by,
+      renewed: !!metaOf(p).replaced_by,
     });
 
     const withEnd = policies.filter((p) => p.end_date);
@@ -180,9 +180,9 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
       .map(toRenewal)
       .sort((a, b) => (a.days_to_expire ?? 0) - (b.days_to_expire ?? 0));
     const expiredUnrenewed = withEnd
-      .filter((p) => p.end_date! < today && !p.metadata?.replaced_by)
+      .filter((p) => p.end_date! < today && !metaOf(p).replaced_by)
       .map(toRenewal);
-    const renewed = withEnd.filter((p) => !!p.metadata?.replaced_by).map(toRenewal);
+    const renewed = withEnd.filter((p) => !!metaOf(p).replaced_by).map(toRenewal);
 
     const toPayment = (pay: any): PortfolioPayment => {
       const paidCount = paidCountByPolicy.get(pay.policy_id) ?? 0;
