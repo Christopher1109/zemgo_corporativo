@@ -71,14 +71,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data: level } = useAuthLevel();
   const isSuperAdmin = !!level?.isSuperAdmin;
   const { data: myAccess } = useMyAccess();
+  const { data: isSalesRepOnly } = useIsSalesRepOnly();
   // Permisos del PROGRAMA ACTIVO (no la unión de todos)
   const programModules = modulesForProgram(myAccess, activeProgram?.id);
-  const visibleNav = NAV.filter((n) => {
-    if (n.requires === "manage_users") return !!level?.canManageUsers;
-    if (isSuperAdmin) return true;
-    if (n.module === null) return true;
-    return canAccessModule(programModules, n.module);
-  });
+  const visibleNav = isSalesRepOnly
+    ? [{ to: "/mi-cartera", label: "Mi cartera", icon: Briefcase, module: null } as NavItem]
+    : NAV.filter((n) => {
+        if (n.requires === "manage_users") return !!level?.canManageUsers;
+        if (isSuperAdmin) return true;
+        if (n.module === null) return true;
+        return canAccessModule(programModules, n.module);
+      });
 
 
 
