@@ -80,6 +80,7 @@ function ClientsList() {
           {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
           Descargar datos de clientes
         </Button>
+        <ClientDataUploadDialog programId={activeProgram?.id} />
         <Button asChild>
           <Link to="/clients/new">
             <Plus className="h-4 w-4 mr-2" /> Nuevo cliente
