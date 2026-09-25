@@ -214,12 +214,12 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
     const commissions = commissionsRes.data ?? [];
     const toCommission = (c: any): PortfolioCommission => ({
       id: c.id,
-      client_name: c.payments?.policies?.clients?.full_name ?? "—",
+      client_name: clientName(c.payments?.policies?.clients),
       folio: c.payments?.policies?.folio ?? null,
-      paid_at: c.payments?.paid_at ?? c.created_at,
+      paid_at: c.payments?.paid_at ?? c.earned_at ?? c.created_at,
       kind: c.kind,
       base_amount: c.base_amount,
-      rate: c.rate,
+      rate: c.percentage != null ? c.percentage / 100 : null,
       amount: c.amount,
     });
     const detail = commissions.map(toCommission).sort((a, b) => (b.paid_at ?? "").localeCompare(a.paid_at ?? ""));
