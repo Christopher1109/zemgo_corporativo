@@ -24,6 +24,7 @@ const empty = {
   first_name: "", last_name: "", curp: "", rfc: "",
   date_of_birth: "", gender: "", marital_status: "",
   email: "", phone: "",
+  payer_name: "", payer_phone: "",
   street: "", number: "", colonia: "", city: "", state: "", zip: "",
   // ABC-only free-text list of cónyuge/hijos shown on the certificate.
   dependents_text: "",
@@ -332,6 +333,15 @@ function NewClient() {
           <CardContent className="grid md:grid-cols-2 gap-4">
             <Field label="Email"><Input type="email" value={form.email} onChange={set("email")} /></Field>
             <Field label="Teléfono"><Input value={form.phone} onChange={set("phone")} /></Field>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-base">Responsable de pago (opcional)</CardTitle></CardHeader>
+          <CardContent className="grid md:grid-cols-2 gap-4">
+            <p className="md:col-span-2 text-xs text-muted-foreground">Úsalo cuando otra persona paga el programa (por ejemplo, un papá que paga los de sus hijos).</p>
+            <Field label="Nombre"><Input value={form.payer_name} onChange={set("payer_name")} /></Field>
+            <Field label="Celular"><Input value={form.payer_phone} onChange={set("payer_phone")} /></Field>
           </CardContent>
         </Card>
 

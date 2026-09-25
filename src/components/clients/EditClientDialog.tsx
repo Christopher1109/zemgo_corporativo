@@ -42,7 +42,7 @@ export function EditClientDialog({ client }: { client: ClientRow }) {
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState<Record<string, string>>(() =>
     Object.fromEntries(
-      [...FIELDS.map((f) => f.key), "gender", "marital_status", "address_full"].map((k) => [
+      [...FIELDS.map((f) => f.key), "gender", "marital_status", "address_full", "payer_name", "payer_phone"].map((k) => [
         k,
         (client?.[k] ?? "") as string,
       ]),
@@ -133,6 +133,16 @@ export function EditClientDialog({ client }: { client: ClientRow }) {
           <div className="space-y-1 sm:col-span-2">
             <Label className="text-xs">Domicilio completo (opcional)</Label>
             <Input value={form.address_full ?? ""} onChange={(e) => set("address_full", e.target.value)} />
+          </div>
+
+          <div className="sm:col-span-2 border-t pt-3 text-sm font-medium">Responsable de pago (opcional)</div>
+          <div className="space-y-1">
+            <Label className="text-xs">Nombre</Label>
+            <Input value={form.payer_name ?? ""} onChange={(e) => set("payer_name", e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Celular</Label>
+            <Input value={form.payer_phone ?? ""} onChange={(e) => set("payer_phone", e.target.value)} />
           </div>
         </div>
 
