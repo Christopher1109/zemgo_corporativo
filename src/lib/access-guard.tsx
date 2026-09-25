@@ -51,8 +51,19 @@ export function RouteAccessGuard({ children }: { children: ReactNode }) {
   const { activeProgram } = useProgram();
   const { data: access, isLoading: loadingAccess } = useMyAccess();
   const { data: level, isLoading: loadingLevel } = useAuthLevel();
+  const { data: isSalesRepOnly, isLoading: loadingRep } = useIsSalesRepOnly();
+  const navigate = useNavigate();
 
-  if (loadingAccess || loadingLevel) {
+  const mustRedirect = !!isSalesRepOnly && pathname !== "/mi-cartera";
+  useEffect(() => {
+    if (mustRedirect) navigate({ to: "/mi-cartera", replace: true });
+  }, [mustRedirect, navigate]);
+
+  if (loadingAccess || loadingLevel || loadingRep) {
+    return <div className="h-40 rounded-md bg-muted/40 animate-pulse" />;
+  }
+
+  if (mustRedirect) {
     return <div className="h-40 rounded-md bg-muted/40 animate-pulse" />;
   }
 
