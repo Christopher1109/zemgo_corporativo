@@ -1685,6 +1685,33 @@ export type Database = {
         }
         Relationships: []
       }
+      portal_login_groups: {
+        Row: {
+          accounts: Json
+          created_at: string
+          expires_at: string
+          id: string
+          ip_address: unknown
+          token_hash: string
+        }
+        Insert: {
+          accounts?: Json
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip_address?: unknown
+          token_hash: string
+        }
+        Update: {
+          accounts?: Json
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_address?: unknown
+          token_hash?: string
+        }
+        Relationships: []
+      }
       portal_sessions: {
         Row: {
           client_id: string
@@ -1692,6 +1719,7 @@ export type Database = {
           expires_at: string
           id: string
           ip_address: unknown
+          program_id: string | null
           revoked_at: string | null
           token_hash: string
           user_agent: string | null
@@ -1702,6 +1730,7 @@ export type Database = {
           expires_at: string
           id?: string
           ip_address?: unknown
+          program_id?: string | null
           revoked_at?: string | null
           token_hash: string
           user_agent?: string | null
@@ -1712,6 +1741,7 @@ export type Database = {
           expires_at?: string
           id?: string
           ip_address?: unknown
+          program_id?: string | null
           revoked_at?: string | null
           token_hash?: string
           user_agent?: string | null
@@ -1751,6 +1781,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "payment_reminder_status"
             referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "portal_sessions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2980,6 +3017,7 @@ export type Database = {
         Args: { _director_id: string; _hospital: string; _incident_id: string }
         Returns: string
       }
+      list_portal_accounts: { Args: { _group_token: string }; Returns: Json }
       log_renewal_contact: {
         Args: { _notes: string; _policy_id: string }
         Returns: string
@@ -3065,6 +3103,10 @@ export type Database = {
         Returns: Json
       }
       resolve_portal_session: { Args: { _token: string }; Returns: string }
+      resolve_portal_session_program: {
+        Args: { _token: string }
+        Returns: string
+      }
       resolve_sales_rep_ref: { Args: { _ref: string }; Returns: string }
       resume_whatsapp_bot: { Args: { _wa_phone: string }; Returns: undefined }
       revoke_medical_pass: {
@@ -3078,6 +3120,16 @@ export type Database = {
       save_google_sheets_credentials: {
         Args: { _json: Json }
         Returns: undefined
+      }
+      select_portal_account: {
+        Args: {
+          _client_id: string
+          _group_token: string
+          _ip: string
+          _program_id: string
+          _ua: string
+        }
+        Returns: Json
       }
       set_medical_pass_pdf_url: {
         Args: { _pass_id: string; _pdf_url: string }
@@ -3128,6 +3180,15 @@ export type Database = {
       }
       verify_portal_login: {
         Args: { _curp: string; _ip: string; _phone_last4: string; _ua: string }
+        Returns: Json
+      }
+      verify_portal_login_accounts: {
+        Args: {
+          _full_name: string
+          _ip: string
+          _phone_last4: string
+          _ua: string
+        }
         Returns: Json
       }
       verify_portal_login_by_name: {
