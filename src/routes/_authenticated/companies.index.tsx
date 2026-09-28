@@ -29,6 +29,8 @@ function CompaniesPage() {
   const { activeProgram } = useProgram();
   const [scope, setScope] = useState<"active" | "all">("all");
   const [search, setSearch] = useState("");
+  const [editTarget, setEditTarget] = useState<any | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const programId = scope === "active" ? (activeProgram?.id ?? null) : null;
 
   const fn = useServerFn(listCompanies);
