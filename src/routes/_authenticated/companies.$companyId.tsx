@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -12,8 +13,11 @@ import {
   Upload,
   Users,
   Package,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { getCompanyDetail, importCompanyEmployees } from "@/lib/companies.functions";
+import { EditCompanyDialog, DeleteCompanyDialog } from "@/components/companies/company-dialogs";
 import { renderCertificateBlob } from "@/lib/pdf/generateCertificate.browser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
