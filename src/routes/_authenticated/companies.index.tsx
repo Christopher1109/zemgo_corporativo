@@ -2,13 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Building2, Plus, Users, FileText, ArrowRight, Search } from "lucide-react";
+import { Building2, Plus, Users, FileText, ArrowRight, Search, Pencil, Trash2 } from "lucide-react";
 import { listCompanies } from "@/lib/companies.functions";
 import { useProgram } from "@/lib/program-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EditCompanyDialog, DeleteCompanyDialog } from "@/components/companies/company-dialogs";
 
 export const Route = createFileRoute("/_authenticated/companies/")({
   head: () => ({
