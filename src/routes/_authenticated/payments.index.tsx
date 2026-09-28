@@ -72,7 +72,7 @@ function PaymentsList() {
       let q = supabase
         .from("payments")
         .select(
-          "id, amount, paid_amount, due_date, status, method, paid_at, provider, provider_transaction_id, control_number, failure_reason, policies!inner(id, folio, program_id, clients!inner(id, first_name, last_name, curp)), programs:policies(programs(id,name,code,color_primary))",
+          "id, amount, paid_amount, due_date, status, method, paid_at, provider, provider_transaction_id, control_number, failure_reason, policies!inner(id, folio, program_id, clients!inner(id, first_name, last_name, curp), programs(id, name, code, color_primary))",
         )
         .order(paidView ? "paid_at" : "due_date", { ascending: !paidView, nullsFirst: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
