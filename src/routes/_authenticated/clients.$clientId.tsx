@@ -502,7 +502,7 @@ function EnrollmentStatusControl({
               disabled={key === enrollment.status}
               onSelect={(ev) => {
                 ev.preventDefault();
-                setTarget(key);
+                choose(key);
               }}
             >
               {st.label}
@@ -522,9 +522,28 @@ function EnrollmentStatusControl({
               Programa {enrollment.programs?.name}. {target ? STATUS_EFFECTS[target] : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {manualActivation && !preview && (
+            <div className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Revisando certificado y pagos…</div>
+          )}
+          {manualActivation && preview && !preview.has_paid && (
+            <div className="space-y-2 text-sm">
+              {!preview.amount && (
+                <label className="block">
+                  <span className="text-xs text-muted-foreground">No hay precio configurado. Monto cobrado (MXN)</span>
+                  <input
+                    type="number" min="0" step="0.01" value={amountInput}
+                    onChange={(e) => setAmountInput(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
+                  />
+                </label>
+              )}
+              <p className="font-medium">{activationText}</p>
+            </div>
+          )}
+          {manualActivation && preview?.has_paid && <p className="text-sm">{activationText}</p>}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction disabled={busy} onClick={() => target && apply(target)}>
+            <AlertDialogAction disabled={busy || (manualActivation && !preview)} onClick={(e) => { e.preventDefault(); if (target) apply(target); }}>
               Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>
