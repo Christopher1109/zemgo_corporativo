@@ -334,7 +334,7 @@ function CompanyDetailPage() {
         <MiniStat label="Asegurados" value={String(new Set(policies.map((p: any) => p.client_id)).size)} />
         <MiniStat label="Certificados" value={String(policies.length)} />
         <MiniStat label="Activos" value={String(active.length)} />
-        <MiniStat label="Prima total" value={fmtMx(totalPremium)} />
+        <MiniStat label="Precio total" value={fmtMx(totalPremium)} />
       </div>
 
       <Card>
@@ -399,7 +399,7 @@ function CompanyDetailPage() {
                     {p.status}
                   </Badge>
                   <div className="text-right w-24">
-                    <div className="text-xs text-muted-foreground">Prima</div>
+                    <div className="text-xs text-muted-foreground">Precio</div>
                     <div className="font-semibold tabular-nums">{fmtMx(p.premium)}</div>
                   </div>
                   <Button asChild variant="ghost" size="sm">
@@ -459,7 +459,7 @@ function CompanyDetailPage() {
               <Input type="date" value={terms.end_date} onChange={(e) => setTerms({ ...terms, end_date: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Prima por persona</Label>
+              <Label>Precio por persona</Label>
               <Input inputMode="decimal" value={terms.premium} onChange={(e) => setTerms({ ...terms, premium: e.target.value })} />
             </div>
             <div className="space-y-1.5 col-span-2">

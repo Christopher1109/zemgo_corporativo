@@ -1,4 +1,5 @@
 import { CertificateBadge } from "@/components/certificates/CertificateBadge";
+import { fmtProgramPrice } from "@/lib/program-price";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -54,7 +55,7 @@ function PoliciesList() {
       let q = supabase
         .from("policies")
         .select(
-          "id, folio, certificate_number, status, start_date, end_date, premium, programs(id,name,color_primary), clients(id,first_name,last_name)",
+          "id, folio, certificate_number, status, start_date, end_date, premium, programs(id,name,color_primary,default_premium,billing_frequency), clients(id,first_name,last_name)",
         )
         // Corporate certificates are managed inside the company folder.
         .is("company_id", null)
@@ -152,7 +153,7 @@ function PoliciesList() {
               <TableHead>Programa</TableHead>
               <TableHead>Certificado</TableHead>
               <TableHead>Vigencia</TableHead>
-              <TableHead>Prima</TableHead>
+              <TableHead>Precio</TableHead>
               <TableHead>Estado</TableHead>
             </TableRow>
           </TableHeader>
@@ -183,7 +184,7 @@ function PoliciesList() {
                   {r.start_date ? new Date(r.start_date).toLocaleDateString("es-MX") : "—"} →{" "}
                   {r.end_date ? new Date(r.end_date).toLocaleDateString("es-MX") : "—"}
                 </TableCell>
-                <TableCell>{r.premium ? `$${Number(r.premium).toLocaleString("es-MX")}` : "—"}</TableCell>
+                <TableCell>{fmtProgramPrice(r.programs)}</TableCell>
                 <TableCell>
                   <Badge variant={STATUS_VARIANT[r.status] ?? "secondary"}>{STATUS_LABELS[r.status] ?? r.status}</Badge>
                 </TableCell>

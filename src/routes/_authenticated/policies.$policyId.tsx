@@ -63,7 +63,7 @@ const ACTION_LABELS: Record<string, string> = {
 
 const FIELD_LABELS: Record<string, string> = {
   status: "Estado",
-  premium: "Prima",
+  premium: "Precio",
   sum_insured: "Suma asegurada",
   deductible: "Deducible",
   start_date: "Inicio de vigencia",

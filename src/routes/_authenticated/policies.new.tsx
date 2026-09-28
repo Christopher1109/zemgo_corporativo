@@ -420,7 +420,7 @@ function NewPolicy() {
             <Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
           </div>
           <div>
-            <Label>Prima (MXN)</Label>
+            <Label>Precio (MXN)</Label>
             <Input type="number" step="0.01" value={form.premium} onChange={(e) => setForm({ ...form, premium: e.target.value })} />
           </div>
           <div>
