@@ -521,6 +521,14 @@ function CompanyDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EditCompanyDialog company={company} open={editOpen} onOpenChange={setEditOpen} />
+      <DeleteCompanyDialog
+        company={company}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => navigate({ to: "/companies" })}
+      />
     </div>
   );
 }
