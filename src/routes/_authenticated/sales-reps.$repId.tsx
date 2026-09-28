@@ -168,6 +168,7 @@ function SalesRepDetailPage() {
   const counts = useMemo(() => {
     const c: Record<GroupKey, number> = { active: 0, prospect: 0, suspended: 0, closed: 0 };
     for (const p of data?.policies ?? []) c[groupOf(p)] += 1;
+    c.prospect += (data?.prospects ?? []).length;
     return c;
   }, [data]);
 
@@ -185,8 +186,13 @@ function SalesRepDetailPage() {
   }
 
   const { rep, policies, summary, upcoming } = data;
-  const uniqueClients = new Set(policies.map((p: any) => p.clients?.id).filter(Boolean));
+  const prospects: any[] = data.prospects ?? [];
+  const uniqueClients = new Set([
+    ...policies.map((p: any) => p.clients?.id).filter(Boolean),
+    ...prospects.map((p: any) => p.client_id),
+  ]);
   const visible = filter === "all" ? policies : policies.filter((p: any) => groupOf(p) === filter);
+  const visibleProspects = filter === "all" || filter === "prospect" ? prospects : [];
 
   return (
     <div className="space-y-5">
@@ -319,7 +325,7 @@ function SalesRepDetailPage() {
               variant={filter === "all" ? "default" : "outline"}
               onClick={() => setFilter("all")}
             >
-              Todos ({policies.length})
+              Todos ({policies.length + prospects.length})
             </Button>
             {GROUPS.map((g) => (
               <Button
@@ -333,8 +339,41 @@ function SalesRepDetailPage() {
             ))}
           </div>
 
+          {visibleProspects.length > 0 && (
+            <div className="divide-y rounded-md border border-dashed">
+              {visibleProspects.map((c: any) => (
+                <Link
+                  key={c.id}
+                  to="/clients/$clientId"
+                  params={{ clientId: c.client_id }}
+                  className="flex items-center gap-3 px-3 py-3 hover:bg-muted/50 text-sm"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium">{c.first_name} {c.last_name}</span>
+                      {c.programs && (
+                        <Badge variant="outline" className="font-mono text-[10px]" style={{ borderColor: c.programs.color_primary, color: c.programs.color_primary }}>
+                          {c.programs.code}
+                        </Badge>
+                      )}
+                      {c.curp_pending && (
+                        <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-800 border-amber-200">CURP pendiente</Badge>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                      {c.phone ?? "Sin teléfono"} · {c.email ?? "Sin correo"} · Registrado {fmtDate(c.registered_at)}
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200">
+                    Prospecto · sin certificado
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+          )}
+
           {visible.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">
+            visibleProspects.length > 0 ? null : <div className="p-6 text-center text-sm text-muted-foreground">
               Sin certificados en esta categoría.
             </div>
           ) : (

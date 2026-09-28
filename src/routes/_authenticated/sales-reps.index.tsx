@@ -102,7 +102,7 @@ function SalesRepsPage() {
                       {!r.is_active && <Badge variant="secondary">inactivo</Badge>}
                     </div>
                     <div className="mt-1 text-xs text-muted-foreground">
-                      {r.clients} clientes · {r.active_policies} certificados activos · {r.total_policies} en cartera
+                      {r.clients} clientes · {r.prospects ?? 0} prospectos · {r.active_policies} certificados activos · {r.total_policies} en cartera
                     </div>
                     <div className="mt-1.5 flex flex-wrap gap-3 text-[11px]">
                       <span className="inline-flex items-center gap-1 text-muted-foreground">
