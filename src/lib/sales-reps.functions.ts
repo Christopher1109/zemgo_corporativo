@@ -84,7 +84,34 @@ export const listSalesReps = createServerFn({ method: "GET" })
       comStats.set(rid, s);
     }
 
+    // Clients linked directly to the rep (with or without policy)
+    const cliQ = await sb
+      .from("clients")
+      .select("id, sales_rep_id, client_programs(program_id, status)")
+      .not("sales_rep_id", "is", null);
+    if (cliQ.error) throw new Error(cliQ.error.message);
+    const polKeys = new Set((pol.data ?? []).map((p: any) => `${p.client_id}:${p.program_id}`));
+    const cliStats = new Map<string, { clients: Set<string>; prospects: Set<string> }>();
+    const add = (rid: string, cid: string, prospect: boolean) => {
+      const s = cliStats.get(rid) ?? { clients: new Set<string>(), prospects: new Set<string>() };
+      s.clients.add(cid);
+      if (prospect) s.prospects.add(cid);
+      cliStats.set(rid, s);
+    };
+    for (const c of cliQ.data ?? []) {
+      const cps = (Array.isArray(c.client_programs) ? c.client_programs : c.client_programs ? [c.client_programs] : []) as any[];
+      const targets = programId ? cps.filter((x) => x.program_id === programId) : cps;
+      for (const cp of targets) {
+        const noPolicy = !polKeys.has(`${c.id}:${cp.program_id}`);
+        add(c.sales_rep_id as string, c.id, noPolicy || cp.status === "prospect");
+      }
+    }
+    for (const p of pol.data ?? []) {
+      if (p.client_id) add(p.sales_rep_id as string, p.client_id as string, false);
+    }
+
     const withPolicies = new Set((pol.data ?? []).map((p: any) => p.sales_rep_id as string));
+    for (const rid of cliStats.keys()) withPolicies.add(rid);
     const visible = programId
       ? reps.filter((r: any) => r.program_id == null || r.program_id === programId || withPolicies.has(r.id))
       : reps;
@@ -93,11 +120,13 @@ export const listSalesReps = createServerFn({ method: "GET" })
       const c =
         comStats.get(r.id) ??
         { month: 0, month_new: 0, month_renewal: 0, year: 0, lifetime: 0, collected: 0 };
+      const cs = cliStats.get(r.id);
       return {
         ...r,
         active_policies: s.active,
         total_policies: s.total,
-        clients: s.clients.size,
+        clients: cs?.clients.size ?? s.clients.size,
+        prospects: cs?.prospects.size ?? 0,
         premium_total: s.premium,
         collected_total: c.collected,
         commission_month: c.month,
@@ -243,9 +272,49 @@ export const getSalesRepDetail = createServerFn({ method: "GET" })
       )
       .slice(0, 20);
 
+    // Prospects: clients linked to this rep with no policy in the program.
+    const prospects: any[] = [];
+    {
+      const cQ = await sb
+        .from("clients")
+        .select("id, first_name, last_name, email, phone, curp, created_at, client_programs(program_id, status, enrolled_at, programs(code, name, color_primary))")
+        .eq("sales_rep_id", data.sales_rep_id);
+      if (cQ.error) throw new Error(cQ.error.message);
+      const withPolicy = new Set(policies.map((p: any) => `${p.client_id}:${p.program_id}`));
+      // Policies of these clients in any program (may belong to another rep)
+      const ids = (cQ.data ?? []).map((c: any) => c.id);
+      if (ids.length) {
+        let ap = sb.from("policies").select("client_id, program_id").in("client_id", ids);
+        if (programId) ap = ap.eq("program_id", programId);
+        const apQ = await ap;
+        for (const p of apQ.data ?? []) withPolicy.add(`${p.client_id}:${p.program_id}`);
+      }
+      for (const c of cQ.data ?? []) {
+        const cps = (Array.isArray(c.client_programs) ? c.client_programs : c.client_programs ? [c.client_programs] : []) as any[];
+        const targets = programId ? cps.filter((x) => x.program_id === programId) : cps;
+        for (const cp of targets) {
+          if (withPolicy.has(`${c.id}:${cp.program_id}`)) continue;
+          prospects.push({
+            id: `${c.id}:${cp.program_id}`,
+            client_id: c.id,
+            first_name: c.first_name,
+            last_name: c.last_name,
+            email: c.email,
+            phone: c.phone,
+            program_id: cp.program_id,
+            programs: cp.programs ?? null,
+            client_program_status: cp.status,
+            registered_at: cp.enrolled_at ?? c.created_at,
+            curp_pending: String(c.curp ?? "").toUpperCase().startsWith("PEND"),
+          });
+        }
+      }
+    }
+
     return {
       rep: repQ.data,
       policies: rows,
+      prospects,
       commissions,
       summary: {
         rates: { new: COMMISSION_NEW, renewal: COMMISSION_RENEWAL },
