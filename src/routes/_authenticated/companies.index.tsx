@@ -90,9 +90,9 @@ function CompaniesPage() {
           </Card>
         ) : (
           rows.map((c: any) => (
-            <Link key={c.id} to="/companies/$companyId" params={{ companyId: c.id }} className="block">
-              <Card className="hover:border-primary/60 transition">
-                <CardContent className="p-4 flex items-center gap-4 flex-wrap">
+            <Card key={c.id} className="hover:border-primary/60 transition">
+              <CardContent className="p-4 flex items-center gap-4 flex-wrap">
+                <Link to="/companies/$companyId" params={{ companyId: c.id }} className="block min-w-0 flex-1">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold">{c.legal_name}</span>
@@ -122,10 +122,29 @@ function CompaniesPage() {
                     <div className="text-xs text-muted-foreground">Precio total</div>
                     <div className="font-semibold tabular-nums">{fmtMx(c.stats?.premium ?? 0)}</div>
                   </div>
+                </Link>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Editar empresa"
+                    onClick={() => setEditTarget(c)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Eliminar empresa"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => setDeleteTarget(c)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </Link>
+                </div>
+              </CardContent>
+            </Card>
           ))
         )}
       </div>
