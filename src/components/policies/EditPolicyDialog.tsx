@@ -133,7 +133,7 @@ export function EditPolicyDialog({
 
           <fieldset disabled={!editability.financial}>
             <div className="space-y-1.5">
-              <Label>Prima</Label>
+              <Label>Precio</Label>
               <Input type="number" step="0.01" value={premium} onChange={(e) => setPremium(e.target.value)} />
               <p className="text-xs text-muted-foreground">No se permite bajar la prima si ya hay pagos registrados.</p>
             </div>

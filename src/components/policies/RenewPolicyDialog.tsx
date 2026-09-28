@@ -71,7 +71,7 @@ export function RenewPolicyDialog({
           <div><span className="text-muted-foreground">Cliente:</span> {policy.clients?.first_name} {policy.clients?.last_name}</div>
           <div><span className="text-muted-foreground">Programa:</span> {policy.programs?.name}</div>
           <div><span className="text-muted-foreground">Vigencia actual:</span> {policy.start_date} → {policy.end_date}</div>
-          <div><span className="text-muted-foreground">Prima actual:</span> ${Number(policy.premium ?? 0).toLocaleString("es-MX")}</div>
+          <div><span className="text-muted-foreground">Precio actual:</span> ${Number(policy.premium ?? 0).toLocaleString("es-MX")}</div>
         </Card>
 
         <div className="grid grid-cols-2 gap-3">
@@ -84,7 +84,7 @@ export function RenewPolicyDialog({
             <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
           </div>
           <div className="space-y-1.5 col-span-2">
-            <Label>Prima nueva</Label>
+            <Label>Precio nuevo</Label>
             <Input type="number" step="0.01" value={premium} onChange={(e) => setPremium(e.target.value)} />
           </div>
         </div>

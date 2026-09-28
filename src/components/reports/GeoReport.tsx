@@ -198,7 +198,7 @@ function MxMap({ byCode, loading }: { byCode: Map<string, Row>; loading: boolean
                       </div>
                     </div>
                     <div className="rounded border p-2">
-                      <div className="text-muted-foreground">Primas (anuales)</div>
+                      <div className="text-muted-foreground">Precio (anual)</div>
                       <div className="font-semibold tabular-nums">
                         ${Number(detailQ.data.totals.premium_year).toLocaleString("es-MX")}
                       </div>
