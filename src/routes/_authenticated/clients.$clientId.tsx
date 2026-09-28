@@ -416,10 +416,52 @@ function EnrollmentStatusControl({
   const qc = useQueryClient();
   const [target, setTarget] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<{ has_policy: boolean; has_paid: boolean; amount: number | null } | null>(null);
+  const [amountInput, setAmountInput] = useState("");
   const current = CP_STATUS[enrollment.status] ?? { label: enrollment.status, cls: "" };
+  const programId = enrollment.programs?.id;
+  const manualActivation = target === "active" && enrollment.status !== "active";
+
+  async function choose(key: string) {
+    setPreview(null);
+    setAmountInput("");
+    setTarget(key);
+    if (key === "active" && enrollment.status !== "active" && programId) {
+      const { data, error } = await (supabase.rpc as any)("manual_activation_preview", {
+        _client_id: clientId, _program_id: programId,
+      });
+      if (error) { toast.error(error.message); setTarget(null); return; }
+      setPreview(data);
+      if (data?.amount) setAmountInput(String(data.amount));
+    }
+  }
+
+  async function refresh() {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["client-programs", clientId] }),
+      qc.invalidateQueries({ queryKey: ["client-policies", clientId] }),
+      qc.invalidateQueries({ queryKey: ["client-urgent-payments"] }),
+    ]);
+  }
 
   async function apply(next: string) {
     setBusy(true);
+    if (manualActivation) {
+      const needsPayment = !preview?.has_paid;
+      const amt = Number(amountInput);
+      if (needsPayment && (!amt || amt <= 0)) {
+        setBusy(false);
+        return toast.error("Escribe el monto cobrado.");
+      }
+      const { error } = await (supabase.rpc as any)("manual_activate_client_program", {
+        _client_id: clientId, _program_id: programId, _amount: needsPayment ? amt : null,
+      });
+      setBusy(false);
+      setTarget(null);
+      if (error) return toast.error(error.message === "forbidden" ? "Solo admin o gerente puede activar." : error.message);
+      toast.success("Cliente activado como venta directa.");
+      return refresh();
+    }
     const payload: Record<string, any> = { status: next };
     payload.cancelled_at = next === "cancelled" ? new Date().toISOString() : null;
     const { error } = await supabase
@@ -430,7 +472,14 @@ function EnrollmentStatusControl({
     setTarget(null);
     if (error) return toast.error(error.message);
     toast.success(`Estatus actualizado a ${CP_STATUS[next]?.label ?? next}.`);
-    await qc.invalidateQueries({ queryKey: ["client-programs", clientId] });
+    await refresh();
+  }
+
+  const money = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN" });
+  let activationText = "";
+  if (manualActivation && preview) {
+    if (preview.has_paid) activationText = preview.has_policy ? "El certificado ya tiene un pago cobrado; solo se cambiará el estatus." : "";
+    else activationText = `Se creará el certificado (si no existe) y se registrará un pago cobrado de ${amountInput && Number(amountInput) > 0 ? money(Number(amountInput)) : "$X"} como venta directa. ¿Continuar?`;
   }
 
   return (
