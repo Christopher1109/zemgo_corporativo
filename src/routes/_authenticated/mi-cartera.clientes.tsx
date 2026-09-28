@@ -65,7 +65,19 @@ function ClientesPage() {
                           <TableCell className="text-sm">{c.phone ?? "—"}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">{c.email ?? "—"}</TableCell>
                           <TableCell className="text-sm">{c.program_name ?? "—"}</TableCell>
-                          <TableCell><Badge variant={st.variant}>{st.label}</Badge></TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {c.has_policy ? (
+                                <Badge variant={st.variant}>{st.label}</Badge>
+                              ) : (
+                                <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200">Prospecto · sin certificado</Badge>
+                              )}
+                              {c.curp_pending && <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">CURP pendiente</Badge>}
+                            </div>
+                            {!c.has_policy && c.registered_at && (
+                              <div className="text-[11px] text-muted-foreground mt-1">Registrado {new Date(c.registered_at).toLocaleDateString("es-MX")}</div>
+                            )}
+                          </TableCell>
                           <TableCell className="text-right tabular-nums">{c.active_policies}</TableCell>
                         </TableRow>
                       );

@@ -3066,6 +3066,10 @@ export type Database = {
         Args: { _payment_id: string; _reason: string }
         Returns: undefined
       }
+      register_web_form_submission: {
+        Args: { _data: Json; _program_code: string; _raw?: Json }
+        Returns: Json
+      }
       reject_incident: {
         Args: { _incident_id: string; _reason: string }
         Returns: undefined
