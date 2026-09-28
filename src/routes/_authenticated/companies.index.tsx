@@ -148,6 +148,17 @@ function CompaniesPage() {
           ))
         )}
       </div>
+
+      {editTarget && (
+        <EditCompanyDialog company={editTarget} open onOpenChange={(v) => !v && setEditTarget(null)} />
+      )}
+      {deleteTarget && (
+        <DeleteCompanyDialog
+          company={deleteTarget}
+          open
+          onOpenChange={(v) => !v && setDeleteTarget(null)}
+        />
+      )}
     </div>
   );
 }
