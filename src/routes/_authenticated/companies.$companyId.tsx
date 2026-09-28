@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -12,8 +13,11 @@ import {
   Upload,
   Users,
   Package,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { getCompanyDetail, importCompanyEmployees } from "@/lib/companies.functions";
+import { EditCompanyDialog, DeleteCompanyDialog } from "@/components/companies/company-dialogs";
 import { renderCertificateBlob } from "@/lib/pdf/generateCertificate.browser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -75,11 +79,14 @@ function cellText(v: any): string {
 function CompanyDetailPage() {
   const { companyId } = Route.useParams();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const detailFn = useServerFn(getCompanyDetail);
   const importFn = useServerFn(importCompanyEmployees);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [importOpen, setImportOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [importErrors, setImportErrors] = useState<string[]>([]);
 
@@ -311,7 +318,21 @@ function CompanyDetailPage() {
           <Building2 className="h-6 w-6" />
         </div>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">{company.legal_name}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl font-bold">{company.legal_name}</h1>
+            <Button variant="ghost" size="icon" title="Editar empresa" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Eliminar empresa"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setDeleteOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
           <div className="mt-1 flex flex-wrap gap-2 items-center text-sm text-muted-foreground">
             {company.programs && (
               <Badge
@@ -500,6 +521,14 @@ function CompanyDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EditCompanyDialog company={company} open={editOpen} onOpenChange={setEditOpen} />
+      <DeleteCompanyDialog
+        company={company}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => navigate({ to: "/companies" })}
+      />
     </div>
   );
 }

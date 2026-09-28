@@ -74,6 +74,47 @@ export const createCompany = createServerFn({ method: "POST" })
     return { id: row.id as string };
   });
 
+export const updateCompany = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        company_id: z.string().uuid(),
+        legal_name: z.string().min(2),
+        rfc: z.string().optional().nullable(),
+        contact_name: z.string().optional().nullable(),
+        email: z.string().optional().nullable(),
+        phone: z.string().optional().nullable(),
+        address_full: z.string().optional().nullable(),
+        city: z.string().optional().nullable(),
+        state: z.string().optional().nullable(),
+        notes: z.string().optional().nullable(),
+        is_active: z.boolean().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { company_id, ...fields } = data;
+    const { error } = await supabase.from("companies").update(fields).eq("id", company_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteCompany = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ company_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    // Detach clients and certificates (keep the people and their policies intact),
+    // then remove the company shell and its import history.
+    await supabase.from("clients").update({ company_id: null }).eq("company_id", data.company_id);
+    await supabase.from("policies").update({ company_id: null }).eq("company_id", data.company_id);
+    const { error } = await supabase.from("companies").delete().eq("id", data.company_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const getCompanyDetail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ company_id: z.string().uuid() }).parse(d))
