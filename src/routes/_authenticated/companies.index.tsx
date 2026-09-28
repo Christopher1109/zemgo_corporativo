@@ -116,7 +116,7 @@ function CompaniesPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-muted-foreground">Prima total</div>
+                    <div className="text-xs text-muted-foreground">Precio total</div>
                     <div className="font-semibold tabular-nums">{fmtMx(c.stats?.premium ?? 0)}</div>
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />

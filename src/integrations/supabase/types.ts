@@ -1527,6 +1527,51 @@ export type Database = {
           },
         ]
       }
+      policy_insurer_costs: {
+        Row: {
+          created_at: string
+          insurer_premium: number
+          insurer_premium_detail: Json | null
+          policy_id: string
+          program_id: string
+          source: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          insurer_premium: number
+          insurer_premium_detail?: Json | null
+          policy_id: string
+          program_id: string
+          source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          insurer_premium?: number
+          insurer_premium_detail?: Json | null
+          policy_id?: string
+          program_id?: string
+          source?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_insurer_costs_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: true
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_insurer_costs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       policy_revisions: {
         Row: {
           created_at: string
@@ -1867,6 +1912,7 @@ export type Database = {
       }
       programs: {
         Row: {
+          billing_frequency: string
           billing_note: string | null
           code: string
           color_accent: string
@@ -1883,6 +1929,7 @@ export type Database = {
           whatsapp_reminder_offset_days: number
         }
         Insert: {
+          billing_frequency?: string
           billing_note?: string | null
           code: string
           color_accent: string
@@ -1899,6 +1946,7 @@ export type Database = {
           whatsapp_reminder_offset_days?: number
         }
         Update: {
+          billing_frequency?: string
           billing_note?: string | null
           code?: string
           color_accent?: string
@@ -2867,6 +2915,7 @@ export type Database = {
         Args: { _modules: string[]; _program_id: string }
         Returns: boolean
       }
+      can_view_insurer_cost: { Args: { _program_id: string }; Returns: boolean }
       can_write_program_module: {
         Args: {
           _modules: string[]
@@ -3169,6 +3218,10 @@ export type Database = {
       }
       update_program_policy_number: {
         Args: { _policy_number: string; _program_id: string }
+        Returns: undefined
+      }
+      update_program_price: {
+        Args: { _frequency: string; _price: number; _program_id: string }
         Returns: undefined
       }
       update_user_program_access:

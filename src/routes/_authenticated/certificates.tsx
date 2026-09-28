@@ -239,8 +239,8 @@ function UploadTab({ program }: { program: any }) {
 
   async function confirm() {
     const items = [
-      ...matched.filter((x) => x.include).map((x) => ({ policy_id: x.policy.id, certificate_number: x.row.certificate_number, alta_date: x.row.alta_date })),
-      ...ambig.filter((x) => x.chosen).map((x) => ({ policy_id: x.chosen, certificate_number: x.row.certificate_number, alta_date: x.row.alta_date })),
+      ...matched.filter((x) => x.include).map((x) => ({ policy_id: x.policy.id, certificate_number: x.row.certificate_number, alta_date: x.row.alta_date, insurer_premium: x.row.insurer_premium ?? null, insurer_premium_detail: x.row.insurer_premium_detail ?? null })),
+      ...ambig.filter((x) => x.chosen).map((x) => ({ policy_id: x.chosen, certificate_number: x.row.certificate_number, alta_date: x.row.alta_date, insurer_premium: x.row.insurer_premium ?? null, insurer_premium_detail: x.row.insurer_premium_detail ?? null })),
     ];
     if (items.length === 0) return toast.error("No hay renglones seleccionados.");
     if (conflicts > 0 && overwrite && !window.confirm(`Se sobrescribirán ${conflicts} números de certificado existentes. ¿Continuar?`)) return;

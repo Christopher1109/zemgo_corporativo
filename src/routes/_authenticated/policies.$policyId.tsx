@@ -18,6 +18,8 @@ import { generateCertificateClient } from "@/lib/pdf/generateCertificate.browser
 import { listPolicyRevisions } from "@/lib/policies-edit.functions";
 import { PolicyPaymentsTab } from "@/components/payments/policy-payments-tab";
 import { EditPolicyDialog } from "@/components/policies/EditPolicyDialog";
+import { InsurerCostCard } from "@/components/policies/InsurerCostCard";
+import { fmtProgramPrice } from "@/lib/program-price";
 
 export const Route = createFileRoute("/_authenticated/policies/$policyId")({
   head: () => ({ meta: [{ title: "Detalle de certificado — ZEMGO" }] }),
@@ -61,7 +63,7 @@ const ACTION_LABELS: Record<string, string> = {
 
 const FIELD_LABELS: Record<string, string> = {
   status: "Estado",
-  premium: "Prima",
+  premium: "Precio",
   sum_insured: "Suma asegurada",
   deductible: "Deducible",
   start_date: "Inicio de vigencia",
@@ -124,7 +126,7 @@ function PolicyDetail() {
       const { data, error } = await supabase
         .from("policies")
         .select(
-          "*, programs(id,name,code,color_primary), clients(*, sales_reps(id, full_name, code)), beneficiaries(*), dependents(*)",
+          "*, programs(id,name,code,color_primary,default_premium,billing_frequency), clients(*, sales_reps(id, full_name, code)), beneficiaries(*), dependents(*)",
         )
         .eq("id", policyId)
         .single();
@@ -336,12 +338,13 @@ function PolicyDetail() {
                 <Field label="Contratante" value={policy.contracting_party ?? "—"} />
                 <Field label="Emisión" value={policy.issue_date ?? "—"} />
                 <Field label="Vigencia" value={`${policy.start_date ?? "—"} → ${policy.end_date ?? "—"}`} />
-                <Field label="Prima" value={policy.premium ? `$${Number(policy.premium).toLocaleString("es-MX")}` : "—"} />
+                <Field label="Precio" value={fmtProgramPrice(policy.programs)} />
                 <Field label="Suma asegurada" value={policy.sum_insured ? `$${Number(policy.sum_insured).toLocaleString("es-MX")}` : "—"} />
                 <Field label="Deducible" value={policy.deductible ? `$${Number(policy.deductible).toLocaleString("es-MX")}` : "—"} />
                 <Field label="PDF certificado" value={policy.certificate_pdf_url ? <a className="text-primary underline" href={policy.certificate_pdf_url} target="_blank" rel="noreferrer">Abrir</a> : "—"} />
               </div>
             </Card>
+            <InsurerCostCard policy={policy} />
 
             <Card className="p-5 space-y-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">

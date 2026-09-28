@@ -6,6 +6,8 @@ import { useProgram } from "@/lib/program-context";
 import { useState, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Wallet } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { InsurerCostPanel } from "@/components/finance/InsurerCostPanel";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid,
   BarChart, Bar, PieChart, Pie, Cell,
@@ -17,6 +19,29 @@ export const Route = createFileRoute("/_authenticated/finance")({
 });
 
 function FinancePage() {
+  const { activeProgram } = useProgram();
+  const { data: canCost } = useQuery({
+    queryKey: ["can-view-insurer-cost", activeProgram?.id],
+    enabled: !!activeProgram?.id,
+    queryFn: async () => {
+      const { data } = await (supabase.rpc as any)("can_view_insurer_cost", { _program_id: activeProgram!.id });
+      return !!data;
+    },
+  });
+  if (!canCost) return <FinanceOverview />;
+  return (
+    <Tabs defaultValue="overview" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="overview">Resumen</TabsTrigger>
+        <TabsTrigger value="insurer">Costo aseguradora</TabsTrigger>
+      </TabsList>
+      <TabsContent value="overview"><FinanceOverview /></TabsContent>
+      <TabsContent value="insurer"><InsurerCostPanel programId={activeProgram?.id} /></TabsContent>
+    </Tabs>
+  );
+}
+
+function FinanceOverview() {
   const { activeProgram, programs } = useProgram();
   const [scope, setScope] = useState<"active" | "all">("active");
   const programId = scope === "active" ? activeProgram?.id : null;

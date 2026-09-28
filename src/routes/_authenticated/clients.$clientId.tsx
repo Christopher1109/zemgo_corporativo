@@ -454,7 +454,7 @@ function EnrollmentStatusControl({
         return toast.error("Escribe el monto cobrado.");
       }
       const { error } = await (supabase.rpc as any)("manual_activate_client_program", {
-        _client_id: clientId, _program_id: programId, _amount: needsPayment ? amt : null,
+        _client_id: clientId, _program_id: programId, _amount: needsPayment && !preview?.amount ? amt : null,
       });
       setBusy(false);
       setTarget(null);

@@ -57,7 +57,7 @@ export const FIELDS: Field[] = [
   { key: "end", label: "Fin de vigencia", get: (_c, p) => p?.end_date },
   { key: "pstatus", label: "Estatus del certificado", get: (_c, p) => (p ? POLICY_STATUS[p.status] ?? p.status : "") },
   { key: "alta", label: "Fecha de alta aseguradora", get: (_c, p) => p?.metadata?.insurer_alta_date },
-  { key: "premium", label: "Prima", get: (_c, p) => (p?.premium != null ? Number(p.premium) : "") },
+  { key: "premium", label: "Precio", get: (_c, p) => (p?.premium != null ? Number(p.premium) : "") },
   { key: "last_pay", label: "Último pago", get: (_c, p) => (p ? fmt(payInfo(p).last?.paid_at) : "") },
   { key: "last_amount", label: "Monto último pago", get: (_c, p) => (p ? Number(payInfo(p).last?.amount ?? 0) || "" : "") },
   { key: "debt", label: "Adeudo", get: (_c, p) => (p ? payInfo(p).debt : "") },

@@ -26,7 +26,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
 
 export const AUDIT_FIELD_LABELS: Record<string, string> = {
   status: "Estado",
-  premium: "Prima",
+  premium: "Precio",
   sum_insured: "Suma asegurada",
   deductible: "Deducible",
   amount: "Monto",

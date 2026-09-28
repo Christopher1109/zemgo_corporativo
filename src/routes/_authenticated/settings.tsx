@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings as SettingsIcon, Bell, Save, X, Plus, Users as UsersIcon, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { UsersSettingsTab } from "@/components/settings/users-settings-tab";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -24,6 +25,8 @@ type Program = {
   payment_alert_offsets: number[];
   is_active: boolean;
   policy_number: string | null;
+  default_premium?: number | null;
+  billing_frequency?: string | null;
 };
 
 function SettingsPage() {
@@ -71,7 +74,7 @@ function SettingsPage() {
         <TabsContent value="policy" className="mt-5">
           <section className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Número de póliza vigente por programa. Este dato se utiliza para llenar automáticamente
+              Número de póliza y precio (lo que paga el cliente) por programa. Este dato se utiliza para llenar automáticamente
               el campo <em>N° de Póliza</em> en la Carta Aviso de Accidente. Actualízalo cuando la
               aseguradora emita un nuevo número.
             </p>
@@ -184,6 +187,7 @@ function ProgramAlertsCard({ program }: { program: Program }) {
           <Save className="h-4 w-4 mr-2" />
           {m.isPending ? "Guardando…" : "Guardar"}
         </Button>
+        <ProgramPriceEditor program={program} />
       </CardContent>
     </Card>
   );
@@ -239,7 +243,44 @@ function ProgramPolicyCard({ program }: { program: Program }) {
           <Save className="h-4 w-4 mr-2" />
           {m.isPending ? "Guardando…" : "Guardar"}
         </Button>
+        <ProgramPriceEditor program={program} />
       </CardContent>
     </Card>
+  );
+}
+
+function ProgramPriceEditor({ program }: { program: Program }) {
+  const qc = useQueryClient();
+  const [price, setPrice] = useState(program.default_premium != null ? String(program.default_premium) : "");
+  const [freq, setFreq] = useState(program.billing_frequency ?? "yearly");
+  useEffect(() => {
+    setPrice(program.default_premium != null ? String(program.default_premium) : "");
+    setFreq(program.billing_frequency ?? "yearly");
+  }, [program.default_premium, program.billing_frequency]);
+  const m = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase.rpc as any)("update_program_price", {
+        _program_id: program.id, _price: Number(price), _frequency: freq,
+      });
+      if (error) throw new Error(error.message === "forbidden" ? "Solo superadmin o admin puede cambiar el precio." : error.message);
+    },
+    onSuccess: () => { toast.success(`Precio actualizado para ${program.code}`); qc.invalidateQueries({ queryKey: ["programs-alert-config"] }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+  const dirty = Number(price) !== Number(program.default_premium ?? 0) || freq !== (program.billing_frequency ?? "yearly");
+  return (
+    <div className="border-t pt-3 space-y-1.5">
+      <Label className="text-xs text-muted-foreground">Precio que paga el cliente</Label>
+      <div className="flex gap-2">
+        <Input type="number" min={1} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} className="h-9" />
+        <select value={freq} onChange={(e) => setFreq(e.target.value)} className="h-9 rounded-md border border-input bg-background px-2 text-sm">
+          <option value="monthly">/ mes</option>
+          <option value="yearly">/ año</option>
+        </select>
+      </div>
+      <Button className="w-full" size="sm" variant="outline" disabled={!dirty || !Number(price) || m.isPending} onClick={() => m.mutate()}>
+        <Save className="h-4 w-4 mr-2" />{m.isPending ? "Guardando…" : "Guardar precio"}
+      </Button>
+    </div>
   );
 }

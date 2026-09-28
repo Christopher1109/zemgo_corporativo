@@ -222,7 +222,7 @@ export const generateCertificatePdf = createServerFn({ method: "POST" })
     line("Contratante:", pol.contracting_party ?? "—");
     line("Emisión:", pol.issue_date ?? "—");
     line("Vigencia:", `${pol.start_date ?? "—"}  al  ${pol.end_date ?? "—"}`);
-    line("Prima:", pol.premium ? `$${pol.premium}` : "—");
+    line("Precio:", pol.premium ? `$${pol.premium}` : "—");
     line("Suma asegurada:", pol.sum_insured ? `$${pol.sum_insured}` : "—");
 
     y -= 10;

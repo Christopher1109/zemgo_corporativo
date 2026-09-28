@@ -1,5 +1,11 @@
 // Parses the insurer's "Relación de Asegurados" (PDF from HIR Seguros) or an Excel/CSV equivalent.
-export type InsurerRow = { certificate_number: string; name: string; rfc: string; alta_date: string | null };
+export type Coverage = { code: string; sum_insured: number | null; prima: number };
+export type InsurerRow = {
+  certificate_number: string; name: string; rfc: string; alta_date: string | null;
+  /** Suma de la Prima Neta de HIR (costo aseguradora). Nunca es el precio al cliente. */
+  insurer_premium?: number | null;
+  insurer_premium_detail?: Coverage[];
+};
 export type InsurerFile = { policy_number: string | null; rows: InsurerRow[] };
 
 const RFC_RE = /\b([A-ZÑ&]{4}\d{6}[A-Z0-9]{0,3})\b/;
@@ -42,18 +48,42 @@ async function pdfLines(file: File): Promise<string[]> {
   return lines;
 }
 
+const num = (v: string) => Number(String(v).replace(/[$,\s]/g, ""));
+const COV_RE = /\b(MA|PMB|RGM|GFM|GF|AP|IPT|MAC|PT|[A-Z]{2,4})\s+\$?([\d,]+(?:\.\d{1,2})?)\s+\$?([\d,]+\.\d{2})\b/g;
+
+function coveragesIn(text: string): Coverage[] {
+  const out: Coverage[] = [];
+  for (const m of text.matchAll(COV_RE)) {
+    if (/^(RFC|MXN|TOTAL)$/.test(m[1])) continue;
+    out.push({ code: m[1], sum_insured: num(m[2]) || null, prima: num(m[3]) });
+  }
+  return out;
+}
+
+function finish(r: InsurerRow) {
+  const d = r.insurer_premium_detail ?? [];
+  if (d.length) r.insurer_premium = Math.round(d.reduce((s, c) => s + c.prima, 0) * 100) / 100;
+}
+
 function parseLines(lines: string[]): InsurerFile {
   const policy_number = findPolicyNumber(lines.slice(0, 40).join(" ")) ?? findPolicyNumber(lines.join(" "));
   const rows: InsurerRow[] = [];
   for (const raw of lines) {
     const line = raw.toUpperCase();
     const rfc = line.match(RFC_RE);
-    if (!rfc) continue;
     const cert = line.match(/^\s*(\d{1,6})\b/);
-    if (!cert) continue;
+    if (!rfc || !cert) {
+      // Renglón de cobertura (MA / PMB / RGM…) del último asegurado.
+      const last = rows[rows.length - 1];
+      if (last) { const c = coveragesIn(line); if (c.length) { last.insurer_premium_detail = [...(last.insurer_premium_detail ?? []), ...c]; finish(last); } }
+      continue;
+    }
     const before = line.slice(cert[0].length, rfc.index).replace(TIPO_RE, " ").replace(/[^A-ZÑÁÉÍÓÚÜ .]/g, " ").replace(/\s+/g, " ").trim();
     const date = line.slice((rfc.index ?? 0) + rfc[0].length).match(DATE_RE);
-    rows.push({ certificate_number: String(parseInt(cert[1], 10)), name: before, rfc: rfc[1], alta_date: toIso(date?.[0]) });
+    const row: InsurerRow = { certificate_number: String(parseInt(cert[1], 10)), name: before, rfc: rfc[1], alta_date: toIso(date?.[0]) };
+    const inline = coveragesIn(line.slice((rfc.index ?? 0) + rfc[0].length));
+    if (inline.length) { row.insurer_premium_detail = inline; finish(row); }
+    rows.push(row);
   }
   return { policy_number, rows };
 }
@@ -65,6 +95,8 @@ function parseTable(matrix: string[][]): InsurerFile {
   const h = matrix[hIdx].map((c) => c.toLowerCase());
   const col = (re: RegExp) => h.findIndex((c) => re.test(c));
   const cC = col(/cert/), cN = col(/nombre/), cR = col(/rfc/), cA = col(/alta/), cP = col(/p[oó]liza/);
+  const primaCols = h.map((c, i) => ({ c, i })).filter((x) => /prima/.test(x.c));
+  const totalCol = primaCols.find((x) => /total/.test(x.c));
   let policy_number = findPolicyNumber(matrix.slice(0, hIdx).map((r) => r.join(" ")).join(" "));
   const rows: InsurerRow[] = [];
   for (const r of matrix.slice(hIdx + 1)) {
@@ -72,7 +104,16 @@ function parseTable(matrix: string[][]): InsurerFile {
     const cert = (r[cC] ?? "").trim();
     if (!rfc || !cert) continue;
     if (!policy_number && cP >= 0 && r[cP]) policy_number = r[cP].trim();
-    rows.push({ certificate_number: String(parseInt(cert, 10) || cert), name: (r[cN] ?? "").toUpperCase().trim(), rfc, alta_date: toIso(r[cA]) });
+    const row: InsurerRow = { certificate_number: String(parseInt(cert, 10) || cert), name: (r[cN] ?? "").toUpperCase().trim(), rfc, alta_date: toIso(r[cA]) };
+    const parts = primaCols.filter((x) => x !== totalCol);
+    if (parts.length) {
+      row.insurer_premium_detail = parts
+        .map((x) => ({ code: matrix[hIdx][x.i].replace(/prima( neta)?/i, "").trim().toUpperCase() || "PRIMA", sum_insured: null, prima: num(r[x.i] ?? "") }))
+        .filter((c) => c.prima > 0);
+      finish(row);
+    }
+    if (totalCol && num(r[totalCol.i] ?? "") > 0) row.insurer_premium = num(r[totalCol.i]);
+    rows.push(row);
   }
   return { policy_number: policy_number ?? findPolicyNumber(all), rows };
 }
