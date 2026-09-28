@@ -7,7 +7,7 @@ export const listProgramAlertConfig = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("programs")
-      .select("id, code, name, color_primary, payment_alert_offsets, is_active, policy_number")
+      .select("id, code, name, color_primary, payment_alert_offsets, is_active, policy_number, default_premium, billing_frequency")
       .order("code");
     if (error) throw new Error(error.message);
     return data ?? [];
