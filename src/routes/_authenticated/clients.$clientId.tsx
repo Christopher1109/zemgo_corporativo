@@ -416,10 +416,52 @@ function EnrollmentStatusControl({
   const qc = useQueryClient();
   const [target, setTarget] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<{ has_policy: boolean; has_paid: boolean; amount: number | null } | null>(null);
+  const [amountInput, setAmountInput] = useState("");
   const current = CP_STATUS[enrollment.status] ?? { label: enrollment.status, cls: "" };
+  const programId = enrollment.programs?.id;
+  const manualActivation = target === "active" && enrollment.status !== "active";
+
+  async function choose(key: string) {
+    setPreview(null);
+    setAmountInput("");
+    setTarget(key);
+    if (key === "active" && enrollment.status !== "active" && programId) {
+      const { data, error } = await (supabase.rpc as any)("manual_activation_preview", {
+        _client_id: clientId, _program_id: programId,
+      });
+      if (error) { toast.error(error.message); setTarget(null); return; }
+      setPreview(data);
+      if (data?.amount) setAmountInput(String(data.amount));
+    }
+  }
+
+  async function refresh() {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["client-programs", clientId] }),
+      qc.invalidateQueries({ queryKey: ["client-policies", clientId] }),
+      qc.invalidateQueries({ queryKey: ["client-urgent-payments"] }),
+    ]);
+  }
 
   async function apply(next: string) {
     setBusy(true);
+    if (manualActivation) {
+      const needsPayment = !preview?.has_paid;
+      const amt = Number(amountInput);
+      if (needsPayment && (!amt || amt <= 0)) {
+        setBusy(false);
+        return toast.error("Escribe el monto cobrado.");
+      }
+      const { error } = await (supabase.rpc as any)("manual_activate_client_program", {
+        _client_id: clientId, _program_id: programId, _amount: needsPayment ? amt : null,
+      });
+      setBusy(false);
+      setTarget(null);
+      if (error) return toast.error(error.message === "forbidden" ? "Solo admin o gerente puede activar." : error.message);
+      toast.success("Cliente activado como venta directa.");
+      return refresh();
+    }
     const payload: Record<string, any> = { status: next };
     payload.cancelled_at = next === "cancelled" ? new Date().toISOString() : null;
     const { error } = await supabase
@@ -430,7 +472,14 @@ function EnrollmentStatusControl({
     setTarget(null);
     if (error) return toast.error(error.message);
     toast.success(`Estatus actualizado a ${CP_STATUS[next]?.label ?? next}.`);
-    await qc.invalidateQueries({ queryKey: ["client-programs", clientId] });
+    await refresh();
+  }
+
+  const money = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN" });
+  let activationText = "";
+  if (manualActivation && preview) {
+    if (preview.has_paid) activationText = preview.has_policy ? "El certificado ya tiene un pago cobrado; solo se cambiará el estatus." : "";
+    else activationText = `Se creará el certificado (si no existe) y se registrará un pago cobrado de ${amountInput && Number(amountInput) > 0 ? money(Number(amountInput)) : "$X"} como venta directa. ¿Continuar?`;
   }
 
   return (
@@ -453,7 +502,7 @@ function EnrollmentStatusControl({
               disabled={key === enrollment.status}
               onSelect={(ev) => {
                 ev.preventDefault();
-                setTarget(key);
+                choose(key);
               }}
             >
               {st.label}
@@ -473,9 +522,28 @@ function EnrollmentStatusControl({
               Programa {enrollment.programs?.name}. {target ? STATUS_EFFECTS[target] : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {manualActivation && !preview && (
+            <div className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Revisando certificado y pagos…</div>
+          )}
+          {manualActivation && preview && !preview.has_paid && (
+            <div className="space-y-2 text-sm">
+              {!preview.amount && (
+                <label className="block">
+                  <span className="text-xs text-muted-foreground">No hay precio configurado. Monto cobrado (MXN)</span>
+                  <input
+                    type="number" min="0" step="0.01" value={amountInput}
+                    onChange={(e) => setAmountInput(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
+                  />
+                </label>
+              )}
+              <p className="font-medium">{activationText}</p>
+            </div>
+          )}
+          {manualActivation && preview?.has_paid && <p className="text-sm">{activationText}</p>}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction disabled={busy} onClick={() => target && apply(target)}>
+            <AlertDialogAction disabled={busy || (manualActivation && !preview)} onClick={(e) => { e.preventDefault(); if (target) apply(target); }}>
               Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>

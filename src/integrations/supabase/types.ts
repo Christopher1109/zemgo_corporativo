@@ -1873,6 +1873,7 @@ export type Database = {
           color_primary: string
           color_secondary: string
           created_at: string
+          default_premium: number | null
           id: string
           insurance_branch: string
           is_active: boolean
@@ -1888,6 +1889,7 @@ export type Database = {
           color_primary: string
           color_secondary: string
           created_at?: string
+          default_premium?: number | null
           id?: string
           insurance_branch: string
           is_active?: boolean
@@ -1903,6 +1905,7 @@ export type Database = {
           color_primary?: string
           color_secondary?: string
           created_at?: string
+          default_premium?: number | null
           id?: string
           insurance_branch?: string
           is_active?: boolean
@@ -3021,6 +3024,14 @@ export type Database = {
       log_renewal_contact: {
         Args: { _notes: string; _policy_id: string }
         Returns: string
+      }
+      manual_activate_client_program: {
+        Args: { _amount?: number; _client_id: string; _program_id: string }
+        Returns: Json
+      }
+      manual_activation_preview: {
+        Args: { _client_id: string; _program_id: string }
+        Returns: Json
       }
       mark_overdue_payments: { Args: never; Returns: undefined }
       mark_payment_paid: {
