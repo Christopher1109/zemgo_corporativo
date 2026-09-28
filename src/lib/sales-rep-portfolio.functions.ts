@@ -10,6 +10,9 @@ export type PortfolioClient = {
   status: string | null;
   program_name: string | null;
   active_policies: number;
+  has_policy: boolean;
+  curp_pending: boolean;
+  registered_at: string | null;
 };
 
 export type PortfolioRenewal = {
@@ -106,7 +109,7 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
     const [clientsRes, policiesRes, paymentsRes, commissionsRes] = await Promise.all([
       supabase
         .from("clients")
-        .select("id, first_name, last_name, email, phone, client_programs(status, program_id, programs(name))")
+        .select("id, first_name, last_name, email, phone, curp, created_at, client_programs(status, program_id, enrolled_at, programs(name))")
         .eq("sales_rep_id", repId),
       supabase
         .from("policies")
@@ -154,8 +157,12 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
         status: cp?.status ?? null,
         program_name: prog && !Array.isArray(prog) ? prog.name : null,
         active_policies: 0,
+        has_policy: false,
+        curp_pending: String((c as any).curp ?? "").toUpperCase().startsWith("PEND"),
+        registered_at: cp?.enrolled_at ?? (c as any).created_at ?? null,
       } as PortfolioClient];
     });
+    const clientsWithPolicy = new Set(policies.map((p: any) => p.client_id).filter(Boolean));
     const activeByClient = new Map<string, number>();
     for (const p of activePolicies) {
       const cid = (p as any).client_id ?? null;
@@ -249,7 +256,11 @@ export const getMySalesRepPortfolio = createServerFn({ method: "GET" })
         commission_year: sum(inYear),
         commission_next_60d: upcoming.reduce((s, p) => s + p.estimated_commission, 0),
       },
-      clients: clients.map((c) => ({ ...c, active_policies: activeByClient.get(c.id) ?? 0 })),
+      clients: clients.map((c) => ({
+        ...c,
+        active_policies: activeByClient.get(c.id) ?? 0,
+        has_policy: clientsWithPolicy.has(c.id),
+      })),
       renewals: { expiring, expired_unrenewed: expiredUnrenewed, renewed },
       payments: { overdue, upcoming },
       commissions: {
