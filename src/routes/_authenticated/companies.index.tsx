@@ -110,7 +110,8 @@ function CompaniesPage() {
                     </div>
                     <div className="mt-1 text-xs text-muted-foreground flex items-center gap-3 flex-wrap">
                       <span className="inline-flex items-center gap-1">
-                        <Users className="h-3 w-3" /> {c.stats?.employees ?? 0} asegurados
+                        <Users className="h-3 w-3" /> {c.stats?.employees ?? 0} asegurados activos
+                        {(c.stats?.cancelledEmployees ?? 0) > 0 && ` · ${c.stats.cancelledEmployees} bajas`}
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <FileText className="h-3 w-3" /> {c.stats?.policies ?? 0} certificados ({c.stats?.active ?? 0} activos)
@@ -119,7 +120,7 @@ function CompaniesPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-muted-foreground">Precio total</div>
+                    <div className="text-xs text-muted-foreground">Precio total (activos)</div>
                     <div className="font-semibold tabular-nums">{fmtMx(c.stats?.premium ?? 0)}</div>
                   </div>
                 </Link>

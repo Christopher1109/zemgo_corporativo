@@ -18,27 +18,35 @@ export const listCompanies = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     const ids = (companies ?? []).map((c: any) => c.id);
-    const counts: Record<string, { employees: number; policies: number; active: number; premium: number }> = {};
-    ids.forEach((id) => (counts[id] = { employees: 0, policies: 0, active: 0, premium: 0 }));
+    // employees = asegurados con al menos un certificado vigente; cancelledEmployees = bajas.
+    // premium = solo certificados activos (las bajas no se cobran).
+    const counts: Record<string, { employees: number; cancelledEmployees: number; totalEmployees: number; policies: number; active: number; premium: number }> = {};
+    ids.forEach((id) => (counts[id] = { employees: 0, cancelledEmployees: 0, totalEmployees: 0, policies: 0, active: 0, premium: 0 }));
 
     if (ids.length) {
       const { data: pols } = await supabase
         .from("policies")
         .select("id, company_id, client_id, status, premium")
         .in("company_id", ids);
-      const seen: Record<string, Set<string>> = {};
+      const activeClients: Record<string, Set<string>> = {};
       (pols ?? []).forEach((p: any) => {
         const c = counts[p.company_id];
         if (!c) return;
         c.policies += 1;
-        if (p.status === "active") c.active += 1;
-        c.premium += Number(p.premium ?? 0);
-        seen[p.company_id] ??= new Set();
-        if (p.client_id) seen[p.company_id].add(p.client_id);
+        if (p.status === "active") {
+          c.active += 1;
+          c.premium += Number(p.premium ?? 0);
+          activeClients[p.company_id] ??= new Set();
+          if (p.client_id) activeClients[p.company_id].add(p.client_id);
+        }
       });
       const { data: cls } = await supabase.from("clients").select("id, company_id").in("company_id", ids);
       (cls ?? []).forEach((c: any) => {
-        if (counts[c.company_id]) counts[c.company_id].employees += 1;
+        const k = counts[c.company_id];
+        if (!k) return;
+        k.totalEmployees += 1;
+        if (activeClients[c.company_id]?.has(c.id)) k.employees += 1;
+        else k.cancelledEmployees += 1;
       });
     }
 
