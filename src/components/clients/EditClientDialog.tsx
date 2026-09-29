@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { getDataAlerts, resolveAlertsForChangedFields } from "@/lib/data-alerts";
 
 type ClientRow = Record<string, any>;
 
@@ -62,6 +63,10 @@ export function EditClientDialog({ client }: { client: ClientRow }) {
     if (payload.curp) payload.curp = String(payload.curp).toUpperCase();
     if (payload.rfc) payload.rfc = String(payload.rfc).toUpperCase();
 
+    // Si se corrigió un dato marcado como posiblemente equivocado, se quita la alerta amarilla.
+    const resolvedMeta = resolveAlertsForChangedFields(client.metadata, client, payload);
+    if (resolvedMeta) payload.metadata = resolvedMeta;
+
     const { error } = await supabase.from("clients").update(payload as any).eq("id", client.id);
     setBusy(false);
     if (error) {
@@ -96,7 +101,11 @@ export function EditClientDialog({ client }: { client: ClientRow }) {
                 type={f.type ?? "text"}
                 value={form[f.key] ?? ""}
                 onChange={(e) => set(f.key, e.target.value)}
+                className={getDataAlerts(client.metadata, f.key).length > 0 ? "border-amber-400 bg-amber-50" : undefined}
               />
+              {getDataAlerts(client.metadata, f.key).map((a, i) => (
+                <p key={i} className="text-xs text-amber-700">{a.message}</p>
+              ))}
             </div>
           ))}
 

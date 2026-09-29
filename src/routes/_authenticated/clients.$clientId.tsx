@@ -16,6 +16,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { EditClientDialog } from "@/components/clients/EditClientDialog";
+import { DataAlertBanner, DataAlertIcon } from "@/components/clients/DataAlert";
+import { getDataAlerts } from "@/lib/data-alerts";
 import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
@@ -70,7 +72,7 @@ function ClientDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("*, sales_reps(id, full_name, code)")
+        .select("*, sales_reps(id, full_name, code), companies(id, legal_name)")
         .eq("id", clientId)
         .single();
       if (error) throw error;
@@ -156,7 +158,10 @@ function ClientDetail() {
           <h1 className="text-2xl font-semibold">
             {client.first_name} {client.last_name}
           </h1>
-          <p className="text-sm text-muted-foreground font-mono">{client.curp ?? "—"}</p>
+          <p className="text-sm text-muted-foreground font-mono inline-flex items-center gap-1">
+            {client.curp ?? "—"}
+            <DataAlertIcon metadata={client.metadata} field="curp" />
+          </p>
           <div className="flex flex-wrap gap-1 mt-1">
             {policies.map((p: any) => <CertificateBadge key={p.id} number={p.certificate_number} />)}
           </div>
@@ -178,11 +183,16 @@ function ClientDetail() {
         </TabsList>
 
         <TabsContent value="info">
+          <DataAlertBanner metadata={client.metadata} className="mb-3" />
           <Card className="p-4 grid gap-3 text-sm sm:grid-cols-2">
             <Field label="Nombre completo" value={`${client.first_name} ${client.last_name ?? ""}`} />
-            <Field label="CURP" value={client.curp ?? "—"} />
-            <Field label="RFC" value={client.rfc ?? "—"} />
-            <Field label="Fecha de nacimiento" value={client.date_of_birth ?? "—"} />
+            <Field label="CURP" value={client.curp ?? "—"} metadata={client.metadata} field="curp" />
+            <Field label="RFC" value={client.rfc ?? "—"} metadata={client.metadata} field="rfc" />
+            <Field label="Fecha de nacimiento" value={client.date_of_birth ?? "—"} metadata={client.metadata} field="date_of_birth" />
+            {client.companies?.legal_name && <Field label="Empresa" value={client.companies.legal_name} />}
+            {client.metadata?.employee_number != null && (
+              <Field label="No. de empleado" value={String(client.metadata.employee_number)} />
+            )}
             <Field label="Género" value={client.gender ?? "—"} />
             <Field label="Estado civil" value={client.marital_status ?? "—"} />
             <Field label="Teléfono" value={client.phone ?? "—"} />
@@ -342,11 +352,15 @@ function ClientDetail() {
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+function Field({ label, value, metadata, field }: { label: string; value: string; metadata?: unknown; field?: string }) {
+  const flagged = field ? getDataAlerts(metadata, field).length > 0 : false;
   return (
     <div>
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div>{value}</div>
+      <div className="text-xs text-muted-foreground inline-flex items-center gap-1">
+        {label}
+        {flagged && <DataAlertIcon metadata={metadata} field={field} />}
+      </div>
+      <div className={flagged ? "rounded bg-amber-100 px-1 text-amber-900 w-fit" : undefined}>{value}</div>
     </div>
   );
 }
