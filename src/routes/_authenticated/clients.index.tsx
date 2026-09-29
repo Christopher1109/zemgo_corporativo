@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataAlertIcon } from "@/components/clients/DataAlert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProgram } from "@/lib/program-context";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +37,7 @@ function ClientsList() {
       let q = supabase
         .from("client_programs")
         .select(
-          "status, enrolled_at, programs(id,code,name,color_primary), clients(id,first_name,last_name,curp,phone,email,created_at,company_id,policies(certificate_number,program_id))",
+          "status, enrolled_at, programs(id,code,name,color_primary), clients(id,first_name,last_name,curp,phone,email,created_at,company_id,metadata,policies(certificate_number,program_id))",
         )
         .order("enrolled_at", { ascending: false })
         .limit(200);
@@ -160,7 +161,12 @@ function ClientsList() {
                 onClick={() => navigate({ to: "/clients/$clientId", params: { clientId: r.clients.id } })}
               >
                 <TableCell className="font-medium">{r.clients?.first_name} {r.clients?.last_name}</TableCell>
-                <TableCell className="font-mono text-xs">{r.clients?.curp}</TableCell>
+                <TableCell className="font-mono text-xs">
+                  <span className="inline-flex items-center gap-1">
+                    {r.clients?.curp}
+                    <DataAlertIcon metadata={r.clients?.metadata} field="curp" />
+                  </span>
+                </TableCell>
                 <TableCell>{r.clients?.phone ?? "—"}</TableCell>
                 <TableCell>{r.clients?.email ?? "—"}</TableCell>
                 <TableCell>
