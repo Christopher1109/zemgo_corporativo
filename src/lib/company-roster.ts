@@ -1,9 +1,8 @@
 // Lectura y conciliación del listado mensual que manda una empresa (quién sigue, altas y bajas).
-// Formato actual soportado (Transportes Bueno, sep-2026):
+// Formato confirmado por la empresa (Transportes Bueno, sep-2026):
 //  - Hoja principal con encabezados: No EMPLEADO, NOMBRE, APELLIDO PATERNO, APELLIDO MATERNO, SEXO,
 //    PARENTESCO, FECHA NACIMIENTO, EDAD, CURP, DIRECCION, COLONIA, CP (el orden puede variar).
-//  - Opcional: una hoja con secciones "BAJAS" y "ALTAS" (sin encabezados).
-// TODO: ajustar al formato definitivo que envíe la empresa.
+//  - Opcional: una hoja con secciones "BAJAS" y "ALTAS" (sin encabezados), mismas columnas que el concentrado.
 
 export type RosterPerson = {
   row: number;
@@ -19,9 +18,16 @@ export type RosterPerson = {
   zip: string | null;
   dependents: RosterPerson[];
   alerts: { field: string; message: string; level: "warning"; source: string }[];
+  /** true si la persona viene en la sección ALTAS de la hoja de movimientos. */
+  reported_alta?: boolean;
 };
 
-export type RosterFile = { people: RosterPerson[]; bajas: { name: string; curp: string }[]; warnings: string[] };
+export type RosterFile = {
+  people: RosterPerson[];
+  bajas: { name: string; curp: string }[];
+  altas: { name: string; curp: string }[];
+  warnings: string[];
+};
 
 const CURP_RE = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d$/;
 const ID_TOKEN_RE = /\b([A-ZÑ&]{3,4}\d{6}[A-Z0-9]{0,9})\b/;
@@ -102,6 +108,7 @@ export async function parseRosterFile(file: File, source: string): Promise<Roste
   const warnings: string[] = [];
   const people: RosterPerson[] = [];
   const bajas: { name: string; curp: string }[] = [];
+  const altas: { name: string; curp: string }[] = [];
 
   for (const ws of wb.worksheets) {
     // 1) ¿Hoja con encabezados (listado completo)?
@@ -165,15 +172,23 @@ export async function parseRosterFile(file: File, source: string): Promise<Roste
       const joined = normName([...new Set(vals.filter(Boolean))].join(" "));
       if (/^BAJAS?$/.test(joined)) { section = "bajas"; continue; }
       if (/^ALTAS?$/.test(joined)) { section = "altas"; continue; }
-      if (section !== "bajas" || !joined) continue;
+      if (!section || !joined) continue;
       const token = vals.map((x) => x.toUpperCase().replace(/\s+/g, "")).find((x) => ID_TOKEN_RE.test(x) && x.length >= 10) ?? "";
       const nameParts = vals.filter((x) => x && /^[A-Za-zÁÉÍÓÚÑáéíóúñ .]+$/.test(x) && x.length > 1 && !/^[HMT]$/i.test(x.trim()));
-      bajas.push({ name: normName(nameParts.slice(0, 3).join(" ")), curp: token });
+      (section === "bajas" ? bajas : altas).push({ name: normName(nameParts.slice(0, 3).join(" ")), curp: token });
     }
   }
 
   if (people.length === 0) warnings.push("No se encontró una hoja con encabezados CURP y NOMBRE.");
-  return { people, bajas, warnings };
+
+  // Altas reportadas: se marcan en el listado; si alguna no viene en el concentrado, se avisa.
+  const key = (s: string) => normName(s).split(" ").sort().join(" ");
+  for (const a of altas) {
+    const hit = people.find((p) => (a.curp && p.curp === a.curp) || key(`${p.first_name} ${p.last_name}`) === key(a.name));
+    if (hit) hit.reported_alta = true;
+    else warnings.push(`La hoja de altas reporta a ${a.name || a.curp} pero no viene en el listado concentrado.`);
+  }
+  return { people, bajas, altas, warnings };
 }
 
 // ---------------------------------------------------------------- Conciliación

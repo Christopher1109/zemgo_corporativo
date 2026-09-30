@@ -172,6 +172,9 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
                       {p.employee_number != null && <Badge variant="outline" className="text-[10px]">Emp. {p.employee_number}</Badge>}
                       {p.alerts.length > 0 && <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />}
                       {p.dependents.length > 0 && <Badge variant="secondary" className="text-[10px]">+{p.dependents.length} dependiente(s)</Badge>}
+                      {p.reported_alta
+                        ? <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-200">Alta reportada</Badge>
+                        : <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-800 border-amber-200">No venía en la hoja de altas</Badge>}
                     </div>
                     <div className="text-xs text-muted-foreground font-mono">{p.curp} · {p.date_of_birth ?? "sin fecha"}</div>
                     {elsewhere[p.curp] && <div className="text-xs text-amber-700">{elsewhere[p.curp]}: desmarcado por defecto.</div>}
