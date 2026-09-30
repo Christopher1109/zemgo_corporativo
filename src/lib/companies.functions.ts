@@ -158,7 +158,14 @@ export const getCompanyDetail = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(10);
 
-    return { company, policies: policies ?? [], payments, imports: imports ?? [] };
+    const { data: charges } = await (supabase as any)
+      .from("company_charges")
+      .select("id, period, due_date, insured_count, unit_price, amount, status, paid_at, paid_amount, method, reference, notes")
+      .eq("company_id", data.company_id)
+      .order("period", { ascending: false })
+      .limit(24);
+
+    return { company, policies: policies ?? [], payments, imports: imports ?? [], charges: (charges ?? []) as any[] };
   });
 
 const employeeRow = z.object({

@@ -11,7 +11,8 @@ export const getPaymentReminderStatus = createServerFn({ method: "GET" })
     const sb = context.supabase as any;
     let q = sb
       .from("payment_reminder_status")
-      .select("*")
+      .select("*, policies!inner(company_id)")
+      .is("policies.company_id", null) // los de empresa se cobran a la empresa, sin recordatorio por persona
       .order("due_date", { ascending: true })
       .limit(500);
     if (data?.program_id) q = q.eq("program_id", data.program_id);

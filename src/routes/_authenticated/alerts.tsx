@@ -90,7 +90,7 @@ function AlertsPage() {
   const counts = useMemo(() => {
     if (!data) return { reminders15: 0, reminders30: 0, overdue: 0, renewals30: 0, suspended: 0, overdueAmount: 0, upcomingAmount: 0 };
     let reminders15 = 0, reminders30 = 0, overdue = 0, overdueAmount = 0, upcomingAmount = 0;
-    for (const p of data.upcoming as any[]) {
+    for (const p of [...((data as any).companyCharges ?? []), ...(data.upcoming as any[])]) {
       const d = daysFrom(p.due_date);
       if (p.status === "overdue") { overdue++; overdueAmount += Number(p.amount); }
       else {
@@ -120,6 +120,12 @@ function AlertsPage() {
       daysFrom(a.due_date), a.status === "overdue",
       daysFrom(b.due_date), b.status === "overdue",
     ));
+  const chargesFiltered = ((data as any)?.companyCharges ?? [])
+    .filter((r: any) => {
+      const d = daysFrom(r.due_date);
+      return matchBucket(d, r.status === "overdue", bucket) &&
+        (!s || (r.companies?.legal_name ?? "").toLowerCase().includes(s));
+    });
   const renFiltered = (data?.renewals ?? [])
     .filter((r: any) => {
       const d = daysFrom(r.end_date);
@@ -209,7 +215,7 @@ function AlertsPage() {
       <Tabs defaultValue="reminders" className="w-full">
         <TabsList className="grid w-full grid-cols-4 max-w-3xl">
           <TabsTrigger value="reminders">
-            <Bell className="h-4 w-4 mr-2" /> Recordatorios ({remFiltered.length})
+            <Bell className="h-4 w-4 mr-2" /> Recordatorios ({remFiltered.length + chargesFiltered.length})
           </TabsTrigger>
           <TabsTrigger value="payment-reminders">
             <Send className="h-4 w-4 mr-2" /> Recordatorios de pago
@@ -223,7 +229,12 @@ function AlertsPage() {
         </TabsList>
 
         <TabsContent value="reminders" className="mt-4">
-          {q.isLoading ? <Skeleton /> : <RemindersList rows={remFiltered} />}
+          {q.isLoading ? <Skeleton /> : (
+            <div className="space-y-4">
+              {chargesFiltered.length > 0 && <CompanyChargesList rows={chargesFiltered} />}
+              <RemindersList rows={remFiltered} />
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="payment-reminders" className="mt-4">
           <PaymentRemindersTab programId={programId} search={search} />
@@ -443,6 +454,48 @@ function ContactBits({ c }: { c: any }) {
       {c.email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{c.email}</span>}
       {c.phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{c.phone}</span>}
       {c.state && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{c.state}</span>}
+    </div>
+  );
+}
+
+function CompanyChargesList({ rows }: { rows: any[] }) {
+  return (
+    <div className="grid gap-2">
+      <div className="text-xs font-medium uppercase text-muted-foreground">Cobros a empresas (un solo cobro mensual)</div>
+      {rows.map((r) => {
+        const d = daysFrom(r.due_date);
+        const isOverdue = r.status === "overdue";
+        return (
+          <Card key={r.id} className={cn(semaforo(d, isOverdue))}>
+            <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium text-sm">{r.companies?.legal_name}</span>
+                  <ProgramChip p={r.programs} />
+                  <Badge variant="outline" className="text-[10px]">Empresa · {r.insured_count} asegurados</Badge>
+                  {isOverdue
+                    ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vencido hace {Math.abs(d)}d</Badge>
+                    : <Badge variant="outline" className="text-[10px]">Vence en {d}d</Badge>}
+                </div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">
+                  Periodo {new Date(r.period + "T12:00:00").toLocaleDateString("es-MX", { month: "long", year: "numeric" })}
+                  {r.unit_price ? ` · ${r.insured_count} × $${fmtMx(Number(r.unit_price))}` : ""}
+                </div>
+                <ContactBits c={r.companies} />
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-semibold">${fmtMx(Number(r.amount))}</div>
+                <div className="text-[11px] text-muted-foreground">Vence {r.due_date}</div>
+                <Button asChild size="sm" variant="ghost" className="h-7 mt-1 px-2 text-xs">
+                  <Link to="/companies/$companyId" params={{ companyId: r.company_id }}>
+                    <CreditCard className="h-3 w-3 mr-1" /> Ver empresa
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

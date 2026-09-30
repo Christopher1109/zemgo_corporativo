@@ -15,9 +15,11 @@ export const getAlertsOverview = createServerFn({ method: "GET" })
     let upcomingQ = sb
       .from("payments")
       .select(
-        "id, amount, due_date, status, bank_reference, policies!inner(id, folio, program_id, programs(code, name, color_primary), clients(first_name, last_name, email, phone, state))"
+        "id, amount, due_date, status, bank_reference, policies!inner(id, folio, program_id, company_id, programs(code, name, color_primary), clients(first_name, last_name, email, phone, state))"
       )
       .in("status", ["pending", "overdue"])
+      // Los certificados de empresa no se cobran uno por uno: se cobran a la empresa (company_charges).
+      .is("policies.company_id", null)
       .lte("due_date", new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10))
       .order("due_date", { ascending: true })
       .limit(200);
@@ -30,6 +32,7 @@ export const getAlertsOverview = createServerFn({ method: "GET" })
       .from("policies")
       .select("id, folio, end_date, status, premium, program_id, programs(code, name, color_primary), clients(first_name, last_name, email, phone, state)")
       .eq("status", "active")
+      .is("company_id", null)
       .lte("end_date", new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10))
       .gte("end_date", new Date().toISOString().slice(0, 10))
       .order("end_date", { ascending: true })
@@ -43,13 +46,26 @@ export const getAlertsOverview = createServerFn({ method: "GET" })
       .from("policies")
       .select("id, folio, end_date, premium, program_id, programs(code, name, color_primary), clients(first_name, last_name, email, phone)")
       .eq("status", "suspended")
+      .is("company_id", null)
       .order("updated_at", { ascending: false })
       .limit(50);
     if (programId) suspQ = suspQ.eq("program_id", programId);
     const suspended = await suspQ;
     if (suspended.error) throw new Error(suspended.error.message);
 
+    // Cobros consolidados a empresas (uno por empresa por mes)
+    let chargesQ = (sb as any)
+      .from("company_charges")
+      .select("id, company_id, program_id, period, due_date, amount, insured_count, unit_price, status, companies(legal_name, contact_name, email, phone), programs(code, name, color_primary)")
+      .in("status", ["pending", "overdue"])
+      .lte("due_date", new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10))
+      .order("due_date", { ascending: true });
+    if (programId) chargesQ = chargesQ.eq("program_id", programId);
+    const charges = await chargesQ;
+    if (charges.error) throw new Error(charges.error.message);
+
     return {
+      companyCharges: (charges.data ?? []) as any[],
       upcoming: upcoming.data ?? [],
       renewals: renewals.data ?? [],
       suspended: suspended.data ?? [],
