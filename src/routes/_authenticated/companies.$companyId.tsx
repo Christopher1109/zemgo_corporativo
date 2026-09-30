@@ -19,6 +19,7 @@ import {
 import { getCompanyDetail, importCompanyEmployees } from "@/lib/companies.functions";
 import { EditCompanyDialog, DeleteCompanyDialog } from "@/components/companies/company-dialogs";
 import { MonthlyUpdateDialog } from "@/components/companies/MonthlyUpdateDialog";
+import { CompanyChargesCard } from "@/components/companies/CompanyChargesCard";
 import { renderCertificateBlob } from "@/lib/pdf/generateCertificate.browser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -456,6 +457,8 @@ function CompanyDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <CompanyChargesCard charges={(q.data as any).charges ?? []} companyId={companyId} />
 
       {imports.length > 0 && (
         <Card>
