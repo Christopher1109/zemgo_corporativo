@@ -137,7 +137,7 @@ export const getCompanyDetail = createServerFn({ method: "POST" })
 
     const { data: policies } = await supabase
       .from("policies")
-      .select("id, folio, status, premium, start_date, end_date, certificate_pdf_url, client_id, clients(id, first_name, last_name, curp, email, phone)")
+      .select("id, folio, certificate_number, status, premium, start_date, end_date, certificate_pdf_url, client_id, clients(id, first_name, last_name, curp, email, phone)")
       .eq("company_id", data.company_id)
       .order("folio", { ascending: true });
 

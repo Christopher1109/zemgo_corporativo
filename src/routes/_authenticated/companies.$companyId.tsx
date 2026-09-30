@@ -85,6 +85,7 @@ function CompanyDetailPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [importOpen, setImportOpen] = useState(false);
+  const [showBajas, setShowBajas] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -292,7 +293,10 @@ function CompanyDetailPage() {
   const paidByPolicy = new Set(payments.filter((p: any) => p.status === "paid").map((p: any) => p.policy_id));
   const active = policies.filter((p: any) => p.status === "active");
   const pending = policies.filter((p: any) => p.status !== "active" && p.status !== "cancelled");
-  const totalPremium = policies.reduce((s: number, p: any) => s + Number(p.premium ?? 0), 0);
+  // Solo cuenta lo vigente: las bajas (certificados cancelados) se muestran aparte como historial.
+  const current = policies.filter((p: any) => p.status !== "cancelled");
+  const cancelled = policies.filter((p: any) => p.status === "cancelled");
+  const totalPremium = active.reduce((s: number, p: any) => s + Number(p.premium ?? 0), 0);
   const allReady = policies.length > 0 && pending.length === 0;
 
   return (
@@ -352,10 +356,10 @@ function CompanyDetailPage() {
       </div>
 
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <MiniStat label="Asegurados" value={String(new Set(policies.map((p: any) => p.client_id)).size)} />
-        <MiniStat label="Certificados" value={String(policies.length)} />
-        <MiniStat label="Activos" value={String(active.length)} />
-        <MiniStat label="Precio total" value={fmtMx(totalPremium)} />
+        <MiniStat label="Asegurados activos" value={String(new Set(active.map((p: any) => p.client_id)).size)} />
+        <MiniStat label="Certificados activos" value={String(active.length)} />
+        <MiniStat label="Bajas" value={String(new Set(cancelled.map((p: any) => p.client_id)).size)} />
+        <MiniStat label="Precio mensual (activos)" value={fmtMx(totalPremium)} />
       </div>
 
       <Card>
@@ -387,7 +391,7 @@ function CompanyDetailPage() {
             </div>
           ) : (
             <div className="divide-y">
-              {policies.map((p: any) => (
+              {[...current, ...(showBajas ? cancelled : [])].map((p: any) => (
                 <div key={p.id} className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted/50">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -399,6 +403,11 @@ function CompanyDetailPage() {
                         {p.clients?.first_name} {p.clients?.last_name}
                       </Link>
                       <Badge variant="outline" className="font-mono text-[10px]">{p.folio}</Badge>
+                      {p.certificate_number ? (
+                        <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-200">Cert. N° {p.certificate_number}</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-800 border-amber-200">Sin número de certificado</Badge>
+                      )}
                       {p.clients?.curp && (
                         <span className="text-[11px] font-mono text-muted-foreground">{p.clients.curp}</span>
                       )}
@@ -417,7 +426,7 @@ function CompanyDetailPage() {
                           : "bg-amber-100 text-amber-800 border-amber-200"
                     }
                   >
-                    {p.status}
+                    {p.status === "active" ? "Activo" : p.status === "cancelled" ? "Baja" : p.status}
                   </Badge>
                   <div className="text-right w-24">
                     <div className="text-xs text-muted-foreground">Precio</div>
@@ -430,6 +439,15 @@ function CompanyDetailPage() {
                   </Button>
                 </div>
               ))}
+              {cancelled.length > 0 && (
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 text-left text-xs text-muted-foreground hover:bg-muted/50"
+                  onClick={() => setShowBajas((v) => !v)}
+                >
+                  {showBajas ? "Ocultar bajas" : `Ver bajas (${cancelled.length})`}
+                </button>
+              )}
             </div>
           )}
         </CardContent>
