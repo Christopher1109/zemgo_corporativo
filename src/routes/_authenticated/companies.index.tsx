@@ -114,7 +114,8 @@ function CompaniesPage() {
                         {(c.stats?.cancelledEmployees ?? 0) > 0 && ` · ${c.stats.cancelledEmployees} bajas`}
                       </span>
                       <span className="inline-flex items-center gap-1">
-                        <FileText className="h-3 w-3" /> {c.stats?.policies ?? 0} certificados ({c.stats?.active ?? 0} activos)
+                        <FileText className="h-3 w-3" /> {c.stats?.active ?? 0} certificados activos
+                        {(c.stats?.policies ?? 0) - (c.stats?.active ?? 0) > 0 && ` · ${(c.stats?.policies ?? 0) - (c.stats?.active ?? 0)} cancelados`}
                       </span>
                       {c.contact_name && <span>Contacto: {c.contact_name}</span>}
                     </div>
