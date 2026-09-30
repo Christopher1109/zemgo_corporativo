@@ -37,10 +37,13 @@ function ClientsList() {
       let q = supabase
         .from("client_programs")
         .select(
-          "status, enrolled_at, programs(id,code,name,color_primary), clients(id,first_name,last_name,curp,phone,email,created_at,company_id,metadata,policies(certificate_number,program_id))",
+          "status, enrolled_at, programs(id,code,name,color_primary), clients!inner(id,first_name,last_name,curp,phone,email,created_at,company_id,metadata,policies(certificate_number,program_id))",
         )
+        // Los asegurados de empresa se consolidan en su carpeta: se excluyen en la consulta
+        // (antes del límite) para que no desplacen a los clientes individuales.
+        .is("clients.company_id", null)
         .order("enrolled_at", { ascending: false })
-        .limit(200);
+        .limit(500);
       if (effectiveProgramId) q = q.eq("program_id", effectiveProgramId);
       if (statusFilter !== "all") q = q.eq("status", statusFilter as any);
       const { data, error } = await q;
