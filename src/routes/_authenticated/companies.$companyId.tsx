@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { getCompanyDetail, importCompanyEmployees } from "@/lib/companies.functions";
 import { EditCompanyDialog, DeleteCompanyDialog } from "@/components/companies/company-dialogs";
+import { MonthlyUpdateDialog } from "@/components/companies/MonthlyUpdateDialog";
 import { renderCertificateBlob } from "@/lib/pdf/generateCertificate.browser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,18 +44,19 @@ export const Route = createFileRoute("/_authenticated/companies/$companyId")({
   component: CompanyDetailPage,
 });
 
+// Formato del listado mensual (el mismo que lee "Actualización mensual").
 const COLUMNS = [
-  "Nombre(s)",
-  "Apellidos",
+  "No EMPLEADO",
+  "NOMBRE",
+  "APELLIDO PATERNO",
+  "APELLIDO MATERNO",
+  "SEXO",
+  "PARENTESCO",
+  "FECHA NACIMIENTO",
   "CURP",
-  "RFC",
-  "Fecha de nacimiento (AAAA-MM-DD)",
-  "Genero (M/F)",
-  "Email",
-  "Telefono",
-  "Domicilio",
-  "Beneficiario",
-  "Parentesco",
+  "DIRECCION",
+  "COLONIA",
+  "CP",
 ];
 
 function fmtMx(n: number) {
@@ -86,6 +88,7 @@ function CompanyDetailPage() {
 
   const [importOpen, setImportOpen] = useState(false);
   const [showBajas, setShowBajas] = useState(false);
+  const [monthlyOpen, setMonthlyOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -108,12 +111,13 @@ function CompanyDetailPage() {
     ws.addRow(COLUMNS);
     ws.getRow(1).font = { bold: true };
     ws.columns = COLUMNS.map(() => ({ width: 26 }));
-    ws.addRow(["Juan", "Pérez López", "PELJ850412HDFRLN09", "", "1985-04-12", "M", "juan@empresa.com", "8112345678", "Av. Constitución 100, Monterrey", "María Pérez", "Cónyuge"]);
+    ws.addRow([1, "JUAN", "PEREZ", "LOPEZ", "H", "T", "12/04/1985", "PELJ850412HDFRLN09", "AV CONSTITUCION 100", "CENTRO", "64000"]);
+    ws.addRow(["", "MARIA", "GARCIA", "RUIZ", "M", "ESPOSA", "03/08/1987", "GARM870803MDFRZR01", "AV CONSTITUCION 100", "CENTRO", "64000"]);
     const buf = await wb.xlsx.writeBuffer();
     const url = URL.createObjectURL(new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = "plantilla-asegurados.xlsx";
+    a.download = "plantilla-listado-mensual.xlsx";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -311,8 +315,8 @@ function CompanyDetailPage() {
           <Button variant="outline" size="sm" onClick={downloadTemplate}>
             <FileSpreadsheet className="h-4 w-4 mr-1" /> Descargar plantilla Excel
           </Button>
-          <Button size="sm" onClick={() => setImportOpen(true)}>
-            <Upload className="h-4 w-4 mr-1" /> Cargar asegurados (Excel)
+          <Button size="sm" onClick={() => setMonthlyOpen(true)}>
+            <Upload className="h-4 w-4 mr-1" /> Actualización mensual (Excel)
           </Button>
         </div>
       </div>
@@ -540,6 +544,7 @@ function CompanyDetailPage() {
         </DialogContent>
       </Dialog>
 
+      <MonthlyUpdateDialog company={company} open={monthlyOpen} onOpenChange={setMonthlyOpen} />
       <EditCompanyDialog company={company} open={editOpen} onOpenChange={setEditOpen} />
       <DeleteCompanyDialog
         company={company}
