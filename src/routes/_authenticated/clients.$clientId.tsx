@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { EditClientDialog } from "@/components/clients/EditClientDialog";
+import { useActiveProgramId } from "@/lib/program-context";
 import { DataAlertBanner, DataAlertIcon } from "@/components/clients/DataAlert";
 import { getDataAlerts } from "@/lib/data-alerts";
 import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
@@ -66,6 +67,8 @@ const FREQUENCY_LABELS: Record<string, string> = {
 
 function ClientDetail() {
   const { clientId } = Route.useParams();
+  // Solo se muestra lo del programa activo (programas, certificados y siniestros de otros programas no aparecen).
+  const programId = useActiveProgramId();
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["client", clientId],
@@ -81,12 +84,13 @@ function ClientDetail() {
   });
 
   const { data: enrollments = [] } = useQuery({
-    queryKey: ["client-programs", clientId],
+    queryKey: ["client-programs", clientId, programId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_programs")
         .select("id, status, enrolled_at, cancelled_at, programs(id, code, name, color_primary)")
         .eq("client_id", clientId)
+        .eq("program_id", programId)
         .order("enrolled_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as any[];
@@ -94,12 +98,13 @@ function ClientDetail() {
   });
 
   const { data: policies = [] } = useQuery({
-    queryKey: ["client-policies", clientId],
+    queryKey: ["client-policies", clientId, programId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("policies")
         .select("id, folio, policy_number, certificate_number, status, start_date, end_date, premium, programs(code, name), payment_schedules(*)")
         .eq("client_id", clientId)
+        .eq("program_id", programId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as any[];
@@ -125,12 +130,13 @@ function ClientDetail() {
   const urgentByPolicy = Object.fromEntries(urgentPayments.map((p) => [p.policy_id, p]));
 
   const { data: incidents = [] } = useQuery({
-    queryKey: ["client-incidents", clientId],
+    queryKey: ["client-incidents", clientId, programId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("incidents")
-        .select("id, status, accident_date, hospital, reported_at, medical_passes(id, pdf_url, revoked_at, valid_until, created_at)")
+        .select("id, status, accident_date, hospital, reported_at, medical_passes(id, pdf_url, revoked_at, valid_until, created_at), policies!inner(program_id)")
         .eq("client_id", clientId)
+        .eq("policies.program_id", programId)
         .order("reported_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as any[];

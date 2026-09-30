@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, Send, User, Bot, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useProgram } from "@/lib/program-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -58,7 +59,13 @@ function MessagesPage() {
   const qc = useQueryClient();
 
   const [selected, setSelected] = useState<string | null>(null);
-  const [programFilter, setProgramFilter] = useState<string>("all");
+  // Solo conversaciones del programa activo (más las de números aún sin programa identificado).
+  const { activeProgram } = useProgram();
+  const activeCode = (activeProgram?.code ?? "__none__").toUpperCase();
+  const [programFilter, setProgramFilter] = useState<string>("active");
+  useEffect(() => { setProgramFilter("active"); setSelected(null); }, [activeCode]);
+  const matchesFilter = (c: { program_code: string | null }) =>
+    programFilter === "none" ? !c.program_code : (c.program_code ?? "").toUpperCase() === activeCode;
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -89,15 +96,9 @@ function MessagesPage() {
 
   useEffect(() => {
     if (selected || !conversations) return;
-    const first = conversations.find((c) =>
-      programFilter === "all"
-        ? true
-        : programFilter === "none"
-          ? !c.program_code
-          : (c.program_code ?? "").toUpperCase() === programFilter,
-    );
+    const first = conversations.find(matchesFilter);
     if (first) setSelected(first.wa_phone);
-  }, [conversations, selected, programFilter]);
+  }, [conversations, selected, programFilter, activeCode]);
 
 
   useEffect(() => {
@@ -140,16 +141,10 @@ function MessagesPage() {
 
   // Segmentación por programa: cada programa tendrá su propia línea/bot de WhatsApp,
   // así que el equipo puede ver sólo las conversaciones del programa que atiende.
-  const filtered = (conversations ?? []).filter((c) =>
-    programFilter === "all"
-      ? true
-      : programFilter === "none"
-        ? !c.program_code
-        : (c.program_code ?? "").toUpperCase() === programFilter,
-  );
-  const countFor = (code: string) =>
+  const filtered = (conversations ?? []).filter(matchesFilter);
+  const countFor = (key: string) =>
     (conversations ?? []).filter((c) =>
-      code === "none" ? !c.program_code : (c.program_code ?? "").toUpperCase() === code,
+      key === "none" ? !c.program_code : (c.program_code ?? "").toUpperCase() === activeCode,
     ).length;
 
   const selectedConv = conversations?.find((c) => c.wa_phone === selected);
@@ -176,11 +171,8 @@ function MessagesPage() {
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {[
-            { key: "all", label: "Todos" },
-            { key: "ABC", label: PROGRAM_LABEL.ABC },
-            { key: "FUTCARE", label: PROGRAM_LABEL.FUTCARE },
-            { key: "MCV", label: PROGRAM_LABEL.MCV },
-            { key: "none", label: "Sin programa" },
+            { key: "active", label: activeProgram?.name ?? "Programa activo" },
+            { key: "none", label: "Sin programa identificado" },
           ].map((t) => (
             <Button
               key={t.key}
@@ -193,7 +185,7 @@ function MessagesPage() {
             >
               {t.label}
               <span className="ml-1.5 text-[11px] opacity-70">
-                {t.key === "all" ? (conversations?.length ?? 0) : countFor(t.key)}
+                {countFor(t.key)}
               </span>
             </Button>
           ))}

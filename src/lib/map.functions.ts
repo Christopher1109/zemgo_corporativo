@@ -7,7 +7,7 @@ export const getPoliciesByState = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ program_id: z.string().uuid().nullable().optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const { data: res, error } = await context.supabase.rpc("get_policies_by_state", {
-      _program_id: (data.program_id ?? null) as any,
+      _program_id: (data.program_id || "00000000-0000-0000-0000-000000000000") as any,
     });
     if (error) throw new Error(error.message);
     return res ?? [];
@@ -41,7 +41,7 @@ export const getStateDetail = createServerFn({ method: "GET" })
       )
       .or(orFilter, { referencedTable: "clients" })
       .limit(500);
-    if (data.program_id) polQ = polQ.eq("program_id", data.program_id);
+    polQ = polQ.eq("program_id", data.program_id || "00000000-0000-0000-0000-000000000000");
     const pol = await polQ;
     if (pol.error) throw new Error(pol.error.message);
 

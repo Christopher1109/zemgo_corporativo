@@ -21,7 +21,7 @@ export const listSalesReps = createServerFn({ method: "GET" })
   )
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
-    const programId = data?.program_id ?? null;
+    const programId: string = data?.program_id || "00000000-0000-0000-0000-000000000000"; // siempre un programa (nunca "todos")
 
     const repsQ = await sb
       .from("sales_reps")
@@ -113,7 +113,7 @@ export const listSalesReps = createServerFn({ method: "GET" })
     const withPolicies = new Set((pol.data ?? []).map((p: any) => p.sales_rep_id as string));
     for (const rid of cliStats.keys()) withPolicies.add(rid);
     const visible = programId
-      ? reps.filter((r: any) => r.program_id == null || r.program_id === programId || withPolicies.has(r.id))
+      ? reps.filter((r: any) => r.program_id === programId) // estricto: cada programa ve solo sus vendedores
       : reps;
     return visible.map((r) => {
       const s = stats.get(r.id) ?? { active: 0, total: 0, premium: 0, clients: new Set<string>() };
@@ -146,7 +146,7 @@ export const getSalesRepDetail = createServerFn({ method: "GET" })
   )
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
-    const programId = data.program_id ?? null;
+    const programId: string = data.program_id || "00000000-0000-0000-0000-000000000000"; // siempre un programa (nunca "todos")
     const repQ = await sb
       .from("sales_reps")
       .select("id, full_name, referral_source, code, ref_slug, program_id, is_active, metadata, user_id, email")

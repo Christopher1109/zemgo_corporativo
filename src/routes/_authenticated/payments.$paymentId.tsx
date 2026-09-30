@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useProgramMismatch } from "@/components/ProgramMismatch";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -119,7 +120,9 @@ function PaymentDetail() {
     },
   });
 
+  const mismatch = useProgramMismatch((payment as any)?.policies?.program_id);
   if (!payment) return <div className="text-muted-foreground">Cargando…</div>;
+  if (mismatch) return mismatch;
   const pol = payment.policies;
   const c = pol?.clients;
   const prog = pol?.programs;

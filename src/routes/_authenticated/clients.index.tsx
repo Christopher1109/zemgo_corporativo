@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DataAlertIcon } from "@/components/clients/DataAlert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useProgram } from "@/lib/program-context";
+import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/clients/")({
@@ -25,11 +25,9 @@ function ClientsList() {
   const { activeProgram, programs } = useProgram();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [programFilter, setProgramFilter] = useState<string>("active");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const effectiveProgramId =
-    programFilter === "active" ? activeProgram?.id : programFilter === "all" ? null : programFilter;
+  const effectiveProgramId = useActiveProgramId();
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["clients", effectiveProgramId, statusFilter, search],
@@ -106,19 +104,6 @@ function ClientsList() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Programa</label>
-            <Select value={programFilter} onValueChange={setProgramFilter}>
-              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Programa activo</SelectItem>
-                <SelectItem value="all">Todos</SelectItem>
-                {programs.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Estado</label>

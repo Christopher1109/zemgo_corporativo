@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useProgramMismatch } from "@/components/ProgramMismatch";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
@@ -286,6 +287,7 @@ function CompanyDetailPage() {
     }
   }
 
+  const mismatch = useProgramMismatch((q.data as any)?.company?.program_id);
   if (q.isLoading) return <div className="h-40 rounded-md bg-muted/40 animate-pulse" />;
   if (q.error || !q.data)
     return (
@@ -295,6 +297,7 @@ function CompanyDetailPage() {
     );
 
   const { company, policies, payments, imports } = q.data as any;
+  if (mismatch) return mismatch;
   const paidByPolicy = new Set(payments.filter((p: any) => p.status === "paid").map((p: any) => p.policy_id));
   const active = policies.filter((p: any) => p.status === "active");
   const pending = policies.filter((p: any) => p.status !== "active" && p.status !== "cancelled");

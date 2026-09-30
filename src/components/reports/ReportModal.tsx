@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileSpreadsheet, FileText, FileDown, Save, Loader2, ExternalLink, Trash2, Eye, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { useProgram } from "@/lib/program-context";
+import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { REPORT_SPECS, type ReportFilters, type FilterSpec } from "@/lib/reports/types";
 import {
   generateReport, listPresets, savePreset, deletePreset,
@@ -30,7 +30,10 @@ export function ReportModal({
 }) {
   const spec = reportCode ? REPORT_SPECS[reportCode] : null;
   const { programs, activeProgram } = useProgram();
-  const [filters, setFilters] = useState<ReportFilters>({});
+  const [rawFilters, setFilters] = useState<ReportFilters>({});
+  // Los reportes siempre son del programa activo: no se puede elegir otro programa ni "todos".
+  const activeProgramId = useActiveProgramId();
+  const filters = useMemo<ReportFilters>(() => ({ ...rawFilters, program_id: activeProgramId }), [rawFilters, activeProgramId]);
   const [lastUrl, setLastUrl] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [presetName, setPresetName] = useState("");
@@ -48,7 +51,7 @@ export function ReportModal({
 
   useEffect(() => {
     if (open && spec) {
-      const init: ReportFilters = { program_id: activeProgram?.id ?? "all" };
+      const init: ReportFilters = { program_id: activeProgramId };
       if (spec.filters.some(f => f.type === "window")) init.window_days = 30;
       setFilters(init);
       setLastUrl(null); setWarning(null); setPresetName("");
@@ -122,13 +125,7 @@ export function ReportModal({
       return (
         <div key={f.key} className="space-y-1.5">
           <Label>{f.label}</Label>
-          <Select value={filters.program_id ?? "all"} onValueChange={(v) => set("program_id", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              {programs.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="h-9 rounded-md border px-3 flex items-center text-sm bg-muted/40">{activeProgram?.name ?? "—"}</div>
         </div>
       );
     }

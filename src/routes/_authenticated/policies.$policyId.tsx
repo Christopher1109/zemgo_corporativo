@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useProgramMismatch } from "@/components/ProgramMismatch";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -278,9 +279,11 @@ function PolicyDetail() {
 
 
 
+  const mismatch = useProgramMismatch((policy as any)?.program_id);
   if (isLoading || !policy) {
     return <div className="text-muted-foreground">Cargando certificado…</div>;
   }
+  if (mismatch) return mismatch;
 
   const allowed = NEXT_STATUS[policy.status] ?? [];
 

@@ -46,7 +46,7 @@ function NewIncident() {
         .select("id, folio, start_date, end_date, sum_insured, deductible, contracting_party, program_id, programs(code, name, color_primary), clients(first_name, last_name, curp)")
         .eq("status", "active")
         .order("folio");
-      if (activeProgram?.id) q = q.eq("program_id", activeProgram.id);
+      q = q.eq("program_id", activeProgram?.id ?? "00000000-0000-0000-0000-000000000000");
       const { data, error } = await q;
       if (error) throw error;
       return data as any[];

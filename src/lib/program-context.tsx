@@ -121,3 +121,15 @@ export function useProgram() {
   if (!ctx) throw new Error("useProgram must be used within ProgramProvider");
   return ctx;
 }
+
+/**
+ * Id del programa activo para filtrar CUALQUIER consulta. Nunca regresa null:
+ * mientras el programa carga regresa un id que no existe, así las consultas
+ * regresan vacío en lugar de traer datos de todos los programas.
+ * Regla del sistema: cada programa (ABC, FutCare, Manos con Valor) se ve por separado.
+ */
+export const NO_PROGRAM_ID = "00000000-0000-0000-0000-000000000000";
+export function useActiveProgramId(): string {
+  const { activeProgram } = useProgram();
+  return activeProgram?.id ?? NO_PROGRAM_ID;
+}

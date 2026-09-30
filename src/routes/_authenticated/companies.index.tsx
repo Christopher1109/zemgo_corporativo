@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Building2, Plus, Users, FileText, ArrowRight, Search, Pencil, Trash2 } from "lucide-react";
 import { listCompanies } from "@/lib/companies.functions";
-import { useProgram } from "@/lib/program-context";
+import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,11 +27,10 @@ function fmtMx(n: number) {
 
 function CompaniesPage() {
   const { activeProgram } = useProgram();
-  const [scope, setScope] = useState<"active" | "all">("all");
   const [search, setSearch] = useState("");
   const [editTarget, setEditTarget] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
-  const programId = scope === "active" ? (activeProgram?.id ?? null) : null;
+  const programId = useActiveProgramId();
 
   const fn = useServerFn(listCompanies);
   const q = useQuery({
@@ -60,12 +59,6 @@ function CompaniesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant={scope === "all" ? "default" : "outline"} size="sm" onClick={() => setScope("all")}>
-            Todos los programas
-          </Button>
-          <Button variant={scope === "active" ? "default" : "outline"} size="sm" onClick={() => setScope("active")}>
-            {activeProgram?.name ?? "Programa activo"}
-          </Button>
           <Button asChild size="sm">
             <Link to="/clients/new">
               <Plus className="h-4 w-4 mr-1" /> Nueva empresa

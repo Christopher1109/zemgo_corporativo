@@ -36,7 +36,8 @@ function NewClient() {
   const { user } = useAuth();
   const [kind, setKind] = useState<"person" | "company" | null>(null);
   const [form, setForm] = useState({ ...empty });
-  const [programId, setProgramId] = useState<string>(activeProgram?.id ?? "");
+  // El alta siempre es en el programa activo (no se puede elegir otro).
+  const programId = activeProgram?.id ?? "";
   const [busy, setBusy] = useState(false);
   const [company, setCompany] = useState({
     legal_name: "", rfc: "", contact_name: "", email: "", phone: "",
@@ -208,14 +209,7 @@ function NewClient() {
             <CardHeader><CardTitle className="text-base">Programa</CardTitle></CardHeader>
             <CardContent>
               <Label>Programa *</Label>
-              <Select value={programId} onValueChange={setProgramId}>
-                <SelectTrigger className="mt-1.5 max-w-md"><SelectValue placeholder="Selecciona…" /></SelectTrigger>
-                <SelectContent>
-                  {programs.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="mt-1.5 h-9 max-w-md rounded-md border px-3 flex items-center text-sm bg-muted/40">{activeProgram?.name ?? "—"}</div>
             </CardContent>
           </Card>
           <Card>
@@ -259,19 +253,7 @@ function NewClient() {
           <CardHeader><CardTitle className="text-base">Programa</CardTitle></CardHeader>
           <CardContent>
             <Label>Afiliar a programa *</Label>
-            <Select value={programId} onValueChange={setProgramId}>
-              <SelectTrigger className="mt-1.5 max-w-md"><SelectValue placeholder="Selecciona…" /></SelectTrigger>
-              <SelectContent>
-                {programs.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    <span className="inline-flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color_primary }} />
-                      {p.name}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="mt-1.5 h-9 max-w-md rounded-md border px-3 flex items-center text-sm bg-muted/40">{activeProgram?.name ?? "—"}</div>
           </CardContent>
         </Card>
 

@@ -7,7 +7,7 @@ import {
   UserPlus, FilePlus, Stethoscope, ArrowRight, ShieldCheck,
 } from "lucide-react";
 
-import { useProgram } from "@/lib/program-context";
+import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,7 @@ const fmtMoney = (n: number) => `$${(n ?? 0).toLocaleString("es-MX", { maximumFr
 
 function Dashboard() {
   const { activeProgram } = useProgram();
-  const scope = activeProgram?.id ?? null;
+  const scope = useActiveProgramId();
   const scopeKey = scope ?? "none";
   const on = !!scope;
 

@@ -53,10 +53,8 @@ function NewPolicy() {
   const createContractorFn = useServerFn(createContractor);
   const fromClientFn = useServerFn(createContractorFromClient);
 
-  const [programId, setProgramId] = useState<string>(activeProgram?.id ?? "");
-  useEffect(() => {
-    if (!programId && activeProgram?.id) setProgramId(activeProgram.id);
-  }, [activeProgram?.id, programId]);
+  // El certificado siempre es del programa activo (no se puede elegir otro).
+  const programId = activeProgram?.id ?? "";
 
   const selectedProgram = programs.find((p) => p.id === programId);
   const isABC = selectedProgram?.code?.toUpperCase() === "ABC";
@@ -263,14 +261,7 @@ function NewPolicy() {
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <Label>Programa</Label>
-            <Select value={programId} onValueChange={setProgramId}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar…" /></SelectTrigger>
-              <SelectContent>
-                {programs.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="h-9 rounded-md border px-3 flex items-center text-sm bg-muted/40">{activeProgram?.name ?? "—"}</div>
             <p className="text-xs text-muted-foreground mt-1">El folio se generará automáticamente.</p>
           </div>
 

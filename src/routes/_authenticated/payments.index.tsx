@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { supabase } from "@/integrations/supabase/client";
-import { useProgram } from "@/lib/program-context";
+import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
 
 export const Route = createFileRoute("/_authenticated/payments/")({
@@ -54,7 +54,6 @@ const VIEWS: Array<{ value: string; label: string; statuses: string[] }> = [
 function PaymentsList() {
   const { activeProgram, programs } = useProgram();
   const navigate = useNavigate();
-  const [scope, setScope] = useState<"active" | "all">("active");
   const [view, setView] = useState("open");
   const [statuses, setStatuses] = useState<string[]>(["pending", "overdue", "failed"]);
   const [search, setSearch] = useState("");
@@ -63,7 +62,7 @@ function PaymentsList() {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 25;
 
-  const programId = scope === "active" ? activeProgram?.id : null;
+  const programId = useActiveProgramId();
   const paidView = view === "paid" || view === "attempted";
 
   const { data: rows = [], isLoading } = useQuery({
@@ -123,7 +122,7 @@ function PaymentsList() {
         <div>
           <h1 className="text-2xl font-semibold">Cobranza</h1>
           <p className="text-sm text-muted-foreground">
-            {scope === "active" ? activeProgram?.name : "Todos los programas"} · {rows.length} pagos ·
+            {activeProgram?.name} · {rows.length} pagos ·
             solo consulta, los cobros se realizan en el portal del cliente
           </p>
         </div>
@@ -145,16 +144,6 @@ function PaymentsList() {
 
       <Card className="p-4 space-y-3">
         <div className="grid md:grid-cols-3 gap-3">
-          <div>
-            <label className="text-xs font-medium">Programa</label>
-            <Select value={scope} onValueChange={(v) => setScope(v as any)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">{activeProgram?.name ?? "Activo"}</SelectItem>
-                <SelectItem value="all">Todos ({programs.length})</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div>
             <label className="text-xs font-medium">Vencimiento desde</label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />

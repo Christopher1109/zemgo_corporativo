@@ -1,8 +1,9 @@
+import { Badge } from "@/components/ui/badge";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { useProgram } from "@/lib/program-context";
+import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { useState, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Wallet } from "lucide-react";
@@ -43,8 +44,7 @@ function FinancePage() {
 
 function FinanceOverview() {
   const { activeProgram, programs } = useProgram();
-  const [scope, setScope] = useState<"active" | "all">("active");
-  const programId = scope === "active" ? activeProgram?.id : null;
+  const programId = useActiveProgramId();
 
   const { data: payments = [] } = useQuery({
     queryKey: ["finance-payments", programId],
@@ -52,11 +52,25 @@ function FinanceOverview() {
       let q = supabase
         .from("payments")
         .select("id, amount, paid_amount, status, method, due_date, paid_at, policies!inner(program_id, client_id, clients(first_name, last_name), programs(name, code, color_primary))")
-        .gte("due_date", new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10));
-      if (programId) q = q.eq("policies.program_id", programId);
+        .gte("due_date", new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10))
+        .eq("policies.program_id", programId)
+        // Los certificados de empresa se cobran en el cobro consolidado de la empresa (abajo), no uno por uno.
+        .is("policies.company_id", null);
       const { data, error } = await q.limit(5000);
       if (error) throw error;
-      return (data ?? []) as any[];
+
+      const { data: charges, error: cErr } = await (supabase as any)
+        .from("company_charges")
+        .select("id, amount, paid_amount, status, method, due_date, paid_at, companies(legal_name), programs(name, code, color_primary)")
+        .eq("program_id", programId)
+        .gte("due_date", new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10));
+      if (cErr) throw cErr;
+      // Se integran como un cobro más, con la empresa como "cliente".
+      const companyRows = (charges ?? []).map((c: any) => ({
+        ...c,
+        policies: { programs: c.programs, clients: { first_name: c.companies?.legal_name ?? "Empresa", last_name: "" } },
+      }));
+      return [...(data ?? []), ...companyRows] as any[];
     },
   });
 
@@ -139,13 +153,7 @@ function FinanceOverview() {
           </h1>
           <p className="text-sm text-muted-foreground">Cobranza, deudores, métodos y estimaciones del periodo.</p>
         </div>
-        <Select value={scope} onValueChange={(v) => setScope(v as any)}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">{activeProgram?.name}</SelectItem>
-            <SelectItem value="all">Todos los programas</SelectItem>
-          </SelectContent>
-        </Select>
+        <Badge variant="outline" className="text-sm">{activeProgram?.name}</Badge>
       </div>
 
       <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -167,7 +175,7 @@ function FinanceOverview() {
               <YAxis fontSize={11} />
               <Tooltip />
               <Legend />
-              {programs.map((p) => (
+              {(activeProgram ? [activeProgram] : []).map((p) => (
                 <Line key={p.code} type="monotone" dataKey={p.code} stroke={p.color_primary} strokeWidth={2} />
               ))}
             </LineChart>

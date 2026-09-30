@@ -112,11 +112,11 @@ export function InternalPortfolioReport() {
 }
 
 export function InsurerReport() {
-  const { activeProgram, programs } = useProgram();
+  // Siempre el programa activo (no se puede elegir otro).
+  const { activeProgram } = useProgram();
   const qc = useQueryClient();
-  const [programId, setProgramId] = useState<string>(activeProgram?.id ?? "");
-  useEffect(() => { if (!programId && activeProgram) setProgramId(activeProgram.id); }, [activeProgram, programId]);
-  const program = programs.find((p) => p.id === programId);
+  const programId = activeProgram?.id ?? "";
+  const program = activeProgram;
   const [keys, setKeys] = useState<string[]>(DEFAULT_KEYS);
   const [templateId, setTemplateId] = useState<string>("new");
   const [name, setName] = useState("");
@@ -174,10 +174,7 @@ export function InsurerReport() {
       <div className="flex flex-wrap gap-3 items-end">
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Programa / aseguradora</label>
-          <Select value={programId} onValueChange={(v) => { setProgramId(v); pickTemplate("new"); }}>
-            <SelectTrigger className="w-[220px]"><SelectValue placeholder="Programa" /></SelectTrigger>
-            <SelectContent>{programs.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-          </Select>
+          <div className="h-9 w-[220px] rounded-md border px-3 flex items-center text-sm bg-muted/40">{activeProgram?.name ?? "—"}</div>
         </div>
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Plantilla</label>

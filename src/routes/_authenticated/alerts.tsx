@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Bell, RefreshCw, AlertOctagon, Calendar, CreditCard, ExternalLink, Phone, Mail, MapPin, Search, Send, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useProgram } from "@/lib/program-context";
+import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { getAlertsOverview } from "@/lib/alerts.functions";
 import { getPaymentReminderStatus } from "@/lib/payment-reminders.functions";
 import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
@@ -75,10 +75,9 @@ function priorityCompare(aDays: number, aOverdue: boolean, bDays: number, bOverd
 
 function AlertsPage() {
   const { activeProgram } = useProgram();
-  const [scope, setScope] = useState<"active" | "all">("active");
   const [bucket, setBucket] = useState<Bucket>("all");
   const [search, setSearch] = useState("");
-  const programId = scope === "active" ? (activeProgram?.id ?? null) : null;
+  const programId = useActiveProgramId();
   const fn = useServerFn(getAlertsOverview);
   const q = useQuery({
     queryKey: ["alerts-overview", programId],
@@ -148,16 +147,9 @@ function AlertsPage() {
             Alertas y Renovaciones
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Recordatorios de pago, renovaciones próximas y certificados suspendidos — {activeProgram?.name ?? "todos los programas"}.
+            Recordatorios de pago, renovaciones próximas y certificados suspendidos — {activeProgram?.name}.
           </p>
         </div>
-        <Select value={scope} onValueChange={(v) => setScope(v as any)}>
-          <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">{activeProgram?.name ?? "Programa activo"}</SelectItem>
-            <SelectItem value="all">Todos los programas</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* KPIs */}
