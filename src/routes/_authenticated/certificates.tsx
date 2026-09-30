@@ -46,7 +46,7 @@ async function fetchProgramPolicies(programId: string) {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from("policies")
-      .select("id, folio, certificate_number, status, created_at, program_id, clients(id, first_name, last_name, curp, rfc, date_of_birth, gender), payments(status, paid_at)")
+      .select("id, folio, policy_number, certificate_number, status, created_at, issue_date, program_id, company_id, companies(legal_name), clients(id, first_name, last_name, curp, rfc, date_of_birth, gender, metadata), payments(status, paid_at), dependents(full_name, relationship, date_of_birth, metadata)")
       .eq("program_id", programId)
       .range(from, from + 999);
     if (error) throw error;
@@ -65,7 +65,7 @@ function CertificatesPage() {
           <FileCheck2 className="h-6 w-6" style={{ color: "var(--program-primary)" }} /> Asignación de certificados
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Envía cada mes (corte al día 10) los clientes nuevos a la aseguradora y carga su respuesta para asignar los números de certificado.
+          Exporta los asegurados nuevos (clientes individuales con pago y altas de empresas), envíalos a la aseguradora y sube su respuesta para asignar los números de certificado.
         </p>
       </div>
       {!activeProgram ? (
@@ -90,23 +90,28 @@ function PendingTab({ program }: { program: any }) {
     queryFn: async () => {
       const pols = await fetchProgramPolicies(program.id);
       return pols
-        .filter((p) => !String(p.certificate_number ?? "").trim())
+        .filter((p) => !String(p.certificate_number ?? "").trim() && p.status !== "cancelled")
         .map((p) => {
           const paid = (p.payments ?? []).filter((x: any) => x.status === "paid" && x.paid_at).map((x: any) => x.paid_at).sort();
           return { ...p, first_paid: paid[0] ?? null };
         })
-        .filter((p) => p.first_paid);
+        // Individuales: cuando ya pagaron. Empresas: la empresa paga en bloque, entran al darse de alta.
+        .filter((p) => p.first_paid || p.company_id);
     },
   });
 
   const groups = useMemo(() => {
     const m = new Map<string, { label: string; rows: any[] }>();
     for (const p of data) {
-      const { key, label } = cutoffKey(p.first_paid);
+      const { key, label } = p.company_id
+        ? { key: `empresa-${p.company_id}`, label: `Empresa: ${p.companies?.legal_name ?? "sin nombre"}` }
+        : cutoffKey(p.first_paid);
       if (!m.has(key)) m.set(key, { label, rows: [] });
       m.get(key)!.rows.push(p);
     }
-    return [...m.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+    // Empresas primero, luego cortes mensuales del más reciente al más antiguo.
+    return [...m.entries()].sort((a, b) =>
+      a[0].startsWith("empresa-") !== b[0].startsWith("empresa-") ? (a[0].startsWith("empresa-") ? -1 : 1) : b[0].localeCompare(a[0]));
   }, [data]);
   const [sel, setSel] = useState<string>("all");
   const rows = sel === "all" ? data : groups.find(([k]) => k === sel)?.[1].rows ?? [];
@@ -114,14 +119,26 @@ function PendingTab({ program }: { program: any }) {
   async function download() {
     const wb = await newWorkbook();
     const ws = wb.addWorksheet("Altas");
-    ws.columns = ["Apellidos y nombre","CURP","RFC","Fecha de nacimiento","Sexo","Edad","Fecha de primer pago","Programa","Folio interno"].map((h) => ({ header: h, key: h }));
+    // TODO: ajustar columnas a lo que pida la aseguradora (pendiente de confirmar con Grace Rivera).
+    ws.columns = ["Apellidos y nombre","CURP","RFC","Fecha de nacimiento","Sexo","Edad","Parentesco","No. empleado","Empresa","Fecha de alta","Póliza","Programa","Folio interno"].map((h) => ({ header: h, key: h }));
     for (const p of rows) {
       const c = p.clients ?? {};
+      const alta = p.first_paid ?? p.issue_date ?? p.created_at;
       ws.addRow([
         fullName(c), c.curp ?? "", (c.curp ?? "").slice(0, 10), c.date_of_birth ?? "",
         c.gender ? GENDER_LABEL[c.gender] ?? c.gender : genderFromCurp(c.curp), ageFrom(c.date_of_birth) ?? "",
-        new Date(p.first_paid).toLocaleDateString("es-MX"), program.name, p.folio,
+        "Titular", c.metadata?.employee_number ?? "", p.companies?.legal_name ?? "",
+        alta ? new Date(alta).toLocaleDateString("es-MX") : "", p.policy_number ?? "", program.name, p.folio,
       ]);
+      for (const d of p.dependents ?? []) {
+        const dc = d.metadata?.curp ?? "";
+        ws.addRow([
+          d.full_name, dc, dc.slice(0, 10), d.date_of_birth ?? "",
+          d.metadata?.gender ? GENDER_LABEL[d.metadata.gender] ?? d.metadata.gender : genderFromCurp(dc), ageFrom(d.date_of_birth) ?? "",
+          d.relationship ?? "Dependiente", c.metadata?.employee_number ?? "", p.companies?.legal_name ?? "",
+          alta ? new Date(alta).toLocaleDateString("es-MX") : "", p.policy_number ?? "", program.name, p.folio,
+        ]);
+      }
     }
     styleHeader(ws);
     ws.getColumn(1).width = 38;
@@ -132,7 +149,7 @@ function PendingTab({ program }: { program: any }) {
     <Card className="p-4 space-y-4">
       <div className="flex flex-wrap items-end gap-3 justify-between">
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Mes de alta</label>
+          <label className="text-xs text-muted-foreground">Empresa o mes de alta</label>
           <Select value={sel} onValueChange={setSel}>
             <SelectTrigger className="w-[240px]"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -141,16 +158,16 @@ function PendingTab({ program }: { program: any }) {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={download} disabled={rows.length === 0}><Download className="h-4 w-4 mr-2" />Descargar Excel para aseguradora</Button>
+        <Button onClick={download} disabled={rows.length === 0}><Download className="h-4 w-4 mr-2" />Exportar nuevos para la aseguradora</Button>
       </div>
       {isLoading ? <div className="py-8 text-center text-muted-foreground">Cargando…</div> :
-        groups.length === 0 ? <div className="py-8 text-center text-muted-foreground">No hay certificados pendientes con pago cobrado.</div> :
+        groups.length === 0 ? <div className="py-8 text-center text-muted-foreground">No hay asegurados pendientes de certificado.</div> :
         groups.filter(([k]) => sel === "all" || k === sel).map(([k, g]) => (
           <div key={k} className="space-y-2">
             <h3 className="font-medium text-sm">{g.label} <Badge variant="secondary">{g.rows.length}</Badge></h3>
             <Table>
               <TableHeader><TableRow>
-                <TableHead>Nombre</TableHead><TableHead>CURP</TableHead><TableHead>Folio</TableHead><TableHead>Primer pago</TableHead><TableHead>Certificado</TableHead>
+                <TableHead>Nombre</TableHead><TableHead>CURP</TableHead><TableHead>Folio</TableHead><TableHead>Alta / primer pago</TableHead><TableHead>Certificado</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {g.rows.map((p) => (
@@ -158,7 +175,7 @@ function PendingTab({ program }: { program: any }) {
                     <TableCell>{fullName(p.clients)}</TableCell>
                     <TableCell className="font-mono text-xs">{p.clients?.curp}</TableCell>
                     <TableCell className="font-mono text-xs">{p.folio}</TableCell>
-                    <TableCell>{new Date(p.first_paid).toLocaleDateString("es-MX")}</TableCell>
+                    <TableCell>{new Date(p.first_paid ?? p.issue_date ?? p.created_at).toLocaleDateString("es-MX")}{p.dependents?.length ? ` · +${p.dependents.length} dep.` : ""}</TableCell>
                     <TableCell><CertificateBadge number={null} /></TableCell>
                   </TableRow>
                 ))}
@@ -198,7 +215,8 @@ function UploadTab({ program }: { program: any }) {
       const pols = await fetchProgramPolicies(program.id);
       const byKey = new Map<string, any[]>();
       for (const p of pols) {
-        const k = (p.clients?.curp ?? "").toUpperCase().slice(0, 10);
+        if (p.status === "cancelled") continue; // las bajas no reciben certificado
+        const k = (p.clients?.curp ?? "").toUpperCase().replace(/^SIN-CURP-/, "").slice(0, 10);
         if (k.length < 10) continue;
         if (!byKey.has(k)) byKey.set(k, []);
         byKey.get(k)!.push(p);
@@ -233,6 +251,10 @@ function UploadTab({ program }: { program: any }) {
       setParsed(null);
     } finally { setBusy(false); }
   }
+
+  // Aviso si el archivo trae un número de póliza distinto al de los certificados emparejados (p. ej. el PDF de Vida).
+  const matchedPolicyNumbers = [...new Set(matched.map((x) => x.policy.policy_number).filter(Boolean))];
+  const policyMismatch = !!policyNumber.trim() && matchedPolicyNumbers.length > 0 && !matchedPolicyNumbers.includes(policyNumber.trim());
 
   const conflicts = matched.filter((x) => x.include && x.policy.certificate_number && String(x.policy.certificate_number) !== x.row.certificate_number).length
     + ambig.filter((x) => { const p = x.options.find((o) => o.id === x.chosen); return p?.certificate_number && String(p.certificate_number) !== x.row.certificate_number; }).length;
@@ -276,6 +298,12 @@ function UploadTab({ program }: { program: any }) {
             </div>
             <Badge variant="secondary">{parsed.rows.length} renglones leídos</Badge>
           </div>
+          {policyMismatch && (
+            <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-sm text-amber-900">
+              El archivo es de la póliza <b className="font-mono">{policyNumber}</b>, pero los certificados emparejados son de la póliza{" "}
+              <b className="font-mono">{matchedPolicyNumbers.join(", ")}</b>. Revisa que sea el archivo correcto (por ejemplo, que no sea el de Vida).
+            </p>
+          )}
 
           <section className="space-y-2">
             <h3 className="font-medium">Emparejados ({matched.length})</h3>
