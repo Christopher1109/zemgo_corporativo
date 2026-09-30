@@ -106,7 +106,7 @@ function SalesRepDetailPage() {
   const { activeProgram } = useProgram();
   const q = useQuery({
     queryKey: ["sales-rep", repId, activeProgram?.id ?? null],
-    queryFn: () => fn({ data: { sales_rep_id: repId, program_id: activeProgram?.id ?? null } }),
+    queryFn: () => fn({ data: { sales_rep_id: repId, program_id: activeProgram?.id ?? "00000000-0000-0000-0000-000000000000" } }),
     enabled: !!activeProgram?.id,
   });
 

@@ -91,7 +91,7 @@ export function SalesRepFormDialog({
   onOpenChange: (o: boolean) => void;
   rep?: SalesRepFormValues | null;
 }) {
-  const { programs } = useProgram();
+  const { programs, activeProgram } = useProgram();
   const qc = useQueryClient();
   const createFn = useServerFn(createSalesRep);
   const updateFn = useServerFn(updateSalesRep);
@@ -114,7 +114,8 @@ export function SalesRepFormDialog({
     setName(rep?.full_name ?? "");
     setCode(rep?.code ?? "");
     setSlug(rep?.ref_slug ?? "");
-    setProgramId(rep?.program_id ?? "");
+    // Vendedor nuevo: siempre del programa activo. Existente: conserva su programa.
+    setProgramId(rep ? (rep.program_id ?? "") : (activeProgram?.id ?? ""));
     setActive(rep?.is_active ?? true);
     setEmail(rep?.email ?? "");
     setPassword(rep?.id ? savedPassword : genPassword());
@@ -228,16 +229,9 @@ export function SalesRepFormDialog({
             </div>
             <div className="space-y-1.5">
               <Label>Programa</Label>
-              <select
-                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                value={programId}
-                onChange={(e) => setProgramId(e.target.value)}
-              >
-                <option value="">Los tres programas</option>
-                {programs.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+              <div className="h-9 w-full rounded-md border px-2 flex items-center text-sm bg-muted/40">
+                {programs.find((p) => p.id === programId)?.name ?? (rep ? "Sin programa asignado" : activeProgram?.name ?? "—")}
+              </div>
             </div>
           </div>
           <div className="space-y-1.5">

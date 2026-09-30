@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useProgramMismatch } from "@/components/ProgramMismatch";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -121,9 +122,11 @@ function IncidentDetail() {
     },
   });
 
+  const mismatch = useProgramMismatch((incident as any)?.policies?.program_id);
   if (isLoading || !incident) {
     return <div className="p-6 text-center text-muted-foreground">Cargando…</div>;
   }
+  if (mismatch) return mismatch;
 
   const st = INCIDENT_STATUS[incident.status] ?? { label: incident.status, cls: "" };
   const canDecide = ["admin", "manager", "claims"].includes(myAccess ?? "");

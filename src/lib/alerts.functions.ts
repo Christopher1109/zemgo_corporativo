@@ -8,7 +8,7 @@ export const getAlertsOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => Input.parse(d ?? {}))
   .handler(async ({ data, context }) => {
-    const programId = data?.program_id ?? null;
+    const programId: string = data?.program_id || "00000000-0000-0000-0000-000000000000"; // siempre un programa (nunca "todos")
     const sb = context.supabase;
 
     // Upcoming payments (pending in next 90 days) — fuels payment reminders

@@ -13,7 +13,7 @@ export const listCompanies = createServerFn({ method: "POST" })
       .from("companies")
       .select("id, legal_name, rfc, contact_name, email, phone, city, state, is_active, created_at, program_id, programs(code, name, color_primary)")
       .order("created_at", { ascending: false });
-    if (data.program_id) q = q.eq("program_id", data.program_id);
+    q = q.eq("program_id", data.program_id || "00000000-0000-0000-0000-000000000000"); // siempre un programa
     const { data: companies, error } = await q;
     if (error) throw new Error(error.message);
 

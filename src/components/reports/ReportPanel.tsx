@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { FileSpreadsheet, FileText, FileDown, Save, Loader2, ExternalLink, Trash2, Eye, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { useProgram } from "@/lib/program-context";
+import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { REPORT_SPECS, type ReportFilters, type FilterSpec } from "@/lib/reports/types";
 import {
   generateReport, listPresets, savePreset, deletePreset,
@@ -28,7 +28,10 @@ import { toast } from "sonner";
 export function ReportPanel({ reportCode }: { reportCode: string }) {
   const spec = REPORT_SPECS[reportCode];
   const { programs, activeProgram } = useProgram();
-  const [filters, setFilters] = useState<ReportFilters>({});
+  const [rawFilters, setFilters] = useState<ReportFilters>({});
+  // Los reportes siempre son del programa activo: no se puede elegir otro programa ni "todos".
+  const activeProgramId = useActiveProgramId();
+  const filters = useMemo<ReportFilters>(() => ({ ...rawFilters, program_id: activeProgramId }), [rawFilters, activeProgramId]);
   const [lastUrl, setLastUrl] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [presetName, setPresetName] = useState("");
@@ -46,7 +49,7 @@ export function ReportPanel({ reportCode }: { reportCode: string }) {
 
   useEffect(() => {
     if (!spec) return;
-    const init: ReportFilters = { program_id: activeProgram?.id ?? "all" };
+    const init: ReportFilters = { program_id: activeProgramId };
     if (spec.filters.some(f => f.type === "window")) init.window_days = 30;
     // Por defecto: cargar los últimos 30 días en reportes con date_range,
     // excepto "cartera" (queremos toda la cartera vigente desde el inicio).
@@ -125,13 +128,7 @@ export function ReportPanel({ reportCode }: { reportCode: string }) {
       return (
         <div key={f.key} className="space-y-1.5">
           <Label>{f.label}</Label>
-          <Select value={filters.program_id ?? "all"} onValueChange={(v) => set("program_id", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              {programs.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="h-9 rounded-md border px-3 flex items-center text-sm bg-muted/40">{activeProgram?.name ?? "—"}</div>
         </div>
       );
     }

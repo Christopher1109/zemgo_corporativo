@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { useProgram } from "@/lib/program-context";
+import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { INCIDENT_STATUS } from "./incidents.index";
 
 export const Route = createFileRoute("/_authenticated/incidents/dashboard")({
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/incidents/dashboard")({
 
 function IncidentsDashboard() {
   const { activeProgram, programs } = useProgram();
+  const programId = useActiveProgramId();
 
   const { data: all = [] } = useQuery({
     queryKey: ["incidents-dash", activeProgram?.id],
@@ -25,7 +26,7 @@ function IncidentsDashboard() {
         .select("id, status, reported_at, approved_at, hospital, policies!inner(program_id, status)")
         .order("reported_at", { ascending: false })
         .limit(2000);
-      if (activeProgram?.id) q = q.eq("policies.program_id", activeProgram.id);
+      q = q.eq("policies.program_id", programId);
       const { data } = await q;
       return (data ?? []) as any[];
     },
@@ -38,7 +39,7 @@ function IncidentsDashboard() {
         .from("medical_passes")
         .select("id, valid_until, revoked_at, policies!inner(program_id)")
         .limit(2000);
-      if (activeProgram?.id) q = q.eq("policies.program_id", activeProgram.id);
+      q = q.eq("policies.program_id", programId);
       const { data } = await q;
       return (data ?? []) as any[];
     },
@@ -48,7 +49,7 @@ function IncidentsDashboard() {
     queryKey: ["active-policies-count", activeProgram?.id],
     queryFn: async () => {
       let q = supabase.from("policies").select("id", { count: "exact", head: true }).eq("status", "active");
-      if (activeProgram?.id) q = q.eq("program_id", activeProgram.id);
+      q = q.eq("program_id", programId);
       const { count } = await q;
       return count ?? 0;
     },

@@ -3,6 +3,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ReportFilters } from "./types";
 
+// Todos los reportes son de UN programa: sin programa válido no se regresa nada (nunca "todos").
+const programOf = (f: { program_id?: string | null }) =>
+  f.program_id && f.program_id !== "all" ? f.program_id : "00000000-0000-0000-0000-000000000000";
+
 function dateOrNull(v: any) { return v && typeof v === "string" ? v : null; }
 function truncate(s: string | null | undefined, n: number) {
   if (!s) return "";
@@ -17,7 +21,7 @@ export async function queryCartera(supabase: SupabaseClient, filters: ReportFilt
       programs(code, name),
       clients(first_name, last_name, curp)
     `).order("start_date", { ascending: false }).limit(5000);
-  if (filters.program_id && filters.program_id !== "all") q = q.eq("program_id", filters.program_id);
+  q = q.eq("program_id", programOf(filters));
   if (filters.status && filters.status !== "all") q = q.eq("status", filters.status);
   const from = dateOrNull(filters.date_from); const to = dateOrNull(filters.date_to);
   if (from) q = q.gte("start_date", from);
@@ -42,7 +46,7 @@ export async function queryCobranza(supabase: SupabaseClient, filters: ReportFil
       id, amount, paid_amount, due_date, paid_at, method, status,
       policies!inner(folio, program_id, clients(first_name, last_name))
     `).order("due_date", { ascending: false }).limit(5000);
-  if (filters.program_id && filters.program_id !== "all") q = q.eq("policies.program_id", filters.program_id);
+  q = q.eq("policies.program_id", programOf(filters));
   if (filters.status && filters.status !== "all") q = q.eq("status", filters.status);
   const from = dateOrNull(filters.date_from); const to = dateOrNull(filters.date_to);
   if (from) q = q.gte("due_date", from);
@@ -73,7 +77,7 @@ export async function querySiniestralidad(supabase: SupabaseClient, filters: Rep
       policies!inner(folio, program_id, sum_insured, clients(first_name, last_name)),
       medical_passes(id)
     `).order("accident_date", { ascending: false }).limit(5000);
-  if (filters.program_id && filters.program_id !== "all") q = q.eq("policies.program_id", filters.program_id);
+  q = q.eq("policies.program_id", programOf(filters));
   if (filters.status && filters.status !== "all") q = q.eq("status", filters.status);
   const from = dateOrNull(filters.date_from); const to = dateOrNull(filters.date_to);
   if (from) q = q.gte("accident_date", from);
@@ -101,7 +105,7 @@ export async function querySiniestralidad(supabase: SupabaseClient, filters: Rep
   const exposed = rows.reduce((s, r) => s + r.sum_insured, 0);
   // Active policies for the same filter scope
   let polQ = supabase.from("policies").select("id", { count: "exact", head: true }).eq("status", "active");
-  if (filters.program_id && filters.program_id !== "all") polQ = polQ.eq("program_id", filters.program_id);
+  polQ = polQ.eq("program_id", programOf(filters));
   const { count: activePolCount } = await polQ;
   const rate = activePolCount && activePolCount > 0 ? (total / activePolCount) * 100 : 0;
 
@@ -135,7 +139,7 @@ export async function queryRenovaciones(supabase: SupabaseClient, filters: Repor
       replaced:policies!renewed_from_id(id, folio)
     `).gte("end_date", pastStr).lte("end_date", futureStr)
      .in("status", ["active","expired"]).order("end_date", { ascending: true }).limit(5000);
-  if (filters.program_id && filters.program_id !== "all") q = q.eq("program_id", filters.program_id);
+  q = q.eq("program_id", programOf(filters));
   const { data, error } = await q;
   if (error) throw error;
 
@@ -164,7 +168,8 @@ export async function queryRenovaciones(supabase: SupabaseClient, filters: Repor
 
 export async function queryVentas(supabase: SupabaseClient, filters: ReportFilters): Promise<ReportResult> {
   // Get sales reps
-  let repsQ = supabase.from("sales_reps").select("id, full_name, referral_source");
+  let repsQ = supabase.from("sales_reps").select("id, full_name, referral_source, program_id")
+    .or(`program_id.is.null,program_id.eq.${programOf(filters)}`);
   if (Array.isArray(filters.sales_rep_ids) && filters.sales_rep_ids.length > 0) {
     repsQ = repsQ.in("id", filters.sales_rep_ids);
   }
@@ -181,15 +186,19 @@ export async function queryVentas(supabase: SupabaseClient, filters: ReportFilte
   if (toD) cliQ = cliQ.lte("created_at", toD + "T23:59:59");
   const { data: clients, error: cliErr } = await cliQ;
   if (cliErr) throw cliErr;
+  // Solo clientes inscritos en el programa del reporte.
+  const { data: cps, error: cpErr } = await supabase.from("client_programs").select("client_id").eq("program_id", programOf(filters));
+  if (cpErr) throw cpErr;
+  const inProgram = new Set((cps ?? []).map((x: any) => x.client_id));
   const clientsByRep = new Map<string, string[]>();
   (clients ?? []).forEach((c: any) => {
-    if (!c.sales_rep_id) return;
+    if (!c.sales_rep_id || !inProgram.has(c.id)) return;
     const arr = clientsByRep.get(c.sales_rep_id) ?? [];
     arr.push(c.id); clientsByRep.set(c.sales_rep_id, arr);
   });
 
   let polQ = supabase.from("policies").select("id, client_id, premium, status, program_id");
-  if (filters.program_id && filters.program_id !== "all") polQ = polQ.eq("program_id", filters.program_id);
+  polQ = polQ.eq("program_id", programOf(filters));
   const { data: pols, error: polErr } = await polQ;
   if (polErr) throw polErr;
 
@@ -219,7 +228,7 @@ export async function queryActividad(supabase: SupabaseClient, filters: ReportFi
       id, created_at, user_id, action, entity_type, entity_id, program_id, ip_address,
       programs(code)
     `).order("created_at", { ascending: false }).limit(10000);
-  if (filters.program_id && filters.program_id !== "all") q = q.eq("program_id", filters.program_id);
+  q = q.eq("program_id", programOf(filters));
   const fromD = dateOrNull(filters.date_from);
   const toD = dateOrNull(filters.date_to);
   if (fromD) q = q.gte("created_at", fromD);
@@ -255,7 +264,7 @@ export async function queryEmisiones(supabase: SupabaseClient, filters: ReportFi
       id, start_date, premium, sum_insured, renewed_from_id, client_id,
       programs(code)
     `).order("start_date", { ascending: false }).limit(10000);
-  if (filters.program_id && filters.program_id !== "all") q = q.eq("program_id", filters.program_id);
+  q = q.eq("program_id", programOf(filters));
   const from = dateOrNull(filters.date_from); const to = dateOrNull(filters.date_to);
   if (from) q = q.gte("start_date", from);
   if (to) q = q.lte("start_date", to);

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useProgram } from "@/lib/program-context";
+import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { getMedicalPassBytes } from "@/lib/incidents.functions";
 import { downloadBlob } from "@/lib/pdf/generateCertificate.browser";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ const PRIORITY = new Set(["reported", "pending_review"]);
 
 function IncidentsList() {
   const { activeProgram } = useProgram();
+  const programId = useActiveProgramId();
   const [status, setStatus] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [from, setFrom] = useState("");
@@ -49,7 +50,7 @@ function IncidentsList() {
         .select("id, status, reported_at, occurred_at, accident_date, hospital, description, policies!inner(folio, program_id, programs(code, name, color_primary)), clients!inner(first_name, last_name, curp), medical_passes(id, pdf_url, revoked_at, valid_until)")
         .order("reported_at", { ascending: false })
         .limit(500);
-      if (activeProgram?.id) q = q.eq("policies.program_id", activeProgram.id);
+      q = q.eq("policies.program_id", programId);
       if (status !== "all") q = q.eq("status", status as any);
       if (from) q = q.gte("accident_date", from);
       if (to) q = q.lte("accident_date", to);

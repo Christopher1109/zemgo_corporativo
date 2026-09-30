@@ -27,7 +27,7 @@ export function usePortfolio() {
   const fetchPortfolio = useServerFn(getMySalesRepPortfolio);
   return useQuery({
     queryKey: ["my-sales-rep-portfolio", activeProgram?.id ?? null],
-    queryFn: () => fetchPortfolio({ data: { programId: activeProgram?.id ?? null } }),
+    queryFn: () => fetchPortfolio({ data: { programId: activeProgram?.id ?? "00000000-0000-0000-0000-000000000000" } }),
   });
 }
 
