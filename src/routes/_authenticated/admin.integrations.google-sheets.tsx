@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter, type ErrorComponentProps } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -40,7 +40,7 @@ import { SheetProblemRowsCard } from "@/components/admin/sheet-problem-rows";
 
 export const Route = createFileRoute("/_authenticated/admin/integrations/google-sheets")({
   component: GoogleSheetsAdminPage,
-  errorComponent: ({ error, reset }) => {
+  errorComponent: ({ error, reset }: ErrorComponentProps) => {
     const router = useRouter();
     return (
       <AppShell>
@@ -50,7 +50,7 @@ export const Route = createFileRoute("/_authenticated/admin/integrations/google-
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <ShieldAlert className="h-5 w-5" /> No se pudo cargar
               </CardTitle>
-              <CardDescription>{error.message}</CardDescription>
+              <CardDescription>{error instanceof Error ? error.message : String(error)}</CardDescription>
             </CardHeader>
             <CardContent>
               <Button

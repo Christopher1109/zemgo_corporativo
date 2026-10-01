@@ -102,11 +102,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="h-screen flex bg-background w-full overflow-hidden">
       {/* Sidebar */}
       <aside
-        className="w-64 shrink-0 flex flex-col text-white h-screen sticky top-0 overflow-y-auto"
-        style={{ backgroundColor: "var(--program-primary, #0f2a4a)" }}
+        className="w-60 shrink-0 flex flex-col text-white h-screen sticky top-0 overflow-y-auto"
+        style={{
+          background:
+            "linear-gradient(180deg, var(--program-primary, #0f2a4a) 0%, color-mix(in oklab, var(--program-primary, #0f2a4a) 80%, black) 100%)",
+        }}
       >
-        <div className="p-4 border-b border-white/10">
-          <div className="rounded-md bg-white/95 px-3 py-4 flex items-center justify-center h-24">
+        <div className="px-4 pt-4 pb-3">
+          <div className="rounded-xl bg-white px-3 py-3 flex items-center justify-center h-16 shadow-sm">
             {activeProgram?.code ? (
               <ProgramLogo
                 code={activeProgram.code}
@@ -116,26 +119,24 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="text-xs text-slate-500">Sin programa</span>
             )}
           </div>
-          <div className="mt-2 text-[10px] uppercase tracking-widest opacity-70 text-center">
+          <div className="mt-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/60 text-center">
             {isSalesRepOnly ? "Portal de vendedores" : "Administración"}
           </div>
         </div>
 
         {/* Program selector */}
         {(!isSalesRepOnly || programs.length > 1) && (
-        <div className="p-4 border-b border-white/10">
-          <div className="text-xs uppercase tracking-wider opacity-75 mb-2">Programa activo</div>
+        <div className="px-4 pb-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="w-full flex items-center justify-between gap-2 rounded-md px-3 py-2 text-left hover:bg-white/10 transition border border-white/20"
-                style={{ backgroundColor: "var(--program-accent)" }}
+                className="w-full flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-left transition bg-white/10 hover:bg-white/15 ring-1 ring-white/15"
               >
                 <div className="min-w-0">
                   <div className="text-sm font-semibold truncate">{activeProgram?.name ?? "Selecciona…"}</div>
-                  <div className="text-xs opacity-80 truncate">{activeProgram?.insurance_branch}</div>
+                  <div className="text-[11px] text-white/60 truncate">{activeProgram?.insurance_branch}</div>
                 </div>
-                <ChevronDown className="h-4 w-4 shrink-0" />
+                <ChevronDown className="h-4 w-4 shrink-0 text-white/60" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
@@ -161,7 +162,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
 
         {/* Nav */}
-        <nav className="flex-1 p-2 space-y-1">
+        <nav className="flex-1 px-3 pt-1 pb-3 space-y-0.5">
+          <div className="px-3 pb-1.5 pt-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white/45">
+            Menú
+          </div>
           {visibleNav.map((item) => {
             const Icon = item.icon;
             const active = item.to === "/mi-cartera"
@@ -172,30 +176,38 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition",
-                  active ? "bg-white/20 font-medium" : "hover:bg-white/10",
+                  "group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors",
+                  active
+                    ? "bg-white font-semibold shadow-sm"
+                    : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
+                style={active ? { color: "var(--program-primary, #0f2a4a)" } : undefined}
               >
-                <Icon className="h-4 w-4" />
-                <span className="flex-1">{item.label}</span>
+                <Icon
+                  className={cn(
+                    "h-4 w-4 shrink-0",
+                    active ? "" : "text-white/60 group-hover:text-white",
+                  )}
+                />
+                <span className="flex-1 truncate">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-
-
-
-
-        <div className="p-3 border-t border-white/10 text-xs opacity-80 truncate">{user?.email}</div>
+        <div className="mx-3 mb-3 flex items-center gap-2.5 rounded-lg bg-white/10 px-3 py-2.5 ring-1 ring-white/10">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-[11px] font-semibold uppercase">
+            {(user?.email ?? "?").slice(0, 2)}
+          </span>
+          <span className="truncate text-xs text-white/80">{user?.email}</span>
+        </div>
       </aside>
 
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <header
-          className="h-14 px-6 border-b flex items-center justify-between shrink-0"
-          style={{ borderTopColor: "var(--program-primary)", borderTopWidth: 3, borderTopStyle: "solid" }}
+          className="h-14 px-6 border-b flex items-center justify-between shrink-0 bg-background/80 backdrop-blur"
         >
           <div className="flex items-center gap-3">
             <span
