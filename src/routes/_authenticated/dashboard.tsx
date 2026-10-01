@@ -279,7 +279,7 @@ function Dashboard() {
                           className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[11px] font-semibold text-white"
                           style={{ backgroundColor: "var(--program-primary)" }}
                         >
-                          {(c.first_name?.[0] ?? "?)}{(c.last_name?.[0] ?? "")}
+                          {(c.first_name?.[0] ?? "?")}{(c.last_name?.[0] ?? "")}
                         </span>
                         <div className="min-w-0">
                           <div className="text-sm font-medium truncate">{c.first_name} {c.last_name}</div>
