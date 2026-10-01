@@ -9,68 +9,118 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
-import { Route as AuthenticatedCertificatesRouteImport } from './routes/_authenticated/certificates'
-import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
-import { Route as AuthenticatedHospitalsRouteImport } from './routes/_authenticated/hospitals'
-import { Route as AuthenticatedIncidentsRouteImport } from './routes/_authenticated/incidents'
-import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
-import { Route as AuthenticatedMiCarteraRouteImport } from './routes/_authenticated/mi-cartera'
-import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
-import { Route as AuthenticatedPoliciesRouteImport } from './routes/_authenticated/policies'
-import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
-import { Route as AuthenticatedClientsClientIdRouteImport } from './routes/_authenticated/clients.$clientId'
-import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
-import { Route as AuthenticatedCompaniesIndexRouteImport } from './routes/_authenticated/companies.index'
-import { Route as AuthenticatedCompaniesCompanyIdRouteImport } from './routes/_authenticated/companies.$companyId'
-import { Route as AuthenticatedIncidentsIndexRouteImport } from './routes/_authenticated/incidents.index'
-import { Route as AuthenticatedIncidentsIncidentIdRouteImport } from './routes/_authenticated/incidents.$incidentId'
-import { Route as AuthenticatedIncidentsDashboardRouteImport } from './routes/_authenticated/incidents.dashboard'
-import { Route as AuthenticatedIncidentsNewRouteImport } from './routes/_authenticated/incidents.new'
-import { Route as AuthenticatedMiCarteraIndexRouteImport } from './routes/_authenticated/mi-cartera.index'
-import { Route as AuthenticatedMiCarteraClientesRouteImport } from './routes/_authenticated/mi-cartera.clientes'
-import { Route as AuthenticatedMiCarteraComisionesRouteImport } from './routes/_authenticated/mi-cartera.comisiones'
-import { Route as AuthenticatedMiCarteraPagosRouteImport } from './routes/_authenticated/mi-cartera.pagos'
-import { Route as AuthenticatedMiCarteraRenovacionesRouteImport } from './routes/_authenticated/mi-cartera.renovaciones'
-import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments.index'
-import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
-import { Route as AuthenticatedPoliciesIndexRouteImport } from './routes/_authenticated/policies.index'
-import { Route as AuthenticatedPoliciesPolicyIdRouteImport } from './routes/_authenticated/policies.$policyId'
-import { Route as AuthenticatedPoliciesNewRouteImport } from './routes/_authenticated/policies.new'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedPoliciesRouteImport } from './routes/_authenticated/policies'
+import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
+import { Route as AuthenticatedMiCarteraRouteImport } from './routes/_authenticated/mi-cartera'
+import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
+import { Route as AuthenticatedIncidentsRouteImport } from './routes/_authenticated/incidents'
+import { Route as AuthenticatedHospitalsRouteImport } from './routes/_authenticated/hospitals'
+import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
+import { Route as AuthenticatedCertificatesRouteImport } from './routes/_authenticated/certificates'
+import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedSalesRepsIndexRouteImport } from './routes/_authenticated/sales-reps.index'
-import { Route as AuthenticatedSalesRepsRepIdRouteImport } from './routes/_authenticated/sales-reps.$repId'
-import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
+import { Route as AuthenticatedPoliciesIndexRouteImport } from './routes/_authenticated/policies.index'
+import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments.index'
+import { Route as AuthenticatedMiCarteraIndexRouteImport } from './routes/_authenticated/mi-cartera.index'
+import { Route as AuthenticatedIncidentsIndexRouteImport } from './routes/_authenticated/incidents.index'
+import { Route as AuthenticatedCompaniesIndexRouteImport } from './routes/_authenticated/companies.index'
+import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
 import { Route as ApiPublicPdfSmokeRouteImport } from './routes/api/public/pdf-smoke'
-import { Route as AuthenticatedAdminIntegrationsGoogleSheetsRouteImport } from './routes/_authenticated/admin.integrations.google-sheets'
-import { Route as ApiPublicHooksBankReconciliationRouteImport } from './routes/api/public/hooks/bank-reconciliation'
-import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
-import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
+import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
+import { Route as AuthenticatedSalesRepsRepIdRouteImport } from './routes/_authenticated/sales-reps.$repId'
+import { Route as AuthenticatedPoliciesNewRouteImport } from './routes/_authenticated/policies.new'
+import { Route as AuthenticatedPoliciesPolicyIdRouteImport } from './routes/_authenticated/policies.$policyId'
+import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
+import { Route as AuthenticatedMiCarteraRenovacionesRouteImport } from './routes/_authenticated/mi-cartera.renovaciones'
+import { Route as AuthenticatedMiCarteraPagosRouteImport } from './routes/_authenticated/mi-cartera.pagos'
+import { Route as AuthenticatedMiCarteraComisionesRouteImport } from './routes/_authenticated/mi-cartera.comisiones'
+import { Route as AuthenticatedMiCarteraClientesRouteImport } from './routes/_authenticated/mi-cartera.clientes'
+import { Route as AuthenticatedIncidentsNewRouteImport } from './routes/_authenticated/incidents.new'
+import { Route as AuthenticatedIncidentsDashboardRouteImport } from './routes/_authenticated/incidents.dashboard'
+import { Route as AuthenticatedIncidentsIncidentIdRouteImport } from './routes/_authenticated/incidents.$incidentId'
+import { Route as AuthenticatedCompaniesCompanyIdRouteImport } from './routes/_authenticated/companies.$companyId'
+import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients.new'
+import { Route as AuthenticatedClientsClientIdRouteImport } from './routes/_authenticated/clients.$clientId'
 import { Route as ApiPublicHooksSheetsSyncRouteImport } from './routes/api/public/hooks/sheets-sync'
+import { Route as ApiPublicHooksPaymentHousekeepingRouteImport } from './routes/api/public/hooks/payment-housekeeping'
+import { Route as ApiPublicHooksPassExpirationRouteImport } from './routes/api/public/hooks/pass-expiration'
+import { Route as ApiPublicHooksBankReconciliationRouteImport } from './routes/api/public/hooks/bank-reconciliation'
+import { Route as AuthenticatedAdminIntegrationsGoogleSheetsRouteImport } from './routes/_authenticated/admin.integrations.google-sheets'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
-  id: '/alerts',
-  path: '/alerts',
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPoliciesRoute = AuthenticatedPoliciesRouteImport.update({
+  id: '/policies',
+  path: '/policies',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPaymentsRoute = AuthenticatedPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMiCarteraRoute = AuthenticatedMiCarteraRouteImport.update({
+  id: '/mi-cartera',
+  path: '/mi-cartera',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedIncidentsRoute = AuthenticatedIncidentsRouteImport.update({
+  id: '/incidents',
+  path: '/incidents',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHospitalsRoute = AuthenticatedHospitalsRouteImport.update({
+  id: '/hospitals',
+  path: '/hospitals',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFinanceRoute = AuthenticatedFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCertificatesRoute =
@@ -79,143 +129,22 @@ const AuthenticatedCertificatesRoute =
     path: '/certificates',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
-  id: '/clients',
-  path: '/clients',
+const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFinanceRoute = AuthenticatedFinanceRouteImport.update({
-  id: '/finance',
-  path: '/finance',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedHospitalsRoute = AuthenticatedHospitalsRouteImport.update({
-  id: '/hospitals',
-  path: '/hospitals',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedIncidentsRoute = AuthenticatedIncidentsRouteImport.update({
-  id: '/incidents',
-  path: '/incidents',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
-  id: '/messages',
-  path: '/messages',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMiCarteraRoute = AuthenticatedMiCarteraRouteImport.update({
-  id: '/mi-cartera',
-  path: '/mi-cartera',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPaymentsRoute = AuthenticatedPaymentsRouteImport.update({
-  id: '/payments',
-  path: '/payments',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPoliciesRoute = AuthenticatedPoliciesRouteImport.update({
-  id: '/policies',
-  path: '/policies',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedClientsIndexRoute =
-  AuthenticatedClientsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedClientsRoute,
-  } as any)
-const AuthenticatedClientsClientIdRoute =
-  AuthenticatedClientsClientIdRouteImport.update({
-    id: '/$clientId',
-    path: '/$clientId',
-    getParentRoute: () => AuthenticatedClientsRoute,
-  } as any)
-const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AuthenticatedClientsRoute,
-} as any)
-const AuthenticatedCompaniesIndexRoute =
-  AuthenticatedCompaniesIndexRouteImport.update({
-    id: '/companies/',
-    path: '/companies/',
+const AuthenticatedSalesRepsIndexRoute =
+  AuthenticatedSalesRepsIndexRouteImport.update({
+    id: '/sales-reps/',
+    path: '/sales-reps/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedCompaniesCompanyIdRoute =
-  AuthenticatedCompaniesCompanyIdRouteImport.update({
-    id: '/companies/$companyId',
-    path: '/companies/$companyId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedIncidentsIndexRoute =
-  AuthenticatedIncidentsIndexRouteImport.update({
+const AuthenticatedPoliciesIndexRoute =
+  AuthenticatedPoliciesIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => AuthenticatedIncidentsRoute,
-  } as any)
-const AuthenticatedIncidentsIncidentIdRoute =
-  AuthenticatedIncidentsIncidentIdRouteImport.update({
-    id: '/$incidentId',
-    path: '/$incidentId',
-    getParentRoute: () => AuthenticatedIncidentsRoute,
-  } as any)
-const AuthenticatedIncidentsDashboardRoute =
-  AuthenticatedIncidentsDashboardRouteImport.update({
-    id: '/dashboard',
-    path: '/dashboard',
-    getParentRoute: () => AuthenticatedIncidentsRoute,
-  } as any)
-const AuthenticatedIncidentsNewRoute =
-  AuthenticatedIncidentsNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedIncidentsRoute,
-  } as any)
-const AuthenticatedMiCarteraIndexRoute =
-  AuthenticatedMiCarteraIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedMiCarteraRoute,
-  } as any)
-const AuthenticatedMiCarteraClientesRoute =
-  AuthenticatedMiCarteraClientesRouteImport.update({
-    id: '/clientes',
-    path: '/clientes',
-    getParentRoute: () => AuthenticatedMiCarteraRoute,
-  } as any)
-const AuthenticatedMiCarteraComisionesRoute =
-  AuthenticatedMiCarteraComisionesRouteImport.update({
-    id: '/comisiones',
-    path: '/comisiones',
-    getParentRoute: () => AuthenticatedMiCarteraRoute,
-  } as any)
-const AuthenticatedMiCarteraPagosRoute =
-  AuthenticatedMiCarteraPagosRouteImport.update({
-    id: '/pagos',
-    path: '/pagos',
-    getParentRoute: () => AuthenticatedMiCarteraRoute,
-  } as any)
-const AuthenticatedMiCarteraRenovacionesRoute =
-  AuthenticatedMiCarteraRenovacionesRouteImport.update({
-    id: '/renovaciones',
-    path: '/renovaciones',
-    getParentRoute: () => AuthenticatedMiCarteraRoute,
+    getParentRoute: () => AuthenticatedPoliciesRoute,
   } as any)
 const AuthenticatedPaymentsIndexRoute =
   AuthenticatedPaymentsIndexRouteImport.update({
@@ -223,16 +152,50 @@ const AuthenticatedPaymentsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedPaymentsRoute,
   } as any)
-const AuthenticatedPaymentsPaymentIdRoute =
-  AuthenticatedPaymentsPaymentIdRouteImport.update({
-    id: '/$paymentId',
-    path: '/$paymentId',
-    getParentRoute: () => AuthenticatedPaymentsRoute,
-  } as any)
-const AuthenticatedPoliciesIndexRoute =
-  AuthenticatedPoliciesIndexRouteImport.update({
+const AuthenticatedMiCarteraIndexRoute =
+  AuthenticatedMiCarteraIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedMiCarteraRoute,
+  } as any)
+const AuthenticatedIncidentsIndexRoute =
+  AuthenticatedIncidentsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedIncidentsRoute,
+  } as any)
+const AuthenticatedCompaniesIndexRoute =
+  AuthenticatedCompaniesIndexRouteImport.update({
+    id: '/companies/',
+    path: '/companies/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedClientsIndexRoute =
+  AuthenticatedClientsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedClientsRoute,
+  } as any)
+const ApiPublicPdfSmokeRoute = ApiPublicPdfSmokeRouteImport.update({
+  id: '/api/public/pdf-smoke',
+  path: '/api/public/pdf-smoke',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBootstrapRoute = ApiPublicBootstrapRouteImport.update({
+  id: '/api/public/bootstrap',
+  path: '/api/public/bootstrap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSalesRepsRepIdRoute =
+  AuthenticatedSalesRepsRepIdRouteImport.update({
+    id: '/sales-reps/$repId',
+    path: '/sales-reps/$repId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPoliciesNewRoute =
+  AuthenticatedPoliciesNewRouteImport.update({
+    id: '/new',
+    path: '/new',
     getParentRoute: () => AuthenticatedPoliciesRoute,
   } as any)
 const AuthenticatedPoliciesPolicyIdRoute =
@@ -241,50 +204,75 @@ const AuthenticatedPoliciesPolicyIdRoute =
     path: '/$policyId',
     getParentRoute: () => AuthenticatedPoliciesRoute,
   } as any)
-const AuthenticatedPoliciesNewRoute =
-  AuthenticatedPoliciesNewRouteImport.update({
+const AuthenticatedPaymentsPaymentIdRoute =
+  AuthenticatedPaymentsPaymentIdRouteImport.update({
+    id: '/$paymentId',
+    path: '/$paymentId',
+    getParentRoute: () => AuthenticatedPaymentsRoute,
+  } as any)
+const AuthenticatedMiCarteraRenovacionesRoute =
+  AuthenticatedMiCarteraRenovacionesRouteImport.update({
+    id: '/renovaciones',
+    path: '/renovaciones',
+    getParentRoute: () => AuthenticatedMiCarteraRoute,
+  } as any)
+const AuthenticatedMiCarteraPagosRoute =
+  AuthenticatedMiCarteraPagosRouteImport.update({
+    id: '/pagos',
+    path: '/pagos',
+    getParentRoute: () => AuthenticatedMiCarteraRoute,
+  } as any)
+const AuthenticatedMiCarteraComisionesRoute =
+  AuthenticatedMiCarteraComisionesRouteImport.update({
+    id: '/comisiones',
+    path: '/comisiones',
+    getParentRoute: () => AuthenticatedMiCarteraRoute,
+  } as any)
+const AuthenticatedMiCarteraClientesRoute =
+  AuthenticatedMiCarteraClientesRouteImport.update({
+    id: '/clientes',
+    path: '/clientes',
+    getParentRoute: () => AuthenticatedMiCarteraRoute,
+  } as any)
+const AuthenticatedIncidentsNewRoute =
+  AuthenticatedIncidentsNewRouteImport.update({
     id: '/new',
     path: '/new',
-    getParentRoute: () => AuthenticatedPoliciesRoute,
+    getParentRoute: () => AuthenticatedIncidentsRoute,
   } as any)
-const AuthenticatedSalesRepsIndexRoute =
-  AuthenticatedSalesRepsIndexRouteImport.update({
-    id: '/sales-reps/',
-    path: '/sales-reps/',
+const AuthenticatedIncidentsDashboardRoute =
+  AuthenticatedIncidentsDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedIncidentsRoute,
+  } as any)
+const AuthenticatedIncidentsIncidentIdRoute =
+  AuthenticatedIncidentsIncidentIdRouteImport.update({
+    id: '/$incidentId',
+    path: '/$incidentId',
+    getParentRoute: () => AuthenticatedIncidentsRoute,
+  } as any)
+const AuthenticatedCompaniesCompanyIdRoute =
+  AuthenticatedCompaniesCompanyIdRouteImport.update({
+    id: '/companies/$companyId',
+    path: '/companies/$companyId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedSalesRepsRepIdRoute =
-  AuthenticatedSalesRepsRepIdRouteImport.update({
-    id: '/sales-reps/$repId',
-    path: '/sales-reps/$repId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const ApiPublicBootstrapRoute = ApiPublicBootstrapRouteImport.update({
-  id: '/api/public/bootstrap',
-  path: '/api/public/bootstrap',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AuthenticatedClientsRoute,
 } as any)
-const ApiPublicPdfSmokeRoute = ApiPublicPdfSmokeRouteImport.update({
-  id: '/api/public/pdf-smoke',
-  path: '/api/public/pdf-smoke',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedAdminIntegrationsGoogleSheetsRoute =
-  AuthenticatedAdminIntegrationsGoogleSheetsRouteImport.update({
-    id: '/admin/integrations/google-sheets',
-    path: '/admin/integrations/google-sheets',
-    getParentRoute: () => AuthenticatedRouteRoute,
+const AuthenticatedClientsClientIdRoute =
+  AuthenticatedClientsClientIdRouteImport.update({
+    id: '/$clientId',
+    path: '/$clientId',
+    getParentRoute: () => AuthenticatedClientsRoute,
   } as any)
-const ApiPublicHooksBankReconciliationRoute =
-  ApiPublicHooksBankReconciliationRouteImport.update({
-    id: '/api/public/hooks/bank-reconciliation',
-    path: '/api/public/hooks/bank-reconciliation',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksPassExpirationRoute =
-  ApiPublicHooksPassExpirationRouteImport.update({
-    id: '/api/public/hooks/pass-expiration',
-    path: '/api/public/hooks/pass-expiration',
+const ApiPublicHooksSheetsSyncRoute =
+  ApiPublicHooksSheetsSyncRouteImport.update({
+    id: '/api/public/hooks/sheets-sync',
+    path: '/api/public/hooks/sheets-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksPaymentHousekeepingRoute =
@@ -293,11 +281,23 @@ const ApiPublicHooksPaymentHousekeepingRoute =
     path: '/api/public/hooks/payment-housekeeping',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksSheetsSyncRoute =
-  ApiPublicHooksSheetsSyncRouteImport.update({
-    id: '/api/public/hooks/sheets-sync',
-    path: '/api/public/hooks/sheets-sync',
+const ApiPublicHooksPassExpirationRoute =
+  ApiPublicHooksPassExpirationRouteImport.update({
+    id: '/api/public/hooks/pass-expiration',
+    path: '/api/public/hooks/pass-expiration',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksBankReconciliationRoute =
+  ApiPublicHooksBankReconciliationRouteImport.update({
+    id: '/api/public/hooks/bank-reconciliation',
+    path: '/api/public/hooks/bank-reconciliation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedAdminIntegrationsGoogleSheetsRoute =
+  AuthenticatedAdminIntegrationsGoogleSheetsRouteImport.update({
+    id: '/admin/integrations/google-sheets',
+    path: '/admin/integrations/google-sheets',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -580,11 +580,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -594,88 +594,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/alerts': {
-      id: '/_authenticated/alerts'
-      path: '/alerts'
-      fullPath: '/alerts'
-      preLoaderRoute: typeof AuthenticatedAlertsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/certificates': {
-      id: '/_authenticated/certificates'
-      path: '/certificates'
-      fullPath: '/certificates'
-      preLoaderRoute: typeof AuthenticatedCertificatesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/clients': {
-      id: '/_authenticated/clients'
-      path: '/clients'
-      fullPath: '/clients'
-      preLoaderRoute: typeof AuthenticatedClientsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/finance': {
-      id: '/_authenticated/finance'
-      path: '/finance'
-      fullPath: '/finance'
-      preLoaderRoute: typeof AuthenticatedFinanceRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/hospitals': {
-      id: '/_authenticated/hospitals'
-      path: '/hospitals'
-      fullPath: '/hospitals'
-      preLoaderRoute: typeof AuthenticatedHospitalsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/incidents': {
-      id: '/_authenticated/incidents'
-      path: '/incidents'
-      fullPath: '/incidents'
-      preLoaderRoute: typeof AuthenticatedIncidentsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/messages': {
-      id: '/_authenticated/messages'
-      path: '/messages'
-      fullPath: '/messages'
-      preLoaderRoute: typeof AuthenticatedMessagesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/mi-cartera': {
-      id: '/_authenticated/mi-cartera'
-      path: '/mi-cartera'
-      fullPath: '/mi-cartera'
-      preLoaderRoute: typeof AuthenticatedMiCarteraRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/payments': {
-      id: '/_authenticated/payments'
-      path: '/payments'
-      fullPath: '/payments'
-      preLoaderRoute: typeof AuthenticatedPaymentsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/policies': {
-      id: '/_authenticated/policies'
-      path: '/policies'
-      fullPath: '/policies'
-      preLoaderRoute: typeof AuthenticatedPoliciesRouteImport
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/reports': {
@@ -685,11 +615,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+    '/_authenticated/policies': {
+      id: '/_authenticated/policies'
+      path: '/policies'
+      fullPath: '/policies'
+      preLoaderRoute: typeof AuthenticatedPoliciesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payments': {
+      id: '/_authenticated/payments'
+      path: '/payments'
+      fullPath: '/payments'
+      preLoaderRoute: typeof AuthenticatedPaymentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mi-cartera': {
+      id: '/_authenticated/mi-cartera'
+      path: '/mi-cartera'
+      fullPath: '/mi-cartera'
+      preLoaderRoute: typeof AuthenticatedMiCarteraRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/messages': {
+      id: '/_authenticated/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AuthenticatedMessagesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/incidents': {
+      id: '/_authenticated/incidents'
+      path: '/incidents'
+      fullPath: '/incidents'
+      preLoaderRoute: typeof AuthenticatedIncidentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hospitals': {
+      id: '/_authenticated/hospitals'
+      path: '/hospitals'
+      fullPath: '/hospitals'
+      preLoaderRoute: typeof AuthenticatedHospitalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/finance': {
+      id: '/_authenticated/finance'
+      path: '/finance'
+      fullPath: '/finance'
+      preLoaderRoute: typeof AuthenticatedFinanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/clients': {
+      id: '/_authenticated/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof AuthenticatedClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/certificates': {
+      id: '/_authenticated/certificates'
+      path: '/certificates'
+      fullPath: '/certificates'
+      preLoaderRoute: typeof AuthenticatedCertificatesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/alerts': {
+      id: '/_authenticated/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AuthenticatedAlertsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales-reps/': {
+      id: '/_authenticated/sales-reps/'
+      path: '/sales-reps'
+      fullPath: '/sales-reps/'
+      preLoaderRoute: typeof AuthenticatedSalesRepsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/policies/': {
+      id: '/_authenticated/policies/'
+      path: '/'
+      fullPath: '/policies/'
+      preLoaderRoute: typeof AuthenticatedPoliciesIndexRouteImport
+      parentRoute: typeof AuthenticatedPoliciesRoute
+    }
+    '/_authenticated/payments/': {
+      id: '/_authenticated/payments/'
+      path: '/'
+      fullPath: '/payments/'
+      preLoaderRoute: typeof AuthenticatedPaymentsIndexRouteImport
+      parentRoute: typeof AuthenticatedPaymentsRoute
+    }
+    '/_authenticated/mi-cartera/': {
+      id: '/_authenticated/mi-cartera/'
+      path: '/'
+      fullPath: '/mi-cartera/'
+      preLoaderRoute: typeof AuthenticatedMiCarteraIndexRouteImport
+      parentRoute: typeof AuthenticatedMiCarteraRoute
+    }
+    '/_authenticated/incidents/': {
+      id: '/_authenticated/incidents/'
+      path: '/'
+      fullPath: '/incidents/'
+      preLoaderRoute: typeof AuthenticatedIncidentsIndexRouteImport
+      parentRoute: typeof AuthenticatedIncidentsRoute
+    }
+    '/_authenticated/companies/': {
+      id: '/_authenticated/companies/'
+      path: '/companies'
+      fullPath: '/companies/'
+      preLoaderRoute: typeof AuthenticatedCompaniesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/clients/': {
@@ -699,116 +741,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsIndexRouteImport
       parentRoute: typeof AuthenticatedClientsRoute
     }
-    '/_authenticated/clients/$clientId': {
-      id: '/_authenticated/clients/$clientId'
-      path: '/$clientId'
-      fullPath: '/clients/$clientId'
-      preLoaderRoute: typeof AuthenticatedClientsClientIdRouteImport
-      parentRoute: typeof AuthenticatedClientsRoute
+    '/api/public/pdf-smoke': {
+      id: '/api/public/pdf-smoke'
+      path: '/api/public/pdf-smoke'
+      fullPath: '/api/public/pdf-smoke'
+      preLoaderRoute: typeof ApiPublicPdfSmokeRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/clients/new': {
-      id: '/_authenticated/clients/new'
-      path: '/new'
-      fullPath: '/clients/new'
-      preLoaderRoute: typeof AuthenticatedClientsNewRouteImport
-      parentRoute: typeof AuthenticatedClientsRoute
+    '/api/public/bootstrap': {
+      id: '/api/public/bootstrap'
+      path: '/api/public/bootstrap'
+      fullPath: '/api/public/bootstrap'
+      preLoaderRoute: typeof ApiPublicBootstrapRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/companies/': {
-      id: '/_authenticated/companies/'
-      path: '/companies'
-      fullPath: '/companies/'
-      preLoaderRoute: typeof AuthenticatedCompaniesIndexRouteImport
+    '/_authenticated/sales-reps/$repId': {
+      id: '/_authenticated/sales-reps/$repId'
+      path: '/sales-reps/$repId'
+      fullPath: '/sales-reps/$repId'
+      preLoaderRoute: typeof AuthenticatedSalesRepsRepIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/companies/$companyId': {
-      id: '/_authenticated/companies/$companyId'
-      path: '/companies/$companyId'
-      fullPath: '/companies/$companyId'
-      preLoaderRoute: typeof AuthenticatedCompaniesCompanyIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/incidents/': {
-      id: '/_authenticated/incidents/'
-      path: '/'
-      fullPath: '/incidents/'
-      preLoaderRoute: typeof AuthenticatedIncidentsIndexRouteImport
-      parentRoute: typeof AuthenticatedIncidentsRoute
-    }
-    '/_authenticated/incidents/$incidentId': {
-      id: '/_authenticated/incidents/$incidentId'
-      path: '/$incidentId'
-      fullPath: '/incidents/$incidentId'
-      preLoaderRoute: typeof AuthenticatedIncidentsIncidentIdRouteImport
-      parentRoute: typeof AuthenticatedIncidentsRoute
-    }
-    '/_authenticated/incidents/dashboard': {
-      id: '/_authenticated/incidents/dashboard'
-      path: '/dashboard'
-      fullPath: '/incidents/dashboard'
-      preLoaderRoute: typeof AuthenticatedIncidentsDashboardRouteImport
-      parentRoute: typeof AuthenticatedIncidentsRoute
-    }
-    '/_authenticated/incidents/new': {
-      id: '/_authenticated/incidents/new'
+    '/_authenticated/policies/new': {
+      id: '/_authenticated/policies/new'
       path: '/new'
-      fullPath: '/incidents/new'
-      preLoaderRoute: typeof AuthenticatedIncidentsNewRouteImport
-      parentRoute: typeof AuthenticatedIncidentsRoute
-    }
-    '/_authenticated/mi-cartera/': {
-      id: '/_authenticated/mi-cartera/'
-      path: '/'
-      fullPath: '/mi-cartera/'
-      preLoaderRoute: typeof AuthenticatedMiCarteraIndexRouteImport
-      parentRoute: typeof AuthenticatedMiCarteraRoute
-    }
-    '/_authenticated/mi-cartera/clientes': {
-      id: '/_authenticated/mi-cartera/clientes'
-      path: '/clientes'
-      fullPath: '/mi-cartera/clientes'
-      preLoaderRoute: typeof AuthenticatedMiCarteraClientesRouteImport
-      parentRoute: typeof AuthenticatedMiCarteraRoute
-    }
-    '/_authenticated/mi-cartera/comisiones': {
-      id: '/_authenticated/mi-cartera/comisiones'
-      path: '/comisiones'
-      fullPath: '/mi-cartera/comisiones'
-      preLoaderRoute: typeof AuthenticatedMiCarteraComisionesRouteImport
-      parentRoute: typeof AuthenticatedMiCarteraRoute
-    }
-    '/_authenticated/mi-cartera/pagos': {
-      id: '/_authenticated/mi-cartera/pagos'
-      path: '/pagos'
-      fullPath: '/mi-cartera/pagos'
-      preLoaderRoute: typeof AuthenticatedMiCarteraPagosRouteImport
-      parentRoute: typeof AuthenticatedMiCarteraRoute
-    }
-    '/_authenticated/mi-cartera/renovaciones': {
-      id: '/_authenticated/mi-cartera/renovaciones'
-      path: '/renovaciones'
-      fullPath: '/mi-cartera/renovaciones'
-      preLoaderRoute: typeof AuthenticatedMiCarteraRenovacionesRouteImport
-      parentRoute: typeof AuthenticatedMiCarteraRoute
-    }
-    '/_authenticated/payments/': {
-      id: '/_authenticated/payments/'
-      path: '/'
-      fullPath: '/payments/'
-      preLoaderRoute: typeof AuthenticatedPaymentsIndexRouteImport
-      parentRoute: typeof AuthenticatedPaymentsRoute
-    }
-    '/_authenticated/payments/$paymentId': {
-      id: '/_authenticated/payments/$paymentId'
-      path: '/$paymentId'
-      fullPath: '/payments/$paymentId'
-      preLoaderRoute: typeof AuthenticatedPaymentsPaymentIdRouteImport
-      parentRoute: typeof AuthenticatedPaymentsRoute
-    }
-    '/_authenticated/policies/': {
-      id: '/_authenticated/policies/'
-      path: '/'
-      fullPath: '/policies/'
-      preLoaderRoute: typeof AuthenticatedPoliciesIndexRouteImport
+      fullPath: '/policies/new'
+      preLoaderRoute: typeof AuthenticatedPoliciesNewRouteImport
       parentRoute: typeof AuthenticatedPoliciesRoute
     }
     '/_authenticated/policies/$policyId': {
@@ -818,60 +776,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPoliciesPolicyIdRouteImport
       parentRoute: typeof AuthenticatedPoliciesRoute
     }
-    '/_authenticated/policies/new': {
-      id: '/_authenticated/policies/new'
+    '/_authenticated/payments/$paymentId': {
+      id: '/_authenticated/payments/$paymentId'
+      path: '/$paymentId'
+      fullPath: '/payments/$paymentId'
+      preLoaderRoute: typeof AuthenticatedPaymentsPaymentIdRouteImport
+      parentRoute: typeof AuthenticatedPaymentsRoute
+    }
+    '/_authenticated/mi-cartera/renovaciones': {
+      id: '/_authenticated/mi-cartera/renovaciones'
+      path: '/renovaciones'
+      fullPath: '/mi-cartera/renovaciones'
+      preLoaderRoute: typeof AuthenticatedMiCarteraRenovacionesRouteImport
+      parentRoute: typeof AuthenticatedMiCarteraRoute
+    }
+    '/_authenticated/mi-cartera/pagos': {
+      id: '/_authenticated/mi-cartera/pagos'
+      path: '/pagos'
+      fullPath: '/mi-cartera/pagos'
+      preLoaderRoute: typeof AuthenticatedMiCarteraPagosRouteImport
+      parentRoute: typeof AuthenticatedMiCarteraRoute
+    }
+    '/_authenticated/mi-cartera/comisiones': {
+      id: '/_authenticated/mi-cartera/comisiones'
+      path: '/comisiones'
+      fullPath: '/mi-cartera/comisiones'
+      preLoaderRoute: typeof AuthenticatedMiCarteraComisionesRouteImport
+      parentRoute: typeof AuthenticatedMiCarteraRoute
+    }
+    '/_authenticated/mi-cartera/clientes': {
+      id: '/_authenticated/mi-cartera/clientes'
+      path: '/clientes'
+      fullPath: '/mi-cartera/clientes'
+      preLoaderRoute: typeof AuthenticatedMiCarteraClientesRouteImport
+      parentRoute: typeof AuthenticatedMiCarteraRoute
+    }
+    '/_authenticated/incidents/new': {
+      id: '/_authenticated/incidents/new'
       path: '/new'
-      fullPath: '/policies/new'
-      preLoaderRoute: typeof AuthenticatedPoliciesNewRouteImport
-      parentRoute: typeof AuthenticatedPoliciesRoute
+      fullPath: '/incidents/new'
+      preLoaderRoute: typeof AuthenticatedIncidentsNewRouteImport
+      parentRoute: typeof AuthenticatedIncidentsRoute
     }
-    '/_authenticated/sales-reps/': {
-      id: '/_authenticated/sales-reps/'
-      path: '/sales-reps'
-      fullPath: '/sales-reps/'
-      preLoaderRoute: typeof AuthenticatedSalesRepsIndexRouteImport
+    '/_authenticated/incidents/dashboard': {
+      id: '/_authenticated/incidents/dashboard'
+      path: '/dashboard'
+      fullPath: '/incidents/dashboard'
+      preLoaderRoute: typeof AuthenticatedIncidentsDashboardRouteImport
+      parentRoute: typeof AuthenticatedIncidentsRoute
+    }
+    '/_authenticated/incidents/$incidentId': {
+      id: '/_authenticated/incidents/$incidentId'
+      path: '/$incidentId'
+      fullPath: '/incidents/$incidentId'
+      preLoaderRoute: typeof AuthenticatedIncidentsIncidentIdRouteImport
+      parentRoute: typeof AuthenticatedIncidentsRoute
+    }
+    '/_authenticated/companies/$companyId': {
+      id: '/_authenticated/companies/$companyId'
+      path: '/companies/$companyId'
+      fullPath: '/companies/$companyId'
+      preLoaderRoute: typeof AuthenticatedCompaniesCompanyIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/sales-reps/$repId': {
-      id: '/_authenticated/sales-reps/$repId'
-      path: '/sales-reps/$repId'
-      fullPath: '/sales-reps/$repId'
-      preLoaderRoute: typeof AuthenticatedSalesRepsRepIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/_authenticated/clients/new': {
+      id: '/_authenticated/clients/new'
+      path: '/new'
+      fullPath: '/clients/new'
+      preLoaderRoute: typeof AuthenticatedClientsNewRouteImport
+      parentRoute: typeof AuthenticatedClientsRoute
     }
-    '/api/public/bootstrap': {
-      id: '/api/public/bootstrap'
-      path: '/api/public/bootstrap'
-      fullPath: '/api/public/bootstrap'
-      preLoaderRoute: typeof ApiPublicBootstrapRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/clients/$clientId': {
+      id: '/_authenticated/clients/$clientId'
+      path: '/$clientId'
+      fullPath: '/clients/$clientId'
+      preLoaderRoute: typeof AuthenticatedClientsClientIdRouteImport
+      parentRoute: typeof AuthenticatedClientsRoute
     }
-    '/api/public/pdf-smoke': {
-      id: '/api/public/pdf-smoke'
-      path: '/api/public/pdf-smoke'
-      fullPath: '/api/public/pdf-smoke'
-      preLoaderRoute: typeof ApiPublicPdfSmokeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/admin/integrations/google-sheets': {
-      id: '/_authenticated/admin/integrations/google-sheets'
-      path: '/admin/integrations/google-sheets'
-      fullPath: '/admin/integrations/google-sheets'
-      preLoaderRoute: typeof AuthenticatedAdminIntegrationsGoogleSheetsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/api/public/hooks/bank-reconciliation': {
-      id: '/api/public/hooks/bank-reconciliation'
-      path: '/api/public/hooks/bank-reconciliation'
-      fullPath: '/api/public/hooks/bank-reconciliation'
-      preLoaderRoute: typeof ApiPublicHooksBankReconciliationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/pass-expiration': {
-      id: '/api/public/hooks/pass-expiration'
-      path: '/api/public/hooks/pass-expiration'
-      fullPath: '/api/public/hooks/pass-expiration'
-      preLoaderRoute: typeof ApiPublicHooksPassExpirationRouteImport
+    '/api/public/hooks/sheets-sync': {
+      id: '/api/public/hooks/sheets-sync'
+      path: '/api/public/hooks/sheets-sync'
+      fullPath: '/api/public/hooks/sheets-sync'
+      preLoaderRoute: typeof ApiPublicHooksSheetsSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/payment-housekeeping': {
@@ -881,12 +867,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksPaymentHousekeepingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/sheets-sync': {
-      id: '/api/public/hooks/sheets-sync'
-      path: '/api/public/hooks/sheets-sync'
-      fullPath: '/api/public/hooks/sheets-sync'
-      preLoaderRoute: typeof ApiPublicHooksSheetsSyncRouteImport
+    '/api/public/hooks/pass-expiration': {
+      id: '/api/public/hooks/pass-expiration'
+      path: '/api/public/hooks/pass-expiration'
+      fullPath: '/api/public/hooks/pass-expiration'
+      preLoaderRoute: typeof ApiPublicHooksPassExpirationRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/bank-reconciliation': {
+      id: '/api/public/hooks/bank-reconciliation'
+      path: '/api/public/hooks/bank-reconciliation'
+      fullPath: '/api/public/hooks/bank-reconciliation'
+      preLoaderRoute: typeof ApiPublicHooksBankReconciliationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/integrations/google-sheets': {
+      id: '/_authenticated/admin/integrations/google-sheets'
+      path: '/admin/integrations/google-sheets'
+      fullPath: '/admin/integrations/google-sheets'
+      preLoaderRoute: typeof AuthenticatedAdminIntegrationsGoogleSheetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
