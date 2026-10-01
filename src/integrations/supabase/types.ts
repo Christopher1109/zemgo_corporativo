@@ -452,6 +452,81 @@ export type Database = {
           },
         ]
       }
+      company_charges: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          due_date: string
+          id: string
+          insured_count: number
+          method: Database["public"]["Enums"]["payment_method"] | null
+          notes: string | null
+          paid_amount: number | null
+          paid_at: string | null
+          period: string
+          program_id: string
+          reference: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          due_date: string
+          id?: string
+          insured_count?: number
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          period: string
+          program_id: string
+          reference?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string
+          id?: string
+          insured_count?: number
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          period?: string
+          program_id?: string
+          reference?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_charges_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_charges_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_imports: {
         Row: {
           company_id: string
@@ -2906,6 +2981,10 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_company_monthly_update: {
+        Args: { _company_id: string; _payload: Json }
+        Returns: Json
+      }
       apply_invite_access_matrix: {
         Args: { _access: Json; _phone: string; _user_id: string }
         Returns: Json
@@ -2962,6 +3041,7 @@ export type Database = {
         Returns: undefined
       }
       generate_bank_reference: { Args: { _payment_id: string }; Returns: Json }
+      generate_company_charges: { Args: never; Returns: number }
       generate_pending_payments: { Args: never; Returns: undefined }
       get_action_items: { Args: { _program_id: string }; Returns: Json }
       get_dashboard_kpis: { Args: { _program_id: string }; Returns: Json }
@@ -3080,6 +3160,17 @@ export type Database = {
       }
       manual_activation_preview: {
         Args: { _client_id: string; _program_id: string }
+        Returns: Json
+      }
+      mark_company_charge_paid: {
+        Args: {
+          _charge_id: string
+          _method: Database["public"]["Enums"]["payment_method"]
+          _notes: string
+          _paid_amount: number
+          _paid_at: string
+          _reference: string
+        }
         Returns: Json
       }
       mark_overdue_payments: { Args: never; Returns: undefined }
