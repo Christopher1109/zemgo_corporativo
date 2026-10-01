@@ -127,7 +127,7 @@ function Dashboard() {
   }, [alertsQ.data]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 pb-4">
+    <div className="space-y-8 pb-4">
       {/* Header */}
       <div className="flex items-end justify-between gap-4">
         <div className="min-w-0">
