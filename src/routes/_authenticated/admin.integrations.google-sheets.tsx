@@ -40,7 +40,7 @@ import { SheetProblemRowsCard } from "@/components/admin/sheet-problem-rows";
 
 export const Route = createFileRoute("/_authenticated/admin/integrations/google-sheets")({
   component: GoogleSheetsAdminPage,
-  errorComponent: ({ error, reset }) => {
+  errorComponent: ({ error, reset }: { error: Error; reset: () => void }) => {
     const router = useRouter();
     return (
       <AppShell>
