@@ -105,7 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="w-60 shrink-0 flex flex-col text-white h-screen sticky top-0 overflow-y-auto"
         style={{
           background:
-            "linear-gradient(180deg, var(--program-primary, #0f2a4a) 0%, color-mix(in oklab, var(--program-primary, #0f2a4a) 82%, black) 100%)",
+            "linear-gradient(180deg, var(--program-primary, #0f2a4a) 0%, color-mix(in oklab, var(--program-primary, #0f2a4a) 80%, black) 100%)",
         }}
       >
         <div className="px-4 pt-4 pb-3">
@@ -162,7 +162,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
 
         {/* Nav */}
-        <nav className="flex-1 p-2 space-y-1">
+        <nav className="flex-1 px-3 pt-1 pb-3 space-y-0.5">
+          <div className="px-3 pb-1.5 pt-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white/45">
+            Menú
+          </div>
           {visibleNav.map((item) => {
             const Icon = item.icon;
             const active = item.to === "/mi-cartera"
@@ -173,30 +176,38 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition",
-                  active ? "bg-white/20 font-medium" : "hover:bg-white/10",
+                  "group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors",
+                  active
+                    ? "bg-white font-semibold shadow-sm"
+                    : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
+                style={active ? { color: "var(--program-primary, #0f2a4a)" } : undefined}
               >
-                <Icon className="h-4 w-4" />
-                <span className="flex-1">{item.label}</span>
+                <Icon
+                  className={cn(
+                    "h-4 w-4 shrink-0",
+                    active ? "" : "text-white/60 group-hover:text-white",
+                  )}
+                />
+                <span className="flex-1 truncate">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-
-
-
-
-        <div className="p-3 border-t border-white/10 text-xs opacity-80 truncate">{user?.email}</div>
+        <div className="mx-3 mb-3 flex items-center gap-2.5 rounded-lg bg-white/10 px-3 py-2.5 ring-1 ring-white/10">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-[11px] font-semibold uppercase">
+            {(user?.email ?? "?").slice(0, 2)}
+          </span>
+          <span className="truncate text-xs text-white/80">{user?.email}</span>
+        </div>
       </aside>
 
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <header
-          className="h-14 px-6 border-b flex items-center justify-between shrink-0"
-          style={{ borderTopColor: "var(--program-primary)", borderTopWidth: 3, borderTopStyle: "solid" }}
+          className="h-14 px-6 border-b flex items-center justify-between shrink-0 bg-background/80 backdrop-blur"
         >
           <div className="flex items-center gap-3">
             <span
