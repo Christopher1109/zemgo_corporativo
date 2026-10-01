@@ -50,7 +50,7 @@ export const Route = createFileRoute("/_authenticated/admin/integrations/google-
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <ShieldAlert className="h-5 w-5" /> No se pudo cargar
               </CardTitle>
-              <CardDescription>{error.message}</CardDescription>
+              <CardDescription>{error instanceof Error ? error.message : String(error)}</CardDescription>
             </CardHeader>
             <CardContent>
               <Button
