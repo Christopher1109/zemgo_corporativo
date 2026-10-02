@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { EditClientDialog } from "@/components/clients/EditClientDialog";
+import { DeleteClientDialog } from "@/components/clients/DeleteClientDialog";
 import { useActiveProgramId } from "@/lib/program-context";
 import { DataAlertBanner, DataAlertIcon } from "@/components/clients/DataAlert";
 import { getDataAlerts } from "@/lib/data-alerts";
@@ -174,6 +175,7 @@ function ClientDetail() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <EditClientDialog client={client} />
+          <DeleteClientDialog client={client} />
           {enrollments.map((e) => (
             <EnrollmentStatusControl key={e.id} enrollment={e} clientId={clientId} />
           ))}
