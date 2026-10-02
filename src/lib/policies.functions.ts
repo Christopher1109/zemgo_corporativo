@@ -57,7 +57,7 @@ export const createPolicy = createServerFn({ method: "POST" })
     // Fetch the program's configured HIR policy number (may be null until set in Settings → Póliza)
     const { data: prog } = await supabase
       .from("programs")
-      .select("policy_number")
+      .select("policy_number, default_premium")
       .eq("id", data.program_id)
       .maybeSingle();
 
@@ -74,7 +74,8 @@ export const createPolicy = createServerFn({ method: "POST" })
         end_date: data.end_date,
         contracting_party: data.contracting_party ?? null,
         contractor_id: data.contractor_id ?? null,
-        premium: data.premium ?? null,
+        // Si no se captura precio, se usa el precio vigente del programa (Configuración).
+        premium: data.premium ?? (prog as any)?.default_premium ?? null,
         sum_insured: data.sum_insured ?? null,
         status: "draft",
         created_by: userId,
