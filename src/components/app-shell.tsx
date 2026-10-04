@@ -37,7 +37,7 @@ const NAV: NavItem[] = [
   { to: "/clients", label: "Clientes", icon: Users, module: "clients" },
   { to: "/companies", label: "Empresas", icon: Building2, module: "clients" },
   { to: "/policies", label: "Certificados", icon: FileText, module: "policies" },
-  { to: "/certificates", label: "Asignación de certificados", icon: FileCheck2, module: "policies" },
+  { to: "/certificates", label: "Altas, bajas y certificados", icon: FileCheck2, module: "policies" },
   { to: "/payments", label: "Pagos", icon: CreditCard, module: "payments" },
   { to: "/finance", label: "Finanzas", icon: Wallet, module: "finance" },
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, module: "incidents" },

@@ -80,7 +80,9 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
       }
       setElsewhere(other);
       setNewSel(Object.fromEntries(r.nuevos.map((p) => [p.row, !other[p.curp]])));
-      setBajaSel(Object.fromEntries(r.bajas.map((b) => [b.current.client_id, true])));
+      // Bajas: las reportadas por la empresa se aplican. Si alguien solo "no viene en la lista" pero sigue
+      // activo en HIR (ya tiene certificado), se queda activo salvo que lo marques; si no está en HIR, se da de baja.
+      setBajaSel(Object.fromEntries(r.bajas.map((b) => [b.current.client_id, b.explicit || !b.current.certificate_number])));
       setRec(r); setFileName(file.name); setWarnings(parsed.warnings);
     } catch (e: any) {
       toast.error(e?.message ?? "No se pudo leer el archivo");
@@ -96,7 +98,7 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
     if (!window.confirm(`Se aplicarán ${nuevos.length} altas y ${bajas.length} bajas para ${company.legal_name} (${period}). ¿Continuar?`)) return;
     setBusy(true);
     const toPayload = (p: RosterPerson) => ({
-      first_name: p.first_name, last_name: p.last_name, curp: p.curp, rfc: p.curp.slice(0, 10),
+      first_name: p.first_name, last_name: p.last_name, paterno: p.paterno || null, materno: p.materno || null, curp: p.curp, rfc: p.curp.slice(0, 10),
       date_of_birth: p.date_of_birth, gender: p.gender, street: p.street, colonia: p.colonia, zip: p.zip,
       employee_number: p.employee_number, alerts: p.alerts,
       dependents: p.dependents.map((d) => ({
@@ -110,6 +112,7 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
         nuevos: nuevos.map(toPayload),
         siguen: rec.siguen.map(({ person, current }) => ({
           client_id: current.client_id, employee_number: person.employee_number, curp: person.curp,
+          paterno: person.paterno || null, materno: person.materno || null,
           date_of_birth: person.date_of_birth, gender: person.gender, street: person.street, colonia: person.colonia, zip: person.zip,
         })),
         bajas: bajas.map((b) => ({ client_id: b.current.client_id, reason: b.reason })),
@@ -133,7 +136,7 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
           <DialogTitle>Actualización mensual — {company.legal_name}</DialogTitle>
           <DialogDescription>
             Sube el listado que mandó la empresa. Antes de guardar verás quién sigue, quién es nuevo y quién se da de baja.
-            Los nuevos quedan con un certificado <b>sin número</b>, listos para enviarse a la aseguradora desde "Asignación de certificados".
+            Los nuevos quedan con un certificado <b>sin número</b>, listos para enviarse a HIR desde "Altas, bajas y certificados". Las bajas aparecen ahí mismo para enviarlas.
           </DialogDescription>
         </DialogHeader>
 
@@ -193,6 +196,9 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
                     <div className="text-xs text-muted-foreground">
                       {b.reason}{b.current.certificate_number ? ` · Cert. N° ${b.current.certificate_number}` : ""}
                     </div>
+                    {!b.explicit && b.current.certificate_number && (
+                      <div className="text-xs text-amber-700">Sigue activo en HIR y no viene en las bajas: se queda activo salvo que lo marques.</div>
+                    )}
                   </div>
                   <Badge variant="outline" className={b.explicit ? "bg-rose-50 text-rose-800" : "bg-amber-50 text-amber-800"}>
                     {b.explicit ? "Baja reportada" : "No viene en la lista"}

@@ -65,13 +65,14 @@ function finish(r: InsurerRow) {
   if (d.length) r.insurer_premium = Math.round(d.reduce((s, c) => s + c.prima, 0) * 100) / 100;
 }
 
-function parseLines(lines: string[]): InsurerFile {
+export function parseLines(lines: string[]): InsurerFile {
   const policy_number = findPolicyNumber(lines.slice(0, 40).join(" ")) ?? findPolicyNumber(lines.join(" "));
   const rows: InsurerRow[] = [];
   for (const raw of lines) {
     const line = raw.toUpperCase();
     const rfc = line.match(RFC_RE);
-    const cert = line.match(/^\s*(\d{1,6})\b/);
+    // HIR antepone la columna Grupo ("5-1") al número de certificado: se omite.
+    const cert = line.match(/^\s*(?:\d{1,3}-\d{1,3}\s+)?(\d{1,6})\b/);
     if (!rfc || !cert) {
       // Renglón de cobertura (MA / PMB / RGM…) del último asegurado.
       const last = rows[rows.length - 1];
