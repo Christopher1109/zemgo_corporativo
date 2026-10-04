@@ -9,6 +9,9 @@ export type RosterPerson = {
   employee_number: number | null;
   first_name: string;
   last_name: string;
+  /** Apellidos por separado (los pide HIR en sus archivos de altas/bajas). */
+  paterno: string;
+  materno: string;
   gender: "M" | "F" | null;
   relationship: string; // T = titular
   date_of_birth: string | null;
@@ -142,6 +145,8 @@ export async function parseRosterFile(file: File, source: string): Promise<Roste
           employee_number: empRaw && /^\d+$/.test(empRaw) ? Number(empRaw) : null,
           first_name: normName(first),
           last_name: normName(last),
+          paterno: col.last_name ? "" : normName(t("last_name_p")),
+          materno: col.last_name ? "" : normName(t("last_name_m")),
           gender: genderOf(t("gender"), curp),
           relationship: t("relationship"),
           date_of_birth: dob,
