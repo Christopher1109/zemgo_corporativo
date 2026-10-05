@@ -20,7 +20,7 @@ import {
 import { getCompanyDetail, importCompanyEmployees } from "@/lib/companies.functions";
 import { EditCompanyDialog, DeleteCompanyDialog } from "@/components/companies/company-dialogs";
 import { MonthlyUpdateDialog } from "@/components/companies/MonthlyUpdateDialog";
-import { CompanyChargesCard } from "@/components/companies/CompanyChargesCard";
+import { CompanyChargesCard, CompanyBillingSummary } from "@/components/companies/CompanyChargesCard";
 import { renderCertificateBlob } from "@/lib/pdf/generateCertificate.browser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -306,6 +306,20 @@ function CompanyDetailPage() {
   const cancelled = policies.filter((p: any) => p.status === "cancelled");
   const totalPremium = active.reduce((s: number, p: any) => s + Number(p.premium ?? 0), 0);
   const allReady = policies.length > 0 && pending.length === 0;
+  const charges = ((q.data as any).charges ?? []) as any[];
+  // Precio por persona: el más común entre los certificados vigentes.
+  const priceCounts = new Map<number, number>();
+  for (const p of active) if (p.premium != null) priceCounts.set(Number(p.premium), (priceCounts.get(Number(p.premium)) ?? 0) + 1);
+  const unitPrice = [...priceCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  // Renovaciones: fin de vigencia de los certificados vigentes, agrupado por fecha.
+  const todayStr = new Date().toLocaleDateString("en-CA");
+  const in90 = new Date(Date.now() + 90 * 86400000).toLocaleDateString("en-CA");
+  const renewalGroups = Object.entries(
+    active.reduce((acc: Record<string, number>, p: any) => { const k = p.end_date ?? "sin_vigencia"; acc[k] = (acc[k] ?? 0) + 1; return acc; }, {}),
+  ).sort((a, b) => a[0].localeCompare(b[0])) as [string, number][];
+  const nextRenewal = renewalGroups.find(([d]) => d !== "sin_vigencia" && d >= todayStr);
+  const renewSoon = active.filter((p: any) => p.end_date && p.end_date >= todayStr && p.end_date <= in90).length;
+  const sinVigencia = renewalGroups.find(([d]) => d === "sin_vigencia")?.[1] ?? 0;
 
   return (
     <div className="space-y-5">
@@ -367,8 +381,30 @@ function CompanyDetailPage() {
         <MiniStat label="Asegurados activos" value={String(new Set(active.map((p: any) => p.client_id)).size)} />
         <MiniStat label="Certificados activos" value={String(active.length)} />
         <MiniStat label="Bajas" value={String(new Set(cancelled.map((p: any) => p.client_id)).size)} />
-        <MiniStat label="Precio mensual (activos)" value={fmtMx(totalPremium)} />
+        <MiniStat label="Cobro mensual (activos)" value={fmtMx(totalPremium)} />
       </div>
+
+      <CompanyBillingSummary charges={charges} activeCount={active.length} unitPrice={unitPrice} />
+
+      <Card>
+        <CardContent className="p-4 text-sm flex flex-wrap gap-x-6 gap-y-1">
+          <span className="font-medium">Vigencias y renovación</span>
+          {nextRenewal ? (
+            <span>
+              Próxima renovación: <b>{fmtDate(nextRenewal[0])}</b> ({nextRenewal[1]} certificados)
+              {renewSoon > 0 && <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-800 border-amber-200">{renewSoon} renuevan en los próximos 90 días</Badge>}
+            </span>
+          ) : <span className="text-muted-foreground">Sin renovaciones próximas</span>}
+          {renewalGroups.filter(([d]) => d !== "sin_vigencia").length > 1 && (
+            <span className="text-muted-foreground text-xs">
+              {renewalGroups.filter(([d]) => d !== "sin_vigencia").map(([d, n]) => `${fmtDate(d)}: ${n}`).join(" · ")}
+            </span>
+          )}
+          {sinVigencia > 0 && (
+            <span className="text-amber-700 text-xs">{sinVigencia} sin vigencia aún (se asigna al subir la relación de HIR con su certificado)</span>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-2 flex-row items-center justify-between space-y-0 gap-3 flex-wrap">
@@ -421,7 +457,7 @@ function CompanyDetailPage() {
                       )}
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
-                      {fmtDate(p.start_date)} → {fmtDate(p.end_date)} · {paidByPolicy.has(p.id) ? "Pagado" : "Sin pago registrado"}
+                      {p.start_date ? `Vigencia ${fmtDate(p.start_date)} → ${fmtDate(p.end_date)}` : "Vigencia pendiente (al asignar certificado)"} · Lo paga la empresa en su cobro mensual
                     </div>
                   </div>
                   <Badge
@@ -461,7 +497,7 @@ function CompanyDetailPage() {
         </CardContent>
       </Card>
 
-      <CompanyChargesCard charges={(q.data as any).charges ?? []} companyId={companyId} />
+      <CompanyChargesCard charges={charges} companyId={companyId} />
 
       {imports.length > 0 && (
         <Card>
