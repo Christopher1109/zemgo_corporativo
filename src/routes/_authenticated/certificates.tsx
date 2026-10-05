@@ -360,6 +360,44 @@ function UploadTab({ program }: { program: any }) {
   const [notInHir, setNotInHir] = useState<any[]>([]);
   const [overwrite, setOverwrite] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [rowBusy, setRowBusy] = useState<string | null>(null);
+
+  async function resolveCancelled(policy: any, action: "reactivate" | "confirm") {
+    const name = fullName(policy.clients);
+    if (action === "reactivate" && !window.confirm(`¿Regresar a ${name} al sistema como activo?`)) return;
+    if (action === "confirm" && !window.confirm(`¿Confirmar la baja de ${name}? Ya no aparecerá en esta lista.`)) return;
+    setRowBusy(policy.id);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const now = new Date().toISOString();
+      const meta = { ...(policy.metadata ?? {}) };
+      let update: any;
+      if (action === "reactivate") {
+        const prev = { cancellation: meta.cancellation ?? null, insurer_baja_sent: meta.insurer_baja_sent ?? null };
+        delete meta.cancellation; delete meta.insurer_baja_sent; delete meta.baja_confirmed;
+        meta.reactivated = { at: now, by: auth.user?.id ?? null, reason: "HIR lo sigue listando", previous: prev };
+        update = { status: "active", metadata: meta };
+      } else {
+        meta.baja_confirmed = { at: now, by: auth.user?.id ?? null };
+        update = { metadata: meta };
+      }
+      const { error } = await supabase.from("policies").update(update).eq("id", policy.id);
+      if (error) throw error;
+      if (action === "reactivate" && policy.clients?.id) {
+        await supabase.from("client_programs").update({ status: "active", cancelled_at: null })
+          .eq("client_id", policy.clients.id).eq("program_id", program.id);
+      }
+      await supabase.from("audit_log").insert({
+        user_id: auth.user?.id ?? null, program_id: program.id, entity_type: "policy", entity_id: policy.id,
+        action: action === "reactivate" ? "reactivate_from_hir" : "confirm_baja", diff: { certificate_number: policy.certificate_number },
+      });
+      setHirButCancelled((l) => l.filter((x) => x.policy.id !== policy.id));
+      toast.success(action === "reactivate" ? `${name} regresó al sistema.` : `Baja de ${name} confirmada.`);
+      qc.invalidateQueries({ queryKey: ["cert-bajas", program.id] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo actualizar.");
+    } finally { setRowBusy(null); }
+  }
 
   async function analyze(f: File) {
     setBusy(true); setFile(f);
@@ -376,7 +414,7 @@ function UploadTab({ program }: { program: any }) {
         if (r.policy) { m.push({ row, policy: r.policy, include: true, how: r.how! }); continue; }
         if (r.options?.length) { a.push({ row, options: r.options, chosen: "" }); continue; }
         const c = matchRow(row, cancelled);
-        if (c.policy) { hc.push({ row, policy: c.policy }); continue; }
+        if (c.policy) { if (!c.policy.metadata?.baja_confirmed) hc.push({ row, policy: c.policy }); continue; }
         u.push(row);
       }
       // Certificados vigentes en Zemgo (de esta póliza) que HIR ya no lista.
@@ -512,17 +550,27 @@ function UploadTab({ program }: { program: any }) {
 
           {(hirButCancelled.length > 0 || notInHir.length > 0 || unmatched.length > 0) && (
             <section className="space-y-3 rounded-md border border-amber-300 bg-amber-50/60 p-3">
-              <h3 className="font-medium flex items-center gap-2 text-amber-900"><AlertTriangle className="h-4 w-4" /> Diferencias entre HIR y Zemgo (no se cambia nada)</h3>
+              <h3 className="font-medium flex items-center gap-2 text-amber-900"><AlertTriangle className="h-4 w-4" /> Diferencias entre HIR y Zemgo</h3>
               {hirButCancelled.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <p className="text-sm font-medium">HIR los sigue teniendo, pero en Zemgo están dados de baja ({hirButCancelled.length})</p>
-                  <ul className="text-sm list-disc pl-5">
-                    {hirButCancelled.map(({ row, policy }, i) => (
-                      <li key={i}>N° {row.certificate_number} — {row.name} · {policy.metadata?.insurer_baja_sent
-                        ? <span className="text-muted-foreground">baja enviada el {fmtDate(policy.metadata.insurer_baja_sent.at)}; HIR aún no la aplica</span>
-                        : <span className="text-amber-800">baja aún no enviada: aparece en "Bajas para HIR"</span>}</li>
+                  <p className="text-xs text-muted-foreground">Decide qué hacer con cada uno: <b>Regresar al sistema</b> los vuelve a activar con su certificado; <b>Confirmar baja</b> los deja fuera y ya no volverán a aparecer aquí.</p>
+                  <div className="space-y-1">
+                    {hirButCancelled.map(({ row, policy }) => (
+                      <div key={policy.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-sm">
+                        <div>
+                          N° {row.certificate_number} — {row.name}{" "}
+                          {policy.metadata?.insurer_baja_sent
+                            ? <span className="text-muted-foreground">· baja enviada el {fmtDate(policy.metadata.insurer_baja_sent.at)}</span>
+                            : <span className="text-amber-800">· baja aún no enviada a HIR</span>}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" disabled={!canWrite || rowBusy === policy.id} onClick={() => resolveCancelled(policy, "reactivate")}>Regresar al sistema</Button>
+                          <Button size="sm" variant="outline" className="text-destructive border-destructive/40" disabled={!canWrite || rowBusy === policy.id} onClick={() => resolveCancelled(policy, "confirm")}>Confirmar baja</Button>
+                        </div>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
               {notInHir.length > 0 && (
