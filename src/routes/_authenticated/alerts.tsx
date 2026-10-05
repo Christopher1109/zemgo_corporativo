@@ -18,6 +18,7 @@ import { getAlertsOverview } from "@/lib/alerts.functions";
 import { getPaymentReminderStatus } from "@/lib/payment-reminders.functions";
 import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
 import { cn } from "@/lib/utils";
+import { RegisterCompanyPaymentDialog } from "@/components/companies/CompanyChargesCard";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
   head: () => ({ meta: [{ title: "Alertas y renovaciones — ZEMGO" }] }),
@@ -213,7 +214,7 @@ function AlertsPage() {
             <Send className="h-4 w-4 mr-2" /> Recordatorios de pago
           </TabsTrigger>
           <TabsTrigger value="renewals">
-            <RefreshCw className="h-4 w-4 mr-2" /> Renovaciones ({renFiltered.length})
+            <RefreshCw className="h-4 w-4 mr-2" /> Renovaciones ({renFiltered.length + ((data as any)?.companyRenewals?.length ?? 0)})
           </TabsTrigger>
           <TabsTrigger value="suspended">
             <AlertOctagon className="h-4 w-4 mr-2" /> Suspendidas ({suspFiltered.length})
@@ -232,7 +233,12 @@ function AlertsPage() {
           <PaymentRemindersTab programId={programId} search={search} />
         </TabsContent>
         <TabsContent value="renewals" className="mt-4">
-          {q.isLoading ? <Skeleton /> : <RenewalsList rows={renFiltered} />}
+          {q.isLoading ? <Skeleton /> : (
+            <div className="space-y-4">
+              {((data as any)?.companyRenewals?.length ?? 0) > 0 && <CompanyRenewalsList rows={(data as any).companyRenewals} />}
+              <RenewalsList rows={renFiltered} />
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="suspended" className="mt-4">
           {q.isLoading ? <Skeleton /> : <SuspendedList rows={suspFiltered} />}
@@ -450,9 +456,37 @@ function ContactBits({ c }: { c: any }) {
   );
 }
 
-function CompanyChargesList({ rows }: { rows: any[] }) {
+function CompanyRenewalsList({ rows }: { rows: any[] }) {
   return (
     <div className="grid gap-2">
+      <div className="text-xs font-medium uppercase text-muted-foreground">Renovaciones de certificados de empresa</div>
+      {rows.map((r) => {
+        const d = daysFrom(r.end_date);
+        return (
+          <Card key={`${r.company_id}-${r.end_date}`} className={cn(semaforo(d, false))}>
+            <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <div className="font-medium text-sm">{r.legal_name}</div>
+                <div className="text-[11px] text-muted-foreground">
+                  {r.count} certificados terminan su vigencia el {r.end_date} ({d === 0 ? "hoy" : `en ${d} días`}). La renovación se confirma con la empresa y la aseguradora.
+                </div>
+              </div>
+              <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-xs">
+                <Link to="/companies/$companyId" params={{ companyId: r.company_id }}>Ver empresa</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function CompanyChargesList({ rows }: { rows: any[] }) {
+  const [payOpen, setPayOpen] = useState<any | null>(null);
+  return (
+    <div className="grid gap-2">
+      <RegisterCompanyPaymentDialog charge={payOpen} onClose={() => setPayOpen(null)} />
       <div className="text-xs font-medium uppercase text-muted-foreground">Cobros a empresas (un solo cobro mensual)</div>
       {rows.map((r) => {
         const d = daysFrom(r.due_date);
@@ -478,11 +512,16 @@ function CompanyChargesList({ rows }: { rows: any[] }) {
               <div className="text-right">
                 <div className="text-sm font-semibold">${fmtMx(Number(r.amount))}</div>
                 <div className="text-[11px] text-muted-foreground">Vence {r.due_date}</div>
-                <Button asChild size="sm" variant="ghost" className="h-7 mt-1 px-2 text-xs">
-                  <Link to="/companies/$companyId" params={{ companyId: r.company_id }}>
-                    <CreditCard className="h-3 w-3 mr-1" /> Ver empresa
-                  </Link>
-                </Button>
+                <div className="flex gap-1 justify-end mt-1">
+                  <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => setPayOpen(r)}>
+                    <Check className="h-3 w-3 mr-1" /> Registrar pago
+                  </Button>
+                  <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-xs">
+                    <Link to="/companies/$companyId" params={{ companyId: r.company_id }}>
+                      <CreditCard className="h-3 w-3 mr-1" /> Ver empresa
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

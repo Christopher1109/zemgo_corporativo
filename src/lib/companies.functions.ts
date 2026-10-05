@@ -160,7 +160,7 @@ export const getCompanyDetail = createServerFn({ method: "POST" })
 
     const { data: charges } = await (supabase as any)
       .from("company_charges")
-      .select("id, period, due_date, insured_count, unit_price, amount, status, paid_at, paid_amount, method, reference, notes")
+      .select("id, company_id, period, due_date, insured_count, unit_price, amount, status, paid_at, paid_amount, method, reference, notes")
       .eq("company_id", data.company_id)
       .order("period", { ascending: false })
       .limit(24);

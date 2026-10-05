@@ -64,7 +64,28 @@ export const getAlertsOverview = createServerFn({ method: "GET" })
     const charges = await chargesQ;
     if (charges.error) throw new Error(charges.error.message);
 
+    // Renovaciones de certificados de empresa (fin de vigencia en los próximos 90 días), agrupadas por empresa y fecha.
+    let compRenQ = sb
+      .from("policies")
+      .select("company_id, end_date, companies(legal_name)")
+      .eq("status", "active")
+      .not("company_id", "is", null)
+      .lte("end_date", new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10))
+      .gte("end_date", new Date().toISOString().slice(0, 10))
+      .limit(5000);
+    if (programId) compRenQ = compRenQ.eq("program_id", programId);
+    const compRen = await compRenQ;
+    if (compRen.error) throw new Error(compRen.error.message);
+    const groups = new Map<string, { company_id: string; legal_name: string; end_date: string; count: number }>();
+    for (const r of (compRen.data ?? []) as any[]) {
+      const k = `${r.company_id}|${r.end_date}`;
+      const g = groups.get(k) ?? { company_id: r.company_id, legal_name: r.companies?.legal_name ?? "Empresa", end_date: r.end_date, count: 0 };
+      g.count++;
+      groups.set(k, g);
+    }
+
     return {
+      companyRenewals: [...groups.values()].sort((a, b) => a.end_date.localeCompare(b.end_date)),
       companyCharges: (charges.data ?? []) as any[],
       upcoming: upcoming.data ?? [],
       renewals: renewals.data ?? [],
