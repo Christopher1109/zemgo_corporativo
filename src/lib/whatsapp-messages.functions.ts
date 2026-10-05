@@ -76,3 +76,41 @@ export const resumeWhatsappBot = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export interface PaymentReminderLogRow {
+  id: string;
+  created_at: string;
+  sent_at: string | null;
+  status: "pending" | "sent" | "failed" | "cancelled" | string;
+  manual: boolean;
+  sent_by_name: string | null;
+  phone: string | null;
+  wa_phone: string | null;
+  client_id: string | null;
+  client_name: string | null;
+  folio: string | null;
+  payment_id: string | null;
+  amount: number | null;
+  due_date: string | null;
+  payment_status: string | null;
+  paid_at: string | null;
+  method: string | null;
+  replies: number;
+  last_reply: { body: string | null; type: string; at: string } | null;
+}
+
+// Bitácora de recordatorios de pago por WhatsApp (automáticos y manuales) del programa activo,
+// con el resultado: si el cliente pagó y si respondió en la conversación.
+export const listPaymentReminderLog = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { program_code: string; days?: number }) =>
+    z.object({ program_code: z.string().min(1), days: z.number().int().min(1).max(365).optional() }).parse(d),
+  )
+  .handler(async ({ data, context }): Promise<PaymentReminderLogRow[]> => {
+    const { data: rows, error } = await (context.supabase.rpc as any)("get_payment_reminder_log", {
+      _program_code: data.program_code,
+      _days: data.days ?? 90,
+    });
+    if (error) throw new Error(error.message);
+    return (rows as PaymentReminderLogRow[]) ?? [];
+  });
