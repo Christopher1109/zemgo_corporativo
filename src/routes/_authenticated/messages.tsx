@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, Send, User, Bot, PlayCircle } from "lucide-react";
+import { MessageCircle, Send, User, Bot, PlayCircle, Bell } from "lucide-react";
+import { PaymentRemindersView } from "@/components/messages/PaymentRemindersView";
 import { toast } from "sonner";
 import { useProgram } from "@/lib/program-context";
 import { Card } from "@/components/ui/card";
@@ -59,6 +60,7 @@ function MessagesPage() {
   const qc = useQueryClient();
 
   const [selected, setSelected] = useState<string | null>(null);
+  const [view, setView] = useState<"conversations" | "reminders">("conversations");
   // Solo conversaciones del programa activo (más las de números aún sin programa identificado).
   const { activeProgram } = useProgram();
   const activeCode = (activeProgram?.code ?? "__none__").toUpperCase();
@@ -169,7 +171,15 @@ function MessagesPage() {
           propia línea de WhatsApp). Puedes responder manualmente dentro de las 24h posteriores al último
           mensaje del cliente.
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 inline-flex rounded-md border p-0.5 bg-muted/40">
+          <Button size="sm" variant={view === "conversations" ? "default" : "ghost"} onClick={() => setView("conversations")}>
+            <MessageCircle className="h-3.5 w-3.5 mr-1.5" /> Conversaciones
+          </Button>
+          <Button size="sm" variant={view === "reminders" ? "default" : "ghost"} onClick={() => setView("reminders")}>
+            <Bell className="h-3.5 w-3.5 mr-1.5" /> Recordatorios de pago
+          </Button>
+        </div>
+        {view === "conversations" && <div className="mt-3 flex flex-wrap gap-2">
           {[
             { key: "active", label: activeProgram?.name ?? "Programa activo" },
             { key: "none", label: "Sin programa identificado" },
@@ -189,9 +199,16 @@ function MessagesPage() {
               </span>
             </Button>
           ))}
-        </div>
+        </div>}
       </div>
 
+      {view === "reminders" ? (
+        <PaymentRemindersView
+          programCode={activeCode}
+          programName={activeProgram?.name ?? "este programa"}
+          onOpenConversation={(waPhone) => { setProgramFilter("active"); setSelected(waPhone); setView("conversations"); }}
+        />
+      ) : (
       <Card className="flex-1 min-h-0 flex overflow-hidden">
         {/* Lista de conversaciones */}
         <div className="w-80 shrink-0 border-r overflow-y-auto">
@@ -317,7 +334,9 @@ function MessagesPage() {
                     <div key={m.id} className={`flex ${m.direction === "outbound" ? "justify-end" : "justify-start"}`}>
                       <div
                         className={`max-w-[70%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words ${
-                          m.direction === "outbound"
+                          m.message_type === "template"
+                            ? "bg-amber-50 border border-amber-200 text-amber-950 rounded-br-sm"
+                            : m.direction === "outbound"
                             ? "bg-primary text-primary-foreground rounded-br-sm"
                             : "bg-background border rounded-bl-sm"
                         }`}
@@ -369,6 +388,7 @@ function MessagesPage() {
           )}
         </div>
       </Card>
+      )}
     </div>
   );
 }
