@@ -2989,6 +2989,7 @@ export type Database = {
         Args: { _access: Json; _phone: string; _user_id: string }
         Returns: Json
       }
+      can_manage_settings: { Args: { _uid: string }; Returns: boolean }
       can_manage_users: { Args: { _user_id: string }; Returns: boolean }
       can_read_program_module: {
         Args: { _modules: string[]; _program_id: string }
@@ -3047,6 +3048,10 @@ export type Database = {
       get_dashboard_kpis: { Args: { _program_id: string }; Returns: Json }
       get_google_sheets_credentials: { Args: never; Returns: Json }
       get_google_sheets_credentials_meta: { Args: never; Returns: Json }
+      get_payment_reminder_log: {
+        Args: { _days?: number; _program_code: string }
+        Returns: Json
+      }
       get_policies_by_state: {
         Args: { _program_id: string }
         Returns: {
@@ -3173,6 +3178,16 @@ export type Database = {
         }
         Returns: Json
       }
+      mark_insurer_movements_sent: {
+        Args: {
+          _file_name: string
+          _kind: string
+          _movement_date: string
+          _policy_ids: string[]
+          _program_id: string
+        }
+        Returns: Json
+      }
       mark_overdue_payments: { Args: never; Returns: undefined }
       mark_payment_paid: {
         Args: {
@@ -3264,6 +3279,10 @@ export type Database = {
       }
       resolve_sales_rep_ref: { Args: { _ref: string }; Returns: string }
       resume_whatsapp_bot: { Args: { _wa_phone: string }; Returns: undefined }
+      revert_company_charge_payment: {
+        Args: { _charge_id: string; _reason: string }
+        Returns: Json
+      }
       revoke_medical_pass: {
         Args: { _pass_id: string; _reason: string }
         Returns: undefined
@@ -3289,6 +3308,10 @@ export type Database = {
       set_medical_pass_pdf_url: {
         Args: { _pass_id: string; _pdf_url: string }
         Returns: undefined
+      }
+      set_whatsapp_reminders_enabled: {
+        Args: { _enabled: boolean }
+        Returns: Json
       }
       start_sheet_sync: {
         Args: { _program: string; _sheet_id: string }
@@ -3358,6 +3381,13 @@ export type Database = {
           _ua: string
         }
         Returns: Json
+      }
+      wa_conversation_key: { Args: { _phone: string }; Returns: string }
+      whatsapp_reminders_status: { Args: never; Returns: Json }
+      whatsapp_test_result: { Args: { _request_id: number }; Returns: Json }
+      whatsapp_test_send: {
+        Args: { _program_code: string; _to: string }
+        Returns: number
       }
     }
     Enums: {
