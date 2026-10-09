@@ -151,6 +151,7 @@ function ClientDetail() {
     return <div className="p-6 text-center text-muted-foreground">Cargando…</div>;
   }
 
+  const hasPhone = !!(String(client.phone ?? "").trim() || String(client.payer_phone ?? "").trim());
   const address =
     client.address_full ??
     [client.street, client.number, client.colonia, client.city, client.state, client.zip]
