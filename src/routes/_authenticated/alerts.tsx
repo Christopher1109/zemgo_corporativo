@@ -291,15 +291,14 @@ function PaymentRemindersTab({ programId, search }: { programId: string | null; 
     if (!row) return;
     setSending(true);
     try {
-      const { error } = await supabase.functions.invoke("resend-payment-reminder", {
-        body: { payment_id: row.payment_id },
-      });
-      if (error) throw new Error(error.message);
-      toast.success(`Recordatorio reenviado a ${row.first_name} ${row.last_name}`);
+      const err = await invokePaymentReminder(row.payment_id);
+      if (err) { toast.error(err); return; }
+      toast.success(`Recordatorio enviado a ${row.first_name} ${row.last_name}`);
       setConfirmRow(null);
-      await queryClient.invalidateQueries({ queryKey: ["payment-reminder-status"] });
-    } catch (e: any) {
-      toast.error(e?.message ?? "No se pudo reenviar el recordatorio");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["payment-reminder-status"] }),
+        queryClient.invalidateQueries({ queryKey: ["whatsapp", "reminder-log"] }),
+      ]);
     } finally {
       setSending(false);
     }
