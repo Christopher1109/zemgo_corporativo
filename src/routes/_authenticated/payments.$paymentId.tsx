@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
+import { SendPaymentReminderButton } from "@/components/payments/SendPaymentReminderButton";
 import { auditActionLabel, describeAuditDiff } from "@/lib/audit-labels";
 
 export const Route = createFileRoute("/_authenticated/payments/$paymentId")({
@@ -70,7 +71,7 @@ function PaymentDetail() {
       const { data, error } = await supabase
         .from("payments")
         .select(
-          "*, policies(id, folio, status, program_id, start_date, end_date, clients(id, first_name, last_name, curp, email, phone), programs(name, code, color_primary))",
+          "*, policies(id, folio, status, program_id, start_date, end_date, clients(id, first_name, last_name, curp, email, phone, payer_phone), programs(name, code, color_primary))",
         )
         .eq("id", paymentId)
         .single();
@@ -140,6 +141,14 @@ function PaymentDetail() {
         <div className="flex items-center gap-2">
           <PaymentStatusBadge status={payment.status} />
           <Badge variant="outline" className={att.tone}>{att.label}</Badge>
+          {(payment.status === "pending" || payment.status === "overdue") && (
+            <SendPaymentReminderButton
+              paymentId={payment.id}
+              clientName={`${c?.first_name ?? ""} ${c?.last_name ?? ""}`.trim()}
+              paymentStatus={payment.status}
+              hasPhone={!!(c?.phone?.trim() || c?.payer_phone?.trim())}
+            />
+          )}
         </div>
       </div>
 

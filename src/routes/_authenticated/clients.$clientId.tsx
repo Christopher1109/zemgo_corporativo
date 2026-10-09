@@ -21,6 +21,7 @@ import { useActiveProgramId } from "@/lib/program-context";
 import { DataAlertBanner, DataAlertIcon } from "@/components/clients/DataAlert";
 import { getDataAlerts } from "@/lib/data-alerts";
 import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
+import { SendPaymentReminderButton } from "@/components/payments/SendPaymentReminderButton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -129,6 +130,8 @@ function ClientDetail() {
   });
 
   const urgentByPolicy = Object.fromEntries(urgentPayments.map((p) => [p.policy_id, p]));
+  const policyFolio: Record<string, string> = Object.fromEntries(policies.map((p: any) => [p.id, p.folio]));
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: incidents = [] } = useQuery({
     queryKey: ["client-incidents", clientId, programId],
@@ -148,6 +151,7 @@ function ClientDetail() {
     return <div className="p-6 text-center text-muted-foreground">Cargando…</div>;
   }
 
+  const hasPhone = !!(String(client.phone ?? "").trim() || String(client.payer_phone ?? "").trim());
   const address =
     client.address_full ??
     [client.street, client.number, client.colonia, client.city, client.state, client.zip]
@@ -175,6 +179,7 @@ function ClientDetail() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <EditClientDialog client={client} />
+          <EditClientDialog client={client} open={editOpen} onOpenChange={setEditOpen} hideTrigger />
           <DeleteClientDialog client={client} />
           {enrollments.map((e) => (
             <EnrollmentStatusControl key={e.id} enrollment={e} clientId={clientId} />
@@ -318,6 +323,50 @@ function ClientDetail() {
               </TableBody>
             </Table>
           </Card>
+
+          <div className="mt-4 space-y-3">
+            <h3 className="font-medium">Pagos pendientes</h3>
+            {!hasPhone && (
+              <div className="rounded-md border border-amber-300 bg-amber-50 text-amber-900 p-3 text-sm flex flex-wrap items-center justify-between gap-2">
+                <span>Este cliente no tiene teléfono registrado, por eso no recibe recordatorios automáticos. Agrégalo para poder enviarlo.</span>
+                <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>Agregar teléfono</Button>
+              </div>
+            )}
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Vencimiento</TableHead>
+                    <TableHead>Monto</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Folio</TableHead>
+                    <TableHead>Recordatorio</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {urgentPayments.length === 0 && (
+                    <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">Sin pagos pendientes.</TableCell></TableRow>
+                  )}
+                  {[...urgentPayments].sort((a, b) => String(a.due_date).localeCompare(String(b.due_date))).map((pay: any) => (
+                    <TableRow key={pay.id}>
+                      <TableCell>{pay.due_date ? new Date(pay.due_date).toLocaleDateString("es-MX") : "—"}</TableCell>
+                      <TableCell className="font-mono">${Number(pay.amount).toLocaleString("es-MX")}</TableCell>
+                      <TableCell><PaymentStatusBadge status={pay.status} /></TableCell>
+                      <TableCell className="font-mono text-xs">{policyFolio[pay.policy_id] ?? "—"}</TableCell>
+                      <TableCell>
+                        <SendPaymentReminderButton
+                          paymentId={pay.id}
+                          clientName={`${client.first_name ?? ""} ${client.last_name ?? ""}`.trim()}
+                          paymentStatus={pay.status}
+                          hasPhone={hasPhone}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="incidents">
