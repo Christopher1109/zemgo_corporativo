@@ -37,9 +37,24 @@ const FIELDS: Array<{ key: string; label: string; type?: string }> = [
   { key: "zip", label: "C.P." },
 ];
 
-export function EditClientDialog({ client }: { client: ClientRow }) {
+export function EditClientDialog({
+  client,
+  open: openProp,
+  onOpenChange,
+  hideTrigger,
+}: {
+  client: ClientRow;
+  open?: boolean;
+  onOpenChange?: (o: boolean) => void;
+  hideTrigger?: boolean;
+}) {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (o: boolean) => {
+    setOpenState(o);
+    onOpenChange?.(o);
+  };
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState<Record<string, string>>(() =>
     Object.fromEntries(
@@ -80,11 +95,13 @@ export function EditClientDialog({ client }: { client: ClientRow }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Pencil className="h-4 w-4 mr-2" /> Editar datos
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Pencil className="h-4 w-4 mr-2" /> Editar datos
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar cliente</DialogTitle>

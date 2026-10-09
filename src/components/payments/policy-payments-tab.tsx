@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { PaymentStatusBadge } from "./payment-status-badge";
+import { SendPaymentReminderButton } from "./SendPaymentReminderButton";
 
 const FREQ_LABELS: Record<string, string> = {
   monthly: "Mensual",
@@ -48,6 +49,20 @@ export function PolicyPaymentsTab({ policyId, policyStatus }: { policyId: string
     },
   });
 
+  const { data: client } = useQuery({
+    queryKey: ["policy-client-contact", policyId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("policies")
+        .select("clients(first_name, last_name, phone, payer_phone)")
+        .eq("id", policyId)
+        .maybeSingle();
+      return ((data as any)?.clients ?? null) as any;
+    },
+  });
+  const clientName = client ? `${client.first_name ?? ""} ${client.last_name ?? ""}`.trim() : "el cliente";
+
+
   return (
     <div className="space-y-4">
       {policyStatus === "suspended" && (
@@ -76,10 +91,11 @@ export function PolicyPaymentsTab({ policyId, policyStatus }: { policyId: string
               <TableHead>Estado</TableHead>
               <TableHead>Forma de pago</TableHead>
               <TableHead>Pagado</TableHead>
+              <TableHead>Recordatorio</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {payments.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">Sin pagos asociados.</TableCell></TableRow>}
+            {payments.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-6 text-muted-foreground">Sin pagos asociados.</TableCell></TableRow>}
             {payments.map((p) => (
               <TableRow
                 key={p.id}
@@ -91,6 +107,16 @@ export function PolicyPaymentsTab({ policyId, policyStatus }: { policyId: string
                 <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
                 <TableCell>{p.method ? (METHOD_LABELS[p.method] ?? p.method) : "—"}</TableCell>
                 <TableCell>{p.paid_at ? new Date(p.paid_at).toLocaleDateString("es-MX") : "—"}</TableCell>
+                <TableCell>
+                  {(p.status === "pending" || p.status === "overdue") ? (
+                    <SendPaymentReminderButton
+                      paymentId={p.id}
+                      clientName={clientName}
+                      paymentStatus={p.status}
+                      hasPhone={!!(client?.phone?.trim() || client?.payer_phone?.trim())}
+                    />
+                  ) : "—"}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
