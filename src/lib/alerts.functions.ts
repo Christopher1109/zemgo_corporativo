@@ -15,9 +15,11 @@ export const getAlertsOverview = createServerFn({ method: "GET" })
     let upcomingQ = sb
       .from("payments")
       .select(
-        "id, amount, due_date, status, bank_reference, policies!inner(id, folio, program_id, company_id, programs(code, name, color_primary), clients(first_name, last_name, email, phone, state))"
+        "id, amount, due_date, status, bank_reference, policies!inner(id, folio, status, program_id, company_id, programs(code, name, color_primary), clients(first_name, last_name, email, phone, state))"
       )
       .in("status", ["pending", "overdue"])
+      // Solo clientes con cobertura: el cobro de activación de un prospecto no es un recordatorio.
+      .in("policies.status", ["active", "suspended"])
       // Los certificados de empresa no se cobran uno por uno: se cobran a la empresa (company_charges).
       .is("policies.company_id", null)
       .lte("due_date", new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10))
