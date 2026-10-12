@@ -30,7 +30,7 @@ export function PolicyPaymentsTab({ policyId, policyStatus }: { policyId: string
     queryFn: async () => {
       const { data } = await supabase
         .from("payments")
-        .select("*")
+        .select("*, policies(status)")
         .eq("policy_id", policyId)
         .order("due_date", { ascending: true });
       return (data ?? []) as any[];

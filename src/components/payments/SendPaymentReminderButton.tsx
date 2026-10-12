@@ -100,13 +100,17 @@ export function SendPaymentReminderButton({
 
   return (
     <span onClick={(e) => e.stopPropagation()}>
-      {eligible && !hasPhone ? (
+      {eligible && (notActivated || !hasPhone) ? (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <span tabIndex={0} className="inline-block">{button}</span>
             </TooltipTrigger>
-            <TooltipContent>Agrega un teléfono al cliente para enviar el recordatorio</TooltipContent>
+            <TooltipContent>
+              {notActivated
+                ? "Cliente aún sin activar: este cobro es su pago inicial, no un recordatorio."
+                : "Agrega un teléfono al cliente para enviar el recordatorio"}
+            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       ) : (
