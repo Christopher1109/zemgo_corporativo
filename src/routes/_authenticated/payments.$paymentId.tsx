@@ -147,6 +147,7 @@ function PaymentDetail() {
               clientName={`${c?.first_name ?? ""} ${c?.last_name ?? ""}`.trim()}
               paymentStatus={payment.status}
               hasPhone={!!(c?.phone?.trim() || c?.payer_phone?.trim())}
+              policyStatus={pol?.status ?? null}
             />
           )}
         </div>

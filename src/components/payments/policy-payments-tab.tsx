@@ -114,6 +114,7 @@ export function PolicyPaymentsTab({ policyId, policyStatus }: { policyId: string
                       clientName={clientName}
                       paymentStatus={p.status}
                       hasPhone={!!(client?.phone?.trim() || client?.payer_phone?.trim())}
+                      policyStatus={p.policies?.status ?? null}
                     />
                   ) : "—"}
                 </TableCell>

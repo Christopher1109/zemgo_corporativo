@@ -131,6 +131,7 @@ function ClientDetail() {
 
   const urgentByPolicy = Object.fromEntries(urgentPayments.map((p) => [p.policy_id, p]));
   const policyFolio: Record<string, string> = Object.fromEntries(policies.map((p: any) => [p.id, p.folio]));
+  const policyStatusById: Record<string, string> = Object.fromEntries(policies.map((p: any) => [p.id, p.status]));
   const [editOpen, setEditOpen] = useState(false);
 
   const { data: incidents = [] } = useQuery({
@@ -359,6 +360,7 @@ function ClientDetail() {
                           clientName={`${client.first_name ?? ""} ${client.last_name ?? ""}`.trim()}
                           paymentStatus={pay.status}
                           hasPhone={hasPhone}
+                          policyStatus={policyStatusById[pay.policy_id] ?? null}
                         />
                       </TableCell>
                     </TableRow>
