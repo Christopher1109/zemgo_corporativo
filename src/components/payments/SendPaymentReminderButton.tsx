@@ -44,6 +44,7 @@ export function SendPaymentReminderButton({
   clientName,
   paymentStatus,
   hasPhone,
+  policyStatus,
   size = "sm",
   className,
 }: {
@@ -51,6 +52,8 @@ export function SendPaymentReminderButton({
   clientName: string;
   paymentStatus: string;
   hasPhone: boolean;
+  /** Estatus de la póliza; si no es active/suspended, el cobro es la activación y no se manda recordatorio. */
+  policyStatus?: string | null;
   size?: "sm" | "default" | "lg" | "icon";
   className?: string;
 }) {
@@ -58,7 +61,8 @@ export function SendPaymentReminderButton({
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const eligible = paymentStatus === "pending" || paymentStatus === "overdue";
-  const disabled = !eligible || !hasPhone;
+  const notActivated = policyStatus != null && policyStatus !== "active" && policyStatus !== "suspended";
+  const disabled = !eligible || !hasPhone || notActivated;
 
   async function send() {
     setSending(true);
