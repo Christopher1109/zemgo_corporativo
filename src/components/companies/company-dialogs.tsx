@@ -33,6 +33,11 @@ export type CompanyLike = {
   group_type?: string | null;
   billing_mode?: string | null;
   location?: string | null;
+  coverage_start?: string | null;
+  coverage_end?: string | null;
+  pricing_mode?: string | null;
+  unit_price?: number | string | null;
+  flat_amount?: number | string | null;
   programs?: { code?: string | null } | null;
 };
 
@@ -45,6 +50,11 @@ function validate(form: FormState, fut: boolean): string | null {
     if (!(form.contact_name ?? "").trim()) return "El nombre del encargado es obligatorio.";
     if ((form.phone ?? "").replace(/\D/g, "").length !== 10) return "El teléfono del encargado debe tener 10 dígitos.";
     if (!form.billing_mode) return "Elige el modo de pago.";
+    if (!form.coverage_start || !form.coverage_end) return "Captura cuándo empieza y cuándo termina la cobertura.";
+    if (form.coverage_end <= form.coverage_start) return "La fecha de fin de cobertura debe ser posterior al inicio.";
+    if (form.pricing_mode === "flat") {
+      if (!(Number(form.flat_amount) > 0)) return "Captura el costo total acordado del torneo.";
+    } else if (!(Number(form.unit_price) > 0)) return "Captura el costo por jugador.";
     return null;
   }
   if ((form.legal_name ?? "").trim().length < 2) return "La razón social es obligatoria.";
@@ -66,8 +76,13 @@ function payload(form: FormState, fut: boolean) {
     ...(fut
       ? {
           group_type: form.group_type as "torneo" | "equipo" | "club",
-          billing_mode: (form.billing_mode ?? "company") as "company" | "individual",
+          billing_mode: (form.pricing_mode === "flat" ? "company" : form.billing_mode ?? "company") as "company" | "individual",
           location: t(form.location),
+          coverage_start: form.coverage_start || null,
+          coverage_end: form.coverage_end || null,
+          pricing_mode: (form.pricing_mode === "flat" ? "flat" : "per_person") as "flat" | "per_person",
+          unit_price: form.pricing_mode === "flat" ? null : Number(form.unit_price),
+          flat_amount: form.pricing_mode === "flat" ? Number(form.flat_amount) : null,
         }
       : {}),
   };
@@ -133,7 +148,48 @@ export function CompanyFormFields({
         <Field label="Estado">
           <Input value={form.state ?? ""} onChange={set("state")} />
         </Field>
-        {showBillingMode && (
+        <Field label="Inicio de cobertura *">
+          <Input type="date" value={form.coverage_start ?? ""} onChange={set("coverage_start")} />
+        </Field>
+        <Field label="Fin de cobertura *">
+          <Input type="date" value={form.coverage_end ?? ""} onChange={set("coverage_end")} />
+        </Field>
+        <Field label="Costo *" span>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              { v: "per_person", t: "Costo por jugador", d: "Se cobra el costo × cada jugador registrado." },
+              { v: "flat", t: "Costo total del torneo", d: "Una cantidad fija acordada, sin importar cuántos jugadores sean." },
+            ].map((o) => (
+              <label
+                key={o.v}
+                className={`cursor-pointer rounded-md border p-3 text-sm ${(form.pricing_mode ?? "per_person") === o.v ? "border-primary bg-primary/5" : ""}`}
+              >
+                <div className="flex items-center gap-2 font-medium">
+                  <input type="radio" name="pricing_mode" checked={(form.pricing_mode ?? "per_person") === o.v} onChange={() => setForm({ ...form, pricing_mode: o.v })} />
+                  {o.t}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">{o.d}</div>
+              </label>
+            ))}
+          </div>
+          {(form.pricing_mode ?? "per_person") === "flat" ? (
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Total del torneo $</span>
+              <Input inputMode="decimal" className="max-w-40" value={String(form.flat_amount ?? "")} onChange={(e) => setForm({ ...form, flat_amount: e.target.value.replace(/[^\d.]/g, "") })} />
+              <span className="text-sm text-muted-foreground">MXN</span>
+            </div>
+          ) : (
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Costo por jugador $</span>
+              <Input inputMode="decimal" className="max-w-40" value={String(form.unit_price ?? "")} onChange={(e) => setForm({ ...form, unit_price: e.target.value.replace(/[^\d.]/g, "") })} />
+              <span className="text-sm text-muted-foreground">MXN</span>
+            </div>
+          )}
+          {(form.pricing_mode ?? "per_person") === "flat" && form.billing_mode === "individual" && (
+            <p className="mt-1 text-xs text-amber-700">Con costo total del torneo, el cobro siempre lo paga el encargado.</p>
+          )}
+        </Field>
+        {showBillingMode && (form.pricing_mode ?? "per_person") !== "flat" && (
           <Field label="Modo de pago *" span>
             <div className="grid gap-2 sm:grid-cols-2">
               {[
@@ -196,6 +252,7 @@ export function CompanyFormFields({
 const EMPTY: FormState = {
   legal_name: "", rfc: "", contact_name: "", email: "", phone: "", address_full: "", city: "", state: "", notes: "",
   is_active: true, group_type: null, billing_mode: "company", location: "",
+  coverage_start: "", coverage_end: "", pricing_mode: "per_person", unit_price: "", flat_amount: "",
 };
 
 export function CreateCompanyDialog({
@@ -284,7 +341,14 @@ export function EditCompanyDialog({
   const [form, setForm] = useState<FormState>(company);
 
   useEffect(() => {
-    if (open) setForm({ ...company, billing_mode: company.billing_mode ?? "company" });
+    if (open)
+      setForm({
+        ...company,
+        billing_mode: company.billing_mode ?? "company",
+        pricing_mode: company.pricing_mode ?? "per_person",
+        coverage_start: company.coverage_start ? String(company.coverage_start).slice(0, 10) : "",
+        coverage_end: company.coverage_end ? String(company.coverage_end).slice(0, 10) : "",
+      });
   }, [open, company]);
 
   async function save() {
@@ -293,8 +357,9 @@ export function EditCompanyDialog({
     setBusy(true);
     try {
       const p: any = payload(form, fut);
-      // El modo de pago se cambia desde la ficha (con confirmación y recálculo del cobro).
-      delete p.billing_mode;
+      // El modo de pago se cambia desde la ficha (con confirmación y recálculo del cobro),
+      // salvo con costo total del torneo, que siempre lo paga el encargado.
+      if (p.pricing_mode !== "flat") delete p.billing_mode;
       const r = await fn({ data: { company_id: company.id, ...p, is_active: form.is_active } });
       toast.success(`${L.singular} actualizado`);
       if (r?.contact_warning) toast.warning(r.contact_warning);

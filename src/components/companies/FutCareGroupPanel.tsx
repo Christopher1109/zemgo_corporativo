@@ -137,7 +137,14 @@ export function FutCareGroupPanel({
   const modeFn = useServerFn(setGroupBillingMode);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const price = Number(company.programs?.default_premium ?? 950);
+  const isFlat = company.pricing_mode === "flat";
+  const price = Number(company.unit_price ?? company.programs?.default_premium ?? 950);
+  const flatAmount = Number(company.flat_amount ?? 0);
+  const coverageText =
+    company.coverage_start && company.coverage_end
+      ? `del ${fmtDate(company.coverage_start)} al ${fmtDate(company.coverage_end)}`
+      : `${fmtDate(new Date(company.created_at).toLocaleDateString("en-CA", { timeZone: "America/Monterrey" }))} a un año`;
+  const costText = isFlat ? `Costo total acordado del torneo: ${fmtMx(flatAmount)}` : `Costo por jugador: ${fmtMx(price)}`;
   const groupName: string = company.legal_name;
   const current = policies.filter((p) => p.status !== "cancelled");
   const billingMode: "company" | "individual" = company.billing_mode === "individual" ? "individual" : "company";
@@ -467,8 +474,39 @@ export function FutCareGroupPanel({
     billingMode === "company" || payFilter === "all" ? true : payFilter === "paid" ? isPaid(p) : !isPaid(p),
   );
 
+  const ready = current.length > 0 && pendingList.length === 0;
+  const fromPortal = current.filter((p) => p.status === "active" && p.certificate_pdf_url).length;
+
   return (
     <>
+      <div
+        className={`mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-sm ${
+          ready ? "border-emerald-300 bg-emerald-50" : "border-amber-300 bg-amber-50"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          {ready ? <CheckCircle2 className="h-5 w-5 text-emerald-600" /> : <AlertTriangle className="h-5 w-5 text-amber-600" />}
+          <div>
+            <div className="font-semibold">
+              {ready
+                ? "Certificados listos"
+                : current.length === 0
+                  ? "Sin jugadores: sube la plantilla que te regrese el encargado"
+                  : `Pendiente de pago: ${pendingList.length} de ${current.length} jugadores sin cubrir`}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {ready
+                ? `El encargado ya puede descargarlos en su portal · ${fromPortal} de ${current.length} ya generados. También puedes descargarlos aquí (ZIP) para enviárselos.`
+                : `Vigencia ${coverageText} · ${costText}`}
+            </div>
+          </div>
+        </div>
+        {ready && (
+          <Button size="sm" disabled={!!zip} onClick={() => downloadZip(current)}>
+            <Package className="h-4 w-4 mr-1" /> Descargar ZIP
+          </Button>
+        )}
+      </div>
       <Tabs defaultValue="asegurados" className="space-y-4">
         <TabsList>
           <TabsTrigger value="asegurados">Asegurados</TabsTrigger>
@@ -491,7 +529,7 @@ export function FutCareGroupPanel({
           </div>
           <input ref={fileRef} type="file" accept=".xlsx" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void onFile(f); }} />
           <p className="text-xs text-muted-foreground">
-            Vigencia de todos los certificados del grupo: {fmtDate(new Date(company.created_at).toLocaleDateString("en-CA", { timeZone: "America/Monterrey" }))} a un año. Precio por persona: {fmtMx(price)}.
+            Vigencia de todos los certificados del grupo: {coverageText}. {costText}.
           </p>
         </TabsContent>
 
@@ -583,10 +621,18 @@ export function FutCareGroupPanel({
               <div className="flex-1 min-w-[220px]">
                 <div className="text-xs text-muted-foreground">Modo de pago</div>
                 <div className="font-semibold">{BILLING_MODE_LABEL[billingMode]}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{costText} · Vigencia {coverageText}</div>
               </div>
               <div className="flex rounded-md border p-0.5">
                 {(["company", "individual"] as const).map((m) => (
-                  <Button key={m} size="sm" variant={billingMode === m ? "default" : "ghost"} onClick={() => billingMode !== m && setModeConfirm(m)}>
+                  <Button
+                    key={m}
+                    size="sm"
+                    variant={billingMode === m ? "default" : "ghost"}
+                    disabled={isFlat && m === "individual"}
+                    title={isFlat && m === "individual" ? "Con costo total del torneo, el cobro lo paga el encargado" : undefined}
+                    onClick={() => billingMode !== m && setModeConfirm(m)}
+                  >
                     {BILLING_MODE_LABEL[m]}
                   </Button>
                 ))}
@@ -606,7 +652,11 @@ export function FutCareGroupPanel({
                   <>
                     <div className="grid gap-3 sm:grid-cols-4">
                       <Stat label="Monto" value={fmtMx(lastCharge.amount)} />
-                      <Stat label="Certificados × precio" value={`${lastCharge.metadata?.certificates ?? lastCharge.metadata?.insured_count ?? pendingCerts} × ${fmtMx(lastCharge.metadata?.unit_price ?? price)}`} />
+                      {lastCharge.metadata?.pricing_mode === "flat" || isFlat ? (
+                        <Stat label="Costo total del torneo" value={`${lastCharge.metadata?.insured_count ?? pendingCerts} jugadores`} />
+                      ) : (
+                        <Stat label="Certificados × precio" value={`${lastCharge.metadata?.certificates ?? lastCharge.metadata?.insured_count ?? pendingCerts} × ${fmtMx(lastCharge.metadata?.unit_price ?? price)}`} />
+                      )}
                       <Stat label="Vencimiento" value={fmtDate(lastCharge.due_date)} />
                       <Stat label="Estado" value={lastCharge.status === "paid" ? "Pagado" : lastCharge.status === "overdue" ? "Vencido" : lastCharge.status === "pending" ? "Pendiente" : lastCharge.status} />
                     </div>
@@ -682,7 +732,7 @@ export function FutCareGroupPanel({
                 <Stat label="Nuevos" value={String(review.nuevos.length)} />
                 <Stat label="Ya registrados (se ignoran)" value={String(review.yaRegistrados.length)} />
                 <Stat label="Con errores" value={String(review.conErrores.length)} />
-                <Stat label="Total a cobrar estimado" value={fmtMx(review.nuevos.length * price)} />
+                <Stat label={isFlat ? "Costo total acordado" : "Total a cobrar estimado"} value={fmtMx(isFlat ? flatAmount : review.nuevos.length * price)} />
               </div>
 
               <RowTable title="Nuevos" icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />} rows={review.nuevos} extra={(r) => r.alert ? <span className="text-amber-700">{r.alert}</span> : null} />

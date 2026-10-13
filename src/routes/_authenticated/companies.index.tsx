@@ -103,6 +103,12 @@ function CompaniesPage() {
                       {L.fut && c.billing_mode && (
                         <Badge variant="outline" className="text-[10px]">{BILLING_MODE_LABEL[c.billing_mode] ?? c.billing_mode}</Badge>
                       )}
+                      {L.fut && (c.stats?.active ?? 0) > 0 && (c.stats?.pending ?? 0) === 0 && (
+                        <Badge className="text-[10px] bg-emerald-600 hover:bg-emerald-600">Certificados listos</Badge>
+                      )}
+                      {L.fut && (c.stats?.pending ?? 0) > 0 && (
+                        <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700">Pendiente de pago</Badge>
+                      )}
                       {!L.fut && c.rfc && <Badge variant="outline" className="font-mono text-[10px]">{c.rfc}</Badge>}
                       {!c.is_active && <Badge variant="secondary">inactiva</Badge>}
                     </div>

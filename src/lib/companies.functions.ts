@@ -11,7 +11,7 @@ export const listCompanies = createServerFn({ method: "POST" })
     const { supabase } = context;
     let q = supabase
       .from("companies")
-      .select("id, legal_name, rfc, contact_name, email, phone, city, state, is_active, created_at, program_id, group_type, billing_mode, location, address_full, notes, programs(code, name, color_primary)" as any)
+      .select("id, legal_name, rfc, contact_name, email, phone, city, state, is_active, created_at, program_id, group_type, billing_mode, location, coverage_start, coverage_end, pricing_mode, unit_price, flat_amount, address_full, notes, programs(code, name, color_primary)" as any)
       .order("created_at", { ascending: false });
     q = q.eq("program_id", data.program_id || "00000000-0000-0000-0000-000000000000"); // siempre un programa
     const { data: companies, error } = await q;
@@ -20,8 +20,8 @@ export const listCompanies = createServerFn({ method: "POST" })
     const ids = (companies ?? []).map((c: any) => c.id);
     // employees = asegurados con al menos un certificado vigente; cancelledEmployees = bajas.
     // premium = solo certificados activos (las bajas no se cobran).
-    const counts: Record<string, { employees: number; cancelledEmployees: number; totalEmployees: number; policies: number; active: number; premium: number }> = {};
-    ids.forEach((id) => (counts[id] = { employees: 0, cancelledEmployees: 0, totalEmployees: 0, policies: 0, active: 0, premium: 0 }));
+    const counts: Record<string, { employees: number; cancelledEmployees: number; totalEmployees: number; policies: number; active: number; pending: number; premium: number }> = {};
+    ids.forEach((id) => (counts[id] = { employees: 0, cancelledEmployees: 0, totalEmployees: 0, policies: 0, active: 0, pending: 0, premium: 0 }));
 
     if (ids.length) {
       const { data: pols } = await supabase
@@ -33,6 +33,7 @@ export const listCompanies = createServerFn({ method: "POST" })
         const c = counts[p.company_id];
         if (!c) return;
         c.policies += 1;
+        if (p.status === "pending_payment" || p.status === "draft") c.pending += 1;
         if (p.status === "active") {
           c.active += 1;
           c.premium += Number(p.premium ?? 0);
@@ -57,6 +58,11 @@ const groupFields = {
   group_type: z.enum(["torneo", "equipo", "club"]).optional().nullable(),
   billing_mode: z.enum(["company", "individual"]).optional(),
   location: z.string().optional().nullable(),
+  coverage_start: z.string().optional().nullable(),
+  coverage_end: z.string().optional().nullable(),
+  pricing_mode: z.enum(["per_person", "flat"]).optional().nullable(),
+  unit_price: z.number().nonnegative().optional().nullable(),
+  flat_amount: z.number().nonnegative().optional().nullable(),
 };
 
 const CONTACT_ERRORS: Record<string, string> = {
@@ -156,9 +162,9 @@ export const updateCompany = createServerFn({ method: "POST" })
     let contact_warning: string | null = null;
     if (isGroup && before) {
       contact_warning = await upsertGroupContact(supabase, company_id);
-      if (fields.billing_mode && fields.billing_mode !== before.billing_mode) {
-        await (supabase.rpc as any)("refresh_group_charge", { _company_id: company_id });
-      }
+      // Recalcula el cobro y la vigencia de los certificados aún no pagados
+      // (cambio de modo de pago, costo o fechas de cobertura).
+      await (supabase.rpc as any)("refresh_group_charge", { _company_id: company_id });
     }
     return { ok: true, contact_warning };
   });
@@ -274,7 +280,7 @@ export const importCompanyEmployees = createServerFn({ method: "POST" })
 
     const { data: company, error: cErr } = await supabase
       .from("companies")
-      .select("id, legal_name, program_id, created_at")
+      .select("id, legal_name, program_id, created_at, coverage_start, coverage_end, pricing_mode, unit_price" as any)
       .eq("id", data.company_id)
       .single();
     if (cErr) throw new Error(cErr.message);
@@ -291,11 +297,21 @@ export const importCompanyEmployees = createServerFn({ method: "POST" })
     let endDate = data.end_date ?? startDate;
     let premium = data.premium ?? null;
     if (data.group_terms) {
-      startDate = new Date(company.created_at as string).toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
-      const [y, m, d] = startDate.split("-");
-      endDate = `${Number(y) + 1}-${m}-${d}`;
+      const c: any = company;
+      // Vigencia: la que se capturó al dar de alta el torneo/equipo; si no hay, un año desde el alta.
+      if (c.coverage_start && c.coverage_end) {
+        startDate = String(c.coverage_start).slice(0, 10);
+        endDate = String(c.coverage_end).slice(0, 10);
+      } else {
+        startDate = new Date(c.created_at as string).toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
+        const [y, m, d] = startDate.split("-");
+        endDate = `${Number(y) + 1}-${m}-${d}`;
+      }
       issueDate = new Date().toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
-      premium = (prog as any)?.default_premium != null ? Number((prog as any).default_premium) : premium;
+      // Costo: por jugador = el capturado en el grupo; costo total del torneo = lo carga el cobro grupal.
+      if (c.pricing_mode === "flat") premium = 0;
+      else if (c.unit_price != null) premium = Number(c.unit_price);
+      else premium = (prog as any)?.default_premium != null ? Number((prog as any).default_premium) : premium;
     }
 
     const details: Array<{ curp: string; name: string; ok: boolean; folio?: string; error?: string }> = [];
