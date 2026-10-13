@@ -59,56 +59,31 @@ const groupFields = {
   location: z.string().optional().nullable(),
 };
 
-function splitName(full: string) {
-  const parts = full.trim().split(/\s+/);
-  if (parts.length <= 1) return { first_name: parts[0] ?? "", last_name: "-" };
-  if (parts.length === 2) return { first_name: parts[0], last_name: parts[1] };
-  // "Nombre(s) Paterno Materno": los dos últimos son apellidos.
-  return { first_name: parts.slice(0, -2).join(" "), last_name: parts.slice(-2).join(" ") };
+const CONTACT_ERRORS: Record<string, string> = {
+  grupo_no_encontrado: "No se encontró el grupo.",
+  forbidden: "No tienes permiso para dar acceso al encargado.",
+  falta_encargado: "Falta el nombre o teléfono del encargado.",
+};
+
+/** Registra/actualiza al encargado vía RPC. Nunca lanza: regresa un aviso si falla. */
+async function upsertGroupContact(supabase: any, companyId: string): Promise<string | null> {
+  try {
+    const { error } = await (supabase.rpc as any)("upsert_group_contact", { _company_id: companyId });
+    if (!error) return null;
+    const code = Object.keys(CONTACT_ERRORS).find((k) => error.message?.includes(k));
+    return `El grupo se guardó, pero el encargado no tiene acceso al portal: ${code ? CONTACT_ERRORS[code] : error.message}`;
+  } catch (e: any) {
+    return `El grupo se guardó, pero el encargado no tiene acceso al portal: ${e?.message ?? "error desconocido"}`;
+  }
 }
 
-/** El encargado de un torneo/equipo se registra como cliente (sin company_id) para que entre al portal. */
-async function upsertGroupContact(
-  supabase: any,
-  userId: string,
-  company: { id: string; program_id: string; contact_client_id?: string | null },
-  contact: { contact_name?: string | null; phone?: string | null; email?: string | null },
-) {
-  if (!contact.contact_name?.trim()) return null;
-  const { first_name, last_name } = splitName(contact.contact_name);
-  const phone = (contact.phone ?? "").replace(/\D/g, "") || null;
-  if (company.contact_client_id) {
-    const { error } = await supabase
-      .from("clients")
-      .update({ first_name, last_name, phone, email: contact.email || null })
-      .eq("id", company.contact_client_id);
-    if (error) throw new Error(`No se pudo actualizar al encargado: ${error.message}`);
-    return company.contact_client_id;
-  }
-  const placeholder = ("PEND" + crypto.randomUUID().replace(/-/g, "").toUpperCase()).slice(0, 18);
-  const { data: ins, error } = await supabase
-    .from("clients")
-    .insert({
-      first_name,
-      last_name,
-      curp: placeholder,
-      phone,
-      email: contact.email || null,
-      created_by: userId,
-      metadata: { role: "group_contact", company_id: company.id, curp_pending: true },
-    } as any)
-    .select("id")
-    .single();
-  if (error) throw new Error(`No se pudo registrar al encargado: ${error.message}`);
-  await supabase.from("client_programs").insert({
-    client_id: ins.id,
-    program_id: company.program_id,
-    status: "active",
-    metadata: { role: "group_contact", company_id: company.id },
-  } as any);
-  await (supabase.from("companies") as any).update({ contact_client_id: ins.id }).eq("id", company.id);
-  return ins.id as string;
-}
+export const grantGroupContactAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ company_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const warning = await upsertGroupContact(context.supabase, data.company_id);
+    return { ok: !warning, contact_warning: warning };
+  });
 
 export const createCompany = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -136,11 +111,16 @@ export const createCompany = createServerFn({ method: "POST" })
       .select("id, program_id")
       .single();
     if (error) throw new Error(error.message);
+    let contact_warning: string | null = null;
     if (data.group_type) {
-      await upsertGroupContact(supabase, userId, row, data);
-      await (supabase.rpc as any)("refresh_group_charge", { _company_id: row.id });
+      contact_warning = await upsertGroupContact(supabase, row.id);
+      try {
+        await (supabase.rpc as any)("refresh_group_charge", { _company_id: row.id });
+      } catch {
+        /* no bloquea la creación */
+      }
     }
-    return { id: row.id as string };
+    return { id: row.id as string, contact_warning };
   });
 
 export const updateCompany = createServerFn({ method: "POST" })
@@ -173,18 +153,14 @@ export const updateCompany = createServerFn({ method: "POST" })
     const { error } = await (supabase.from("companies") as any).update(fields).eq("id", company_id);
     if (error) throw new Error(error.message);
     const isGroup = !!(fields.group_type ?? before?.group_type);
+    let contact_warning: string | null = null;
     if (isGroup && before) {
-      const changed =
-        !before.contact_client_id ||
-        before.contact_name !== fields.contact_name ||
-        before.phone !== fields.phone ||
-        before.email !== fields.email;
-      if (changed) await upsertGroupContact(supabase, userId, before, fields);
+      contact_warning = await upsertGroupContact(supabase, company_id);
       if (fields.billing_mode && fields.billing_mode !== before.billing_mode) {
         await (supabase.rpc as any)("refresh_group_charge", { _company_id: company_id });
       }
     }
-    return { ok: true };
+    return { ok: true, contact_warning };
   });
 
 export const deleteCompany = createServerFn({ method: "POST" })
