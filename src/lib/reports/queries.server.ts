@@ -181,7 +181,7 @@ export async function queryVentas(supabase: SupabaseClient, filters: ReportFilte
   const fromD = dateOrNull(filters.date_from);
   const toD = dateOrNull(filters.date_to);
 
-  let cliQ = supabase.from("clients").select("id, sales_rep_id, created_at");
+  let cliQ = supabase.from("clients").select("id, sales_rep_id, created_at").not("metadata", "cs", '{"role":"group_contact"}');
   if (fromD) cliQ = cliQ.gte("created_at", fromD);
   if (toD) cliQ = cliQ.lte("created_at", toD + "T23:59:59");
   const { data: clients, error: cliErr } = await cliQ;

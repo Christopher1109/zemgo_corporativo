@@ -76,6 +76,7 @@ function Dashboard() {
         .from("client_programs")
         .select("enrolled_at, clients!inner(id, first_name, last_name, state, created_at)")
         .eq("program_id", scope!)
+        .not("metadata", "cs", '{"role":"group_contact"}')
         .order("enrolled_at", { ascending: false })
         .limit(6);
       if (error) throw error;
@@ -89,7 +90,7 @@ function Dashboard() {
     queryKey: ["dash-summary", scopeKey],
     queryFn: async () => {
       const cnt = async (status: string) => {
-        const { count } = await supabase.from("client_programs").select("id", { count: "exact", head: true }).eq("program_id", scope!).eq("status", status as any);
+        const { count } = await supabase.from("client_programs").select("id", { count: "exact", head: true }).eq("program_id", scope!).eq("status", status as any).not("metadata", "cs", '{"role":"group_contact"}');
         return count ?? 0;
       };
       const [active, prospect, inactive] = await Promise.all([cnt("active"), cnt("prospect"), cnt("inactive")]);
@@ -110,6 +111,7 @@ function Dashboard() {
         .from("client_programs")
         .select("id", { count: "exact", head: true })
         .eq("program_id", scope!)
+        .not("metadata", "cs", '{"role":"group_contact"}')
         .gte("enrolled_at", start.toISOString());
       if (error) throw error;
       return count ?? 0;

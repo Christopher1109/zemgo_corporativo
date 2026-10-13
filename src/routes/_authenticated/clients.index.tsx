@@ -40,6 +40,8 @@ function ClientsList() {
         // Los asegurados de empresa se consolidan en su carpeta: se excluyen en la consulta
         // (antes del límite) para que no desplacen a los clientes individuales.
         .is("clients.company_id", null)
+        // El encargado de un torneo/equipo no es asegurado.
+        .not("clients.metadata", "cs", '{"role":"group_contact"}')
         .order("enrolled_at", { ascending: false })
         .limit(500);
       if (effectiveProgramId) q = q.eq("program_id", effectiveProgramId);
