@@ -3134,6 +3134,7 @@ export type Database = {
         Returns: Json
       }
       get_portal_dashboard: { Args: { _token: string }; Returns: Json }
+      get_portal_group: { Args: { _token: string }; Returns: Json }
       get_portal_hospitals: {
         Args: { _policy_id: string; _token: string }
         Returns: Json
@@ -3261,6 +3262,10 @@ export type Database = {
       name_tokens: { Args: { _name: string }; Returns: string[] }
       next_policy_folio: { Args: { _program_id: string }; Returns: string }
       normalize_person_name: { Args: { _name: string }; Returns: string }
+      portal_can_access_policy: {
+        Args: { _client_id: string; _policy_id: string }
+        Returns: boolean
+      }
       portal_normalize_name: { Args: { _name: string }; Returns: string }
       process_sheet_row: {
         Args: {
@@ -3285,6 +3290,7 @@ export type Database = {
         Returns: Json
       }
       refresh_dashboard_mvs: { Args: never; Returns: Json }
+      refresh_group_charge: { Args: { _company_id: string }; Returns: Json }
       refund_payment: {
         Args: { _payment_id: string; _reason: string }
         Returns: undefined
@@ -3409,6 +3415,7 @@ export type Database = {
             }
             Returns: Json
           }
+      upsert_group_contact: { Args: { _company_id: string }; Returns: string }
       upsert_sales_rep_by_name: {
         Args: { _client_id?: string; _name: string; _source?: string }
         Returns: string
