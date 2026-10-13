@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { groupLabels } from "@/lib/group-labels";
 import type { ReactNode } from "react";
 
 import { ProgramLogo } from "@/components/program-logo";
@@ -189,7 +190,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     active ? "" : "text-white/60 group-hover:text-white",
                   )}
                 />
-                <span className="flex-1 truncate">{item.label}</span>
+                <span className="flex-1 truncate">{item.to === "/companies" ? groupLabels(activeProgram?.code).plural : item.label}</span>
               </Link>
             );
           })}
