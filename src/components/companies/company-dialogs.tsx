@@ -225,18 +225,23 @@ export function CreateCompanyDialog({
     if (!programId) return toast.error("Selecciona un programa.");
     const err = validate(form, fut);
     if (err) return toast.error(err);
+    if (busy) return;
     setBusy(true);
+    let res: { id: string; contact_warning?: string | null };
     try {
-      const res = await fn({ data: { program_id: programId, ...payload(form, fut) } });
-      toast.success(`${L.singular} creado`);
-      onOpenChange(false);
-      await qc.invalidateQueries({ queryKey: ["companies"] });
-      navigate({ to: "/companies/$companyId", params: { companyId: res.id } });
+      res = await fn({ data: { program_id: programId, ...payload(form, fut) } });
     } catch (e: any) {
       toast.error(e?.message ?? "No se pudo guardar");
-    } finally {
       setBusy(false);
+      return;
     }
+    // Una vez creado, siempre cerrar y navegar (evita duplicados al reintentar).
+    toast.success(`${L.singular} creado`);
+    if (res.contact_warning) toast.warning(res.contact_warning);
+    onOpenChange(false);
+    setBusy(false);
+    qc.invalidateQueries({ queryKey: ["companies"] });
+    navigate({ to: "/companies/$companyId", params: { companyId: res.id } });
   }
 
   return (
@@ -290,8 +295,9 @@ export function EditCompanyDialog({
       const p: any = payload(form, fut);
       // El modo de pago se cambia desde la ficha (con confirmación y recálculo del cobro).
       delete p.billing_mode;
-      await fn({ data: { company_id: company.id, ...p, is_active: form.is_active } });
+      const r = await fn({ data: { company_id: company.id, ...p, is_active: form.is_active } });
       toast.success(`${L.singular} actualizado`);
+      if (r?.contact_warning) toast.warning(r.contact_warning);
       onOpenChange(false);
       await qc.invalidateQueries({ queryKey: ["companies"] });
       await qc.invalidateQueries({ queryKey: ["company", company.id] });

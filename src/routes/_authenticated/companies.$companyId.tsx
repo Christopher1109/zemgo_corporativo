@@ -17,7 +17,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { getCompanyDetail, importCompanyEmployees } from "@/lib/companies.functions";
+import { getCompanyDetail, importCompanyEmployees, grantGroupContactAccess } from "@/lib/companies.functions";
 import { EditCompanyDialog, DeleteCompanyDialog } from "@/components/companies/company-dialogs";
 import { MonthlyUpdateDialog } from "@/components/companies/MonthlyUpdateDialog";
 import { CompanyChargesCard, CompanyBillingSummary } from "@/components/companies/CompanyChargesCard";
@@ -384,6 +384,10 @@ function CompanyDetailPage() {
         </div>
       </div>
 
+      {fut && !(company as any).contact_client_id && (
+        <GroupContactAccessBanner companyId={company.id} onDone={() => q.refetch()} />
+      )}
+
       {fut ? (
         <FutCareGroupPanel
           company={company}
@@ -625,5 +629,29 @@ function MiniStat({ label, value }: { label: string; value: string }) {
         <div className="text-xl font-bold tabular-nums mt-1">{value}</div>
       </CardContent>
     </Card>
+  );
+}
+
+function GroupContactAccessBanner({ companyId, onDone }: { companyId: string; onDone: () => void }) {
+  const fn = useServerFn(grantGroupContactAccess);
+  const [busy, setBusy] = useState(false);
+  async function grant() {
+    setBusy(true);
+    try {
+      const r = await fn({ data: { company_id: companyId } });
+      if (r.contact_warning) toast.warning(r.contact_warning);
+      else toast.success("El encargado ya tiene acceso al portal");
+      onDone();
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo dar acceso al encargado");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">
+      <span>El encargado todavía no tiene acceso al portal.</span>
+      <Button size="sm" onClick={grant} disabled={busy}>{busy ? "Dando acceso…" : "Dar acceso al encargado"}</Button>
+    </div>
   );
 }
