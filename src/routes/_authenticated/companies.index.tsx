@@ -9,12 +9,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EditCompanyDialog, DeleteCompanyDialog } from "@/components/companies/company-dialogs";
+import { EditCompanyDialog, DeleteCompanyDialog, CreateCompanyDialog } from "@/components/companies/company-dialogs";
+import { groupLabels, GROUP_TYPE_LABEL, BILLING_MODE_LABEL } from "@/lib/group-labels";
 
 export const Route = createFileRoute("/_authenticated/companies/")({
   head: () => ({
     meta: [
-      { title: "Empresas — ZEMGO" },
+      { title: "Empresas y grupos — ZEMGO" },
       { name: "description", content: "Empresas dadas de alta y sus asegurados consolidados." },
     ],
   }),
@@ -31,6 +32,8 @@ function CompaniesPage() {
   const [editTarget, setEditTarget] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const programId = useActiveProgramId();
+  const [createOpen, setCreateOpen] = useState(false);
+  const L = groupLabels(activeProgram?.code);
 
   const fn = useServerFn(listCompanies);
   const q = useQuery({
@@ -52,24 +55,20 @@ function CompaniesPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Building2 className="h-6 w-6" style={{ color: "var(--program-primary)" }} />
-            Empresas
+            {L.plural}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Cada empresa agrupa a todos sus asegurados: un certificado por persona, consolidado en una sola carpeta.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">{L.description}</p>
         </div>
         <div className="flex gap-2">
-          <Button asChild size="sm">
-            <Link to="/clients/new">
-              <Plus className="h-4 w-4 mr-1" /> Nueva empresa
-            </Link>
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> {L.newLabel}
           </Button>
         </div>
       </div>
 
       <div className="relative max-w-sm">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-8" placeholder="Buscar por razón social o RFC…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Input className="pl-8" placeholder={L.search} value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       <div className="grid gap-3">
@@ -78,7 +77,7 @@ function CompaniesPage() {
         ) : rows.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center text-sm text-muted-foreground">
-              Aún no hay empresas registradas. Usa “Nueva empresa” y elige la opción Empresa.
+              {L.empty}
             </CardContent>
           </Card>
         ) : (
@@ -98,7 +97,13 @@ function CompaniesPage() {
                           {c.programs.code}
                         </Badge>
                       )}
-                      {c.rfc && <Badge variant="outline" className="font-mono text-[10px]">{c.rfc}</Badge>}
+                      {L.fut && c.group_type && (
+                        <Badge variant="secondary" className="text-[10px]">{GROUP_TYPE_LABEL[c.group_type as keyof typeof GROUP_TYPE_LABEL] ?? c.group_type}</Badge>
+                      )}
+                      {L.fut && c.billing_mode && (
+                        <Badge variant="outline" className="text-[10px]">{BILLING_MODE_LABEL[c.billing_mode] ?? c.billing_mode}</Badge>
+                      )}
+                      {!L.fut && c.rfc && <Badge variant="outline" className="font-mono text-[10px]">{c.rfc}</Badge>}
                       {!c.is_active && <Badge variant="secondary">inactiva</Badge>}
                     </div>
                     <div className="mt-1 text-xs text-muted-foreground flex items-center gap-3 flex-wrap">
@@ -110,7 +115,7 @@ function CompaniesPage() {
                         <FileText className="h-3 w-3" /> {c.stats?.active ?? 0} certificados activos
                         {(c.stats?.policies ?? 0) - (c.stats?.active ?? 0) > 0 && ` · ${(c.stats?.policies ?? 0) - (c.stats?.active ?? 0)} cancelados`}
                       </span>
-                      {c.contact_name && <span>Contacto: {c.contact_name}</span>}
+                      {c.contact_name && <span>{L.fut ? "Encargado" : "Contacto"}: {c.contact_name}</span>}
                     </div>
                   </div>
                   <div className="text-right">
@@ -122,7 +127,7 @@ function CompaniesPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    title="Editar empresa"
+                    title={`Editar ${L.singularLower}`}
                     onClick={() => setEditTarget(c)}
                   >
                     <Pencil className="h-4 w-4" />
@@ -130,7 +135,7 @@ function CompaniesPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    title="Eliminar empresa"
+                    title={`Eliminar ${L.singularLower}`}
                     className="text-destructive hover:text-destructive"
                     onClick={() => setDeleteTarget(c)}
                   >
@@ -144,6 +149,7 @@ function CompaniesPage() {
         )}
       </div>
 
+      <CreateCompanyDialog programId={programId} programCode={activeProgram?.code} open={createOpen} onOpenChange={setCreateOpen} />
       {editTarget && (
         <EditCompanyDialog company={editTarget} open onOpenChange={(v) => !v && setEditTarget(null)} />
       )}
