@@ -649,7 +649,7 @@ function GroupContactAccessBanner({ companyId, onDone }: { companyId: string; on
     }
   }
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
       <span>El encargado todavía no tiene acceso al portal.</span>
       <Button size="sm" onClick={grant} disabled={busy}>{busy ? "Dando acceso…" : "Dar acceso al encargado"}</Button>
     </div>
