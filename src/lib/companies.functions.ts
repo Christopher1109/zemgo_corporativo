@@ -11,7 +11,7 @@ export const listCompanies = createServerFn({ method: "POST" })
     const { supabase } = context;
     let q = supabase
       .from("companies")
-      .select("id, legal_name, rfc, contact_name, email, phone, city, state, is_active, created_at, program_id, programs(code, name, color_primary)")
+      .select("id, legal_name, rfc, contact_name, email, phone, city, state, is_active, created_at, program_id, group_type, billing_mode, location, address_full, notes, programs(code, name, color_primary)" as any)
       .order("created_at", { ascending: false });
     q = q.eq("program_id", data.program_id || "00000000-0000-0000-0000-000000000000"); // siempre un programa
     const { data: companies, error } = await q;
@@ -53,6 +53,63 @@ export const listCompanies = createServerFn({ method: "POST" })
     return (companies ?? []).map((c: any) => ({ ...c, stats: counts[c.id] }));
   });
 
+const groupFields = {
+  group_type: z.enum(["torneo", "equipo", "club"]).optional().nullable(),
+  billing_mode: z.enum(["company", "individual"]).optional(),
+  location: z.string().optional().nullable(),
+};
+
+function splitName(full: string) {
+  const parts = full.trim().split(/\s+/);
+  if (parts.length <= 1) return { first_name: parts[0] ?? "", last_name: "-" };
+  if (parts.length === 2) return { first_name: parts[0], last_name: parts[1] };
+  // "Nombre(s) Paterno Materno": los dos últimos son apellidos.
+  return { first_name: parts.slice(0, -2).join(" "), last_name: parts.slice(-2).join(" ") };
+}
+
+/** El encargado de un torneo/equipo se registra como cliente (sin company_id) para que entre al portal. */
+async function upsertGroupContact(
+  supabase: any,
+  userId: string,
+  company: { id: string; program_id: string; contact_client_id?: string | null },
+  contact: { contact_name?: string | null; phone?: string | null; email?: string | null },
+) {
+  if (!contact.contact_name?.trim()) return null;
+  const { first_name, last_name } = splitName(contact.contact_name);
+  const phone = (contact.phone ?? "").replace(/\D/g, "") || null;
+  if (company.contact_client_id) {
+    const { error } = await supabase
+      .from("clients")
+      .update({ first_name, last_name, phone, email: contact.email || null })
+      .eq("id", company.contact_client_id);
+    if (error) throw new Error(`No se pudo actualizar al encargado: ${error.message}`);
+    return company.contact_client_id;
+  }
+  const placeholder = ("PEND" + crypto.randomUUID().replace(/-/g, "").toUpperCase()).slice(0, 18);
+  const { data: ins, error } = await supabase
+    .from("clients")
+    .insert({
+      first_name,
+      last_name,
+      curp: placeholder,
+      phone,
+      email: contact.email || null,
+      created_by: userId,
+      metadata: { role: "group_contact", company_id: company.id, curp_pending: true },
+    } as any)
+    .select("id")
+    .single();
+  if (error) throw new Error(`No se pudo registrar al encargado: ${error.message}`);
+  await supabase.from("client_programs").insert({
+    client_id: ins.id,
+    program_id: company.program_id,
+    status: "active",
+    metadata: { role: "group_contact", company_id: company.id },
+  } as any);
+  await (supabase.from("companies") as any).update({ contact_client_id: ins.id }).eq("id", company.id);
+  return ins.id as string;
+}
+
 export const createCompany = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -68,17 +125,21 @@ export const createCompany = createServerFn({ method: "POST" })
         city: z.string().optional().nullable(),
         state: z.string().optional().nullable(),
         notes: z.string().optional().nullable(),
+        ...groupFields,
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: row, error } = await supabase
-      .from("companies")
-      .insert({ ...data, created_by: userId })
-      .select("id")
+    const { data: row, error } = await (supabase.from("companies") as any)
+      .insert({ ...data, billing_mode: data.billing_mode ?? "company", created_by: userId })
+      .select("id, program_id")
       .single();
     if (error) throw new Error(error.message);
+    if (data.group_type) {
+      await upsertGroupContact(supabase, userId, row, data);
+      await (supabase.rpc as any)("refresh_group_charge", { _company_id: row.id });
+    }
     return { id: row.id as string };
   });
 
@@ -98,14 +159,31 @@ export const updateCompany = createServerFn({ method: "POST" })
         state: z.string().optional().nullable(),
         notes: z.string().optional().nullable(),
         is_active: z.boolean().optional(),
+        ...groupFields,
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
     const { company_id, ...fields } = data;
-    const { error } = await supabase.from("companies").update(fields).eq("id", company_id);
+    const { data: before } = await (supabase.from("companies") as any)
+      .select("id, program_id, group_type, billing_mode, contact_client_id, contact_name, phone, email")
+      .eq("id", company_id)
+      .single();
+    const { error } = await (supabase.from("companies") as any).update(fields).eq("id", company_id);
     if (error) throw new Error(error.message);
+    const isGroup = !!(fields.group_type ?? before?.group_type);
+    if (isGroup && before) {
+      const changed =
+        !before.contact_client_id ||
+        before.contact_name !== fields.contact_name ||
+        before.phone !== fields.phone ||
+        before.email !== fields.email;
+      if (changed) await upsertGroupContact(supabase, userId, before, fields);
+      if (fields.billing_mode && fields.billing_mode !== before.billing_mode) {
+        await (supabase.rpc as any)("refresh_group_charge", { _company_id: company_id });
+      }
+    }
     return { ok: true };
   });
 
@@ -130,14 +208,14 @@ export const getCompanyDetail = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: company, error } = await supabase
       .from("companies")
-      .select("*, programs(id, code, name, color_primary)")
+      .select("*, programs(id, code, name, color_primary, default_premium)")
       .eq("id", data.company_id)
       .single();
     if (error) throw new Error(error.message);
 
     const { data: policies } = await supabase
       .from("policies")
-      .select("id, folio, certificate_number, status, premium, start_date, end_date, certificate_pdf_url, client_id, clients(id, first_name, last_name, curp, email, phone)")
+      .select("id, folio, certificate_number, status, premium, start_date, end_date, certificate_pdf_url, client_id, clients(id, first_name, last_name, curp, email, phone, payer_phone)")
       .eq("company_id", data.company_id)
       .order("folio", { ascending: true });
 
@@ -146,10 +224,18 @@ export const getCompanyDetail = createServerFn({ method: "POST" })
     if (polIds.length) {
       const { data: pays } = await supabase
         .from("payments")
-        .select("id, policy_id, amount, status, due_date, paid_at")
+        .select("id, policy_id, amount, status, due_date, paid_at, bank_reference, paid_amount")
         .in("policy_id", polIds);
       payments = pays ?? [];
     }
+
+    // Cobro grupal (paga el encargado): payments con company_id y sin póliza.
+    const { data: groupCharges } = await (supabase.from("payments") as any)
+      .select("id, amount, status, due_date, paid_at, paid_amount, bank_reference, bank_reference_expires_at, metadata, created_at")
+      .eq("company_id", data.company_id)
+      .is("policy_id", null)
+      .order("created_at", { ascending: false })
+      .limit(12);
 
     const { data: imports } = await supabase
       .from("company_imports")
@@ -165,7 +251,7 @@ export const getCompanyDetail = createServerFn({ method: "POST" })
       .order("period", { ascending: false })
       .limit(24);
 
-    return { company, policies: policies ?? [], payments, imports: imports ?? [], charges: (charges ?? []) as any[] };
+    return { company, policies: policies ?? [], payments, imports: imports ?? [], charges: (charges ?? []) as any[], groupCharges: (groupCharges ?? []) as any[] };
   });
 
 const employeeRow = z.object({
@@ -180,6 +266,13 @@ const employeeRow = z.object({
   address_full: z.string().optional().nullable(),
   beneficiary_name: z.string().optional().nullable(),
   beneficiary_relationship: z.string().optional().nullable(),
+  marital_status: z.string().optional().nullable(),
+  street: z.string().optional().nullable(),
+  colonia: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
+  zip: z.string().optional().nullable(),
+  curp_alert: z.string().optional().nullable(),
 });
 
 export const importCompanyEmployees = createServerFn({ method: "POST" })
@@ -189,9 +282,11 @@ export const importCompanyEmployees = createServerFn({ method: "POST" })
       .object({
         company_id: z.string().uuid(),
         file_name: z.string().optional().nullable(),
-        issue_date: z.string(),
-        start_date: z.string(),
-        end_date: z.string(),
+        issue_date: z.string().optional(),
+        start_date: z.string().optional(),
+        end_date: z.string().optional(),
+        /** FutCare: vigencia = alta del grupo (Monterrey) a +1 año, precio del programa. */
+        group_terms: z.boolean().optional(),
         premium: z.number().optional().nullable(),
         sum_insured: z.number().optional().nullable(),
         rows: z.array(employeeRow).min(1).max(500),
@@ -203,7 +298,7 @@ export const importCompanyEmployees = createServerFn({ method: "POST" })
 
     const { data: company, error: cErr } = await supabase
       .from("companies")
-      .select("id, legal_name, program_id")
+      .select("id, legal_name, program_id, created_at")
       .eq("id", data.company_id)
       .single();
     if (cErr) throw new Error(cErr.message);
@@ -211,13 +306,26 @@ export const importCompanyEmployees = createServerFn({ method: "POST" })
     const programId = company.program_id as string;
     const { data: prog } = await supabase
       .from("programs")
-      .select("policy_number")
+      .select("policy_number, default_premium")
       .eq("id", programId)
       .maybeSingle();
+
+    let issueDate = data.issue_date ?? new Date().toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
+    let startDate = data.start_date ?? issueDate;
+    let endDate = data.end_date ?? startDate;
+    let premium = data.premium ?? null;
+    if (data.group_terms) {
+      startDate = new Date(company.created_at as string).toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
+      const [y, m, d] = startDate.split("-");
+      endDate = `${Number(y) + 1}-${m}-${d}`;
+      issueDate = new Date().toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
+      premium = (prog as any)?.default_premium != null ? Number((prog as any).default_premium) : premium;
+    }
 
     const details: Array<{ curp: string; name: string; ok: boolean; folio?: string; error?: string }> = [];
     let created = 0;
     let failed = 0;
+    const createdPolicies: Array<{ id: string; folio: string; first_name: string; last_name: string }> = [];
 
     for (const r of data.rows) {
       const curp = r.curp.trim().toUpperCase();
@@ -247,6 +355,13 @@ export const importCompanyEmployees = createServerFn({ method: "POST" })
               email: r.email || null,
               phone: r.phone || null,
               address_full: r.address_full || null,
+              marital_status: r.marital_status || null,
+              street: r.street || null,
+              colonia: r.colonia || null,
+              city: r.city || null,
+              state: r.state || null,
+              zip: r.zip || null,
+              metadata: r.curp_alert ? { curp_alert: r.curp_alert } : {},
               company_id: data.company_id,
               created_by: userId,
             })
@@ -285,11 +400,11 @@ export const importCompanyEmployees = createServerFn({ method: "POST" })
             folio: folio as string,
             policy_number: prog?.policy_number ?? null,
             certificate_number: folio as string,
-            issue_date: data.issue_date,
-            start_date: data.start_date,
-            end_date: data.end_date,
+            issue_date: issueDate,
+            start_date: startDate,
+            end_date: endDate,
             contracting_party: company.legal_name as string,
-            premium: data.premium ?? null,
+            premium,
             sum_insured: data.sum_insured ?? null,
             status: "pending_payment",
             created_by: userId,
@@ -297,6 +412,7 @@ export const importCompanyEmployees = createServerFn({ method: "POST" })
           .select("id, folio")
           .single();
         if (polErr) throw new Error(polErr.message);
+        createdPolicies.push({ id: policy.id as string, folio: policy.folio as string, first_name: r.first_name, last_name: r.last_name });
 
         await supabase.from("beneficiaries").insert({
           policy_id: policy.id,
@@ -324,5 +440,122 @@ export const importCompanyEmployees = createServerFn({ method: "POST" })
       created_by: userId,
     });
 
-    return { created, failed, details };
+    return { created, failed, details, policies: createdPolicies };
+  });
+
+async function assertGroupWriter(supabase: any, userId: string, companyId: string) {
+  const { data: company, error } = await (supabase.from("companies") as any)
+    .select("id, program_id, legal_name")
+    .eq("id", companyId)
+    .single();
+  if (error || !company) throw new Error("Grupo no encontrado.");
+  const { data: superAdmin } = await (supabase.rpc as any)("is_super_admin", { _user_id: userId });
+  if (!superAdmin) {
+    const { data: acc } = await supabase
+      .from("user_program_access")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("program_id", company.program_id)
+      .in("role", ["admin", "manager"])
+      .limit(1);
+    if (!(acc ?? []).length) throw new Error("Solo administradores o managers del programa pueden hacer esto.");
+  }
+  return company as { id: string; program_id: string; legal_name: string };
+}
+
+export const refreshGroupCharge = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ company_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: res, error } = await (context.supabase.rpc as any)("refresh_group_charge", { _company_id: data.company_id });
+    if (error) throw new Error(error.message);
+    return (res ?? {}) as any;
+  });
+
+export const setGroupBillingMode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ company_id: z.string().uuid(), billing_mode: z.enum(["company", "individual"]) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertGroupWriter(supabase, userId, data.company_id);
+    const { error } = await (supabase.from("companies") as any)
+      .update({ billing_mode: data.billing_mode })
+      .eq("id", data.company_id);
+    if (error) throw new Error(error.message);
+    const { error: rErr } = await (supabase.rpc as any)("refresh_group_charge", { _company_id: data.company_id });
+    if (rErr) throw new Error(rErr.message);
+    await supabase.from("audit_log").insert({
+      user_id: userId,
+      entity_type: "company",
+      entity_id: data.company_id,
+      action: "billing_mode_change",
+      diff: { billing_mode: data.billing_mode },
+    } as any);
+    return { ok: true };
+  });
+
+/** Baja desde plantilla del grupo: la póliza pasa a cancelada; el cliente no se borra. */
+export const cancelGroupMembers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ company_id: z.string().uuid(), policy_ids: z.array(z.string().uuid()).max(1000) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const company = await assertGroupWriter(supabase, userId, data.company_id);
+    if (!data.policy_ids.length) return { cancelled: 0 };
+    const { data: pols, error } = await supabase
+      .from("policies")
+      .update({ status: "cancelled" })
+      .in("id", data.policy_ids)
+      .eq("company_id", data.company_id)
+      .select("id");
+    if (error) throw new Error(error.message);
+    const ids = (pols ?? []).map((p: any) => p.id);
+    if (ids.length) {
+      await supabase.from("audit_log").insert(
+        ids.map((id: string) => ({
+          user_id: userId,
+          program_id: company.program_id,
+          entity_type: "policy",
+          entity_id: id,
+          action: "cancel",
+          diff: { status: "cancelled", note: "Baja desde plantilla del grupo", company_id: data.company_id },
+        })) as any,
+      );
+    }
+    return { cancelled: ids.length };
+  });
+
+export const markGroupPaymentPaid = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        company_id: z.string().uuid(),
+        payment_id: z.string().uuid(),
+        paid_amount: z.number().positive(),
+        paid_at: z.string(),
+        method: z.enum(["bank_reference", "bank_transfer", "cash", "card", "oxxo", "manual"]),
+        reference: z.string().optional().nullable(),
+        notes: z.string().optional().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertGroupWriter(supabase, userId, data.company_id);
+    const { data: res, error } = await supabase.rpc("mark_payment_paid", {
+      _payment_id: data.payment_id,
+      _paid_amount: data.paid_amount,
+      _paid_at: data.paid_at,
+      _method: data.method,
+      _reference: data.reference ?? "",
+      _notes: data.notes ?? "Pago del grupo registrado desde la ficha",
+      _amount_change_reason: "",
+    });
+    if (error) throw new Error(error.message);
+    return res as any;
   });

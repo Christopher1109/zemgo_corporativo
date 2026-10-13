@@ -22,6 +22,8 @@ import { EditCompanyDialog, DeleteCompanyDialog } from "@/components/companies/c
 import { MonthlyUpdateDialog } from "@/components/companies/MonthlyUpdateDialog";
 import { CompanyChargesCard, CompanyBillingSummary } from "@/components/companies/CompanyChargesCard";
 import { renderCertificateBlob } from "@/lib/pdf/generateCertificate.browser";
+import { FutCareGroupPanel } from "@/components/companies/FutCareGroupPanel";
+import { groupLabels, isFutCare, GROUP_TYPE_LABEL, BILLING_MODE_LABEL } from "@/lib/group-labels";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -292,12 +294,14 @@ function CompanyDetailPage() {
   if (q.error || !q.data)
     return (
       <Card>
-        <CardContent className="p-8 text-center text-sm text-destructive">No se pudo cargar la empresa.</CardContent>
+        <CardContent className="p-8 text-center text-sm text-destructive">No se pudo cargar la información.</CardContent>
       </Card>
     );
 
   const { company, policies, payments, imports } = q.data as any;
   if (mismatch) return mismatch;
+  const fut = isFutCare(company.programs?.code);
+  const L = groupLabels(company.programs?.code);
   const paidByPolicy = new Set(payments.filter((p: any) => p.status === "paid").map((p: any) => p.policy_id));
   const active = policies.filter((p: any) => p.status === "active");
   const pending = policies.filter((p: any) => p.status !== "active" && p.status !== "cancelled");
@@ -326,17 +330,17 @@ function CompanyDetailPage() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <Button asChild variant="ghost" size="sm">
           <Link to="/companies">
-            <ArrowLeft className="h-4 w-4 mr-1" /> Volver a empresas
+            <ArrowLeft className="h-4 w-4 mr-1" /> {L.back}
           </Link>
         </Button>
-        <div className="flex gap-2 flex-wrap">
+        {!fut && <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={downloadTemplate}>
             <FileSpreadsheet className="h-4 w-4 mr-1" /> Descargar plantilla Excel
           </Button>
           <Button size="sm" onClick={() => setMonthlyOpen(true)}>
             <Upload className="h-4 w-4 mr-1" /> Actualización mensual (Excel)
           </Button>
-        </div>
+        </div>}
       </div>
 
       <div className="flex items-start gap-4">
@@ -346,13 +350,13 @@ function CompanyDetailPage() {
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold">{company.legal_name}</h1>
-            <Button variant="ghost" size="icon" title="Editar empresa" onClick={() => setEditOpen(true)}>
+            <Button variant="ghost" size="icon" title={`Editar ${L.singularLower}`} onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              title="Eliminar empresa"
+              title={`Eliminar ${L.singularLower}`}
               className="text-destructive hover:text-destructive"
               onClick={() => setDeleteOpen(true)}
             >
@@ -369,14 +373,26 @@ function CompanyDetailPage() {
                 {company.programs.code}
               </Badge>
             )}
-            {company.rfc && <Badge variant="outline" className="font-mono">{company.rfc}</Badge>}
-            {company.contact_name && <span className="text-xs">Contacto: {company.contact_name}</span>}
+            {fut && company.group_type && <Badge variant="secondary">{GROUP_TYPE_LABEL[company.group_type as keyof typeof GROUP_TYPE_LABEL] ?? company.group_type}</Badge>}
+            {fut && <Badge variant="outline">{BILLING_MODE_LABEL[company.billing_mode] ?? "Paga el encargado"}</Badge>}
+            {!fut && company.rfc && <Badge variant="outline" className="font-mono">{company.rfc}</Badge>}
+            {company.contact_name && <span className="text-xs">{fut ? "Encargado" : "Contacto"}: {company.contact_name}</span>}
+            {fut && company.location && <span className="text-xs">Sede: {company.location}</span>}
             {company.phone && <span className="text-xs">{company.phone}</span>}
             {company.email && <span className="text-xs">{company.email}</span>}
           </div>
         </div>
       </div>
 
+      {fut ? (
+        <FutCareGroupPanel
+          company={company}
+          policies={policies}
+          payments={payments}
+          groupCharges={((q.data as any).groupCharges ?? []) as any[]}
+        />
+      ) : (
+      <>
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <MiniStat label="Asegurados activos" value={String(new Set(active.map((p: any) => p.client_id)).size)} />
         <MiniStat label="Certificados activos" value={String(active.length)} />
@@ -585,6 +601,9 @@ function CompanyDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      </>
+      )}
 
       <MonthlyUpdateDialog company={company} open={monthlyOpen} onOpenChange={setMonthlyOpen} />
       <EditCompanyDialog company={company} open={editOpen} onOpenChange={setEditOpen} />
