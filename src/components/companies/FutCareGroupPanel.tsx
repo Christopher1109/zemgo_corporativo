@@ -12,7 +12,7 @@ import {
   setGroupBillingMode,
   markGroupPaymentPaid,
 } from "@/lib/companies.functions";
-import { sendGroupPaymentReminders } from "@/lib/group-reminders.functions";
+import { sendGroupPaymentReminders } from "@/lib/group-reminders";
 import { alertsFor } from "@/lib/company-roster";
 import { renderCertificateBlob, generateCertificateClient } from "@/lib/pdf/generateCertificate.browser";
 import { BILLING_MODE_LABEL } from "@/lib/group-labels";
@@ -135,7 +135,6 @@ export function FutCareGroupPanel({
   const cancelFn = useServerFn(cancelGroupMembers);
   const refreshFn = useServerFn(refreshGroupCharge);
   const modeFn = useServerFn(setGroupBillingMode);
-  const remindFn = useServerFn(sendGroupPaymentReminders);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const price = Number(company.programs?.default_premium ?? 950);
@@ -425,14 +424,18 @@ export function FutCareGroupPanel({
 
   async function sendReminders(ids?: string[]) {
     try {
-      const r: any = await remindFn({ data: { company_id: company.id, payment_ids: ids } });
-      setNoPhoneSent((r.noPhone ?? []).map((x: any) => x.name));
+      const r = await sendGroupPaymentReminders({ company_id: company.id, payment_ids: ids });
+      if (!r.ok) {
+        toast.error(r.message);
+        return;
+      }
+      setNoPhoneSent(r.noPhone.map((x) => x.name));
       if (r.sent.length) toast.success(`Recordatorio enviado a ${r.sent.length} persona(s)`);
       if (r.failed.length) toast.error(`${r.failed.length} no se pudieron enviar: ${r.failed[0].error}`);
       if (!r.sent.length && !r.failed.length && r.noPhone.length) toast.warning("Nadie tiene teléfono registrado; no se envió.");
       qc.invalidateQueries({ queryKey: ["whatsapp", "reminder-log"] });
-    } catch (e: any) {
-      toast.error(e?.message ?? "No se pudo enviar el recordatorio");
+    } catch {
+      toast.error("No se pudo enviar el recordatorio");
     } finally {
       setRemindConfirm(null);
     }
