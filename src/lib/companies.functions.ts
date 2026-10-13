@@ -278,12 +278,13 @@ export const importCompanyEmployees = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const { data: company, error: cErr } = await supabase
+    const { data: companyRow, error: cErr } = await supabase
       .from("companies")
       .select("id, legal_name, program_id, created_at, coverage_start, coverage_end, pricing_mode, unit_price" as any)
       .eq("id", data.company_id)
       .single();
     if (cErr) throw new Error(cErr.message);
+    const company = companyRow as any;
 
     const programId = company.program_id as string;
     const { data: prog } = await supabase
