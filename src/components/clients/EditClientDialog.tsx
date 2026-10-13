@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, Loader2 } from "lucide-react";
@@ -56,14 +56,22 @@ export function EditClientDialog({
     onOpenChange?.(o);
   };
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      [...FIELDS.map((f) => f.key), "gender", "marital_status", "address_full", "payer_name", "payer_phone"].map((k) => [
-        k,
-        (client?.[k] ?? "") as string,
-      ]),
-    ),
-  );
+  const [form, setForm] = useState<Record<string, string>>({});
+
+  // Reinicia el formulario con los datos más recientes del cliente cada vez
+  // que se abre el diálogo (o llega una versión nueva del cliente), para que
+  // dos ventanas de edición no se sobreescriban entre sí al guardar.
+  useEffect(() => {
+    if (!open) return;
+    setForm(
+      Object.fromEntries(
+        [...FIELDS.map((f) => f.key), "gender", "marital_status", "address_full", "payer_name", "payer_phone"].map((k) => [
+          k,
+          (client?.[k] ?? "") as string,
+        ]),
+      ),
+    );
+  }, [client, open]);
 
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
