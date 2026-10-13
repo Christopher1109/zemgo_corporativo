@@ -393,14 +393,18 @@ export type Database = {
       companies: {
         Row: {
           address_full: string | null
+          billing_mode: string
           city: string | null
+          contact_client_id: string | null
           contact_name: string | null
           created_at: string
           created_by: string | null
           email: string | null
+          group_type: string | null
           id: string
           is_active: boolean
           legal_name: string
+          location: string | null
           notes: string | null
           phone: string | null
           program_id: string
@@ -410,14 +414,18 @@ export type Database = {
         }
         Insert: {
           address_full?: string | null
+          billing_mode?: string
           city?: string | null
+          contact_client_id?: string | null
           contact_name?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          group_type?: string | null
           id?: string
           is_active?: boolean
           legal_name: string
+          location?: string | null
           notes?: string | null
           phone?: string | null
           program_id: string
@@ -427,14 +435,18 @@ export type Database = {
         }
         Update: {
           address_full?: string | null
+          billing_mode?: string
           city?: string | null
+          contact_client_id?: string | null
           contact_name?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          group_type?: string | null
           id?: string
           is_active?: boolean
           legal_name?: string
+          location?: string | null
           notes?: string | null
           phone?: string | null
           program_id?: string
@@ -443,6 +455,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "companies_contact_client_id_fkey"
+            columns: ["contact_client_id"]
+            isOneToOne: false
+            referencedRelation: "abc_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "companies_contact_client_id_fkey"
+            columns: ["contact_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "companies_contact_client_id_fkey"
+            columns: ["contact_client_id"]
+            isOneToOne: false
+            referencedRelation: "futcare_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "companies_contact_client_id_fkey"
+            columns: ["contact_client_id"]
+            isOneToOne: false
+            referencedRelation: "manos_con_valor_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "companies_contact_client_id_fkey"
+            columns: ["contact_client_id"]
+            isOneToOne: false
+            referencedRelation: "payment_reminder_status"
+            referencedColumns: ["client_id"]
+          },
           {
             foreignKeyName: "companies_program_id_fkey"
             columns: ["program_id"]
@@ -1320,6 +1367,7 @@ export type Database = {
           bank_reference: string | null
           bank_reference_expires_at: string | null
           cancellation_reason: string | null
+          company_id: string | null
           control_number: string | null
           created_at: string
           created_by: string | null
@@ -1332,7 +1380,7 @@ export type Database = {
           paid_amount: number | null
           paid_at: string | null
           payment_schedule_id: string | null
-          policy_id: string
+          policy_id: string | null
           provider: string | null
           provider_transaction_id: string | null
           raw_response: Json | null
@@ -1346,6 +1394,7 @@ export type Database = {
           bank_reference?: string | null
           bank_reference_expires_at?: string | null
           cancellation_reason?: string | null
+          company_id?: string | null
           control_number?: string | null
           created_at?: string
           created_by?: string | null
@@ -1358,7 +1407,7 @@ export type Database = {
           paid_amount?: number | null
           paid_at?: string | null
           payment_schedule_id?: string | null
-          policy_id: string
+          policy_id?: string | null
           provider?: string | null
           provider_transaction_id?: string | null
           raw_response?: Json | null
@@ -1372,6 +1421,7 @@ export type Database = {
           bank_reference?: string | null
           bank_reference_expires_at?: string | null
           cancellation_reason?: string | null
+          company_id?: string | null
           control_number?: string | null
           created_at?: string
           created_by?: string | null
@@ -1384,7 +1434,7 @@ export type Database = {
           paid_amount?: number | null
           paid_at?: string | null
           payment_schedule_id?: string | null
-          policy_id?: string
+          policy_id?: string | null
           provider?: string | null
           provider_transaction_id?: string | null
           raw_response?: Json | null
@@ -1393,6 +1443,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_payment_schedule_id_fkey"
             columns: ["payment_schedule_id"]
