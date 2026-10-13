@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useProgramMismatch } from "@/components/ProgramMismatch";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -385,7 +385,7 @@ function CompanyDetailPage() {
       </div>
 
       {fut && !(company as any).contact_client_id && (
-        <GroupContactAccessBanner companyId={company.id} onDone={() => q.refetch()} />
+        <EnsureGroupContact companyId={company.id} onDone={() => q.refetch()} />
       )}
 
       {fut ? (
@@ -632,26 +632,23 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function GroupContactAccessBanner({ companyId, onDone }: { companyId: string; onDone: () => void }) {
+/**
+ * El encargado se registra solo al crear/editar el grupo. Si un grupo viejo
+ * quedó sin encargado, se le da acceso en automático al abrir la ficha
+ * (sin botones ni pasos extra). Solo avisa si de verdad falla.
+ */
+function EnsureGroupContact({ companyId, onDone }: { companyId: string; onDone: () => void }) {
   const fn = useServerFn(grantGroupContactAccess);
-  const [busy, setBusy] = useState(false);
-  async function grant() {
-    setBusy(true);
-    try {
-      const r = await fn({ data: { company_id: companyId } });
-      if (r.contact_warning) toast.warning(r.contact_warning);
-      else toast.success("El encargado ya tiene acceso al portal");
-      onDone();
-    } catch (e: any) {
-      toast.error(e?.message ?? "No se pudo dar acceso al encargado");
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
-      <span>El encargado todavía no tiene acceso al portal.</span>
-      <Button size="sm" onClick={grant} disabled={busy}>{busy ? "Dando acceso…" : "Dar acceso al encargado"}</Button>
-    </div>
-  );
+  const tried = useRef<string | null>(null);
+  useEffect(() => {
+    if (tried.current === companyId) return;
+    tried.current = companyId;
+    fn({ data: { company_id: companyId } })
+      .then((r) => {
+        if (r.contact_warning) toast.warning(r.contact_warning);
+        else onDone();
+      })
+      .catch(() => {});
+  }, [companyId, fn, onDone]);
+  return null;
 }
