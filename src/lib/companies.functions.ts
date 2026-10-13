@@ -449,7 +449,7 @@ async function assertGroupWriter(supabase: any, userId: string, companyId: strin
     .eq("id", companyId)
     .single();
   if (error || !company) throw new Error("Grupo no encontrado.");
-  const { data: superAdmin } = await (supabase.rpc as any)("is_super_admin");
+  const { data: superAdmin } = await (supabase.rpc as any)("is_super_admin", { _user_id: userId });
   if (!superAdmin) {
     const { data: acc } = await supabase
       .from("user_program_access")
