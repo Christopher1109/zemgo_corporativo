@@ -397,9 +397,12 @@ export type Database = {
           city: string | null
           contact_client_id: string | null
           contact_name: string | null
+          coverage_end: string | null
+          coverage_start: string | null
           created_at: string
           created_by: string | null
           email: string | null
+          flat_amount: number | null
           group_type: string | null
           id: string
           is_active: boolean
@@ -407,9 +410,11 @@ export type Database = {
           location: string | null
           notes: string | null
           phone: string | null
+          pricing_mode: string
           program_id: string
           rfc: string | null
           state: string | null
+          unit_price: number | null
           updated_at: string
         }
         Insert: {
@@ -418,9 +423,12 @@ export type Database = {
           city?: string | null
           contact_client_id?: string | null
           contact_name?: string | null
+          coverage_end?: string | null
+          coverage_start?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          flat_amount?: number | null
           group_type?: string | null
           id?: string
           is_active?: boolean
@@ -428,9 +436,11 @@ export type Database = {
           location?: string | null
           notes?: string | null
           phone?: string | null
+          pricing_mode?: string
           program_id: string
           rfc?: string | null
           state?: string | null
+          unit_price?: number | null
           updated_at?: string
         }
         Update: {
@@ -439,9 +449,12 @@ export type Database = {
           city?: string | null
           contact_client_id?: string | null
           contact_name?: string | null
+          coverage_end?: string | null
+          coverage_start?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          flat_amount?: number | null
           group_type?: string | null
           id?: string
           is_active?: boolean
@@ -449,9 +462,11 @@ export type Database = {
           location?: string | null
           notes?: string | null
           phone?: string | null
+          pricing_mode?: string
           program_id?: string
           rfc?: string | null
           state?: string | null
+          unit_price?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -3266,7 +3281,24 @@ export type Database = {
         Args: { _client_id: string; _policy_id: string }
         Returns: boolean
       }
+      portal_import_group_members: {
+        Args: {
+          _company_id: string
+          _file_name?: string
+          _rows: Json
+          _token: string
+        }
+        Returns: Json
+      }
+      portal_is_group_contact: {
+        Args: { _client_id: string; _company_id: string }
+        Returns: boolean
+      }
       portal_normalize_name: { Args: { _name: string }; Returns: string }
+      portal_update_group_member: {
+        Args: { _changes: Json; _policy_id: string; _token: string }
+        Returns: Json
+      }
       process_sheet_row: {
         Args: {
           _program: string
@@ -3416,6 +3448,10 @@ export type Database = {
             Returns: Json
           }
       upsert_group_contact: { Args: { _company_id: string }; Returns: string }
+      upsert_group_contact_internal: {
+        Args: { _company_id: string }
+        Returns: string
+      }
       upsert_sales_rep_by_name: {
         Args: { _client_id?: string; _name: string; _source?: string }
         Returns: string
