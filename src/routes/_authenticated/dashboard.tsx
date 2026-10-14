@@ -37,13 +37,16 @@ function Dashboard() {
     queryKey: ["dash-cobranza", scopeKey],
     queryFn: () => fetchCobranzaResumen(scope),
     enabled: on,
-    staleTime: 60_000,
+    // Siempre al día: se vuelve a consultar cada vez que se abre el dashboard.
+    staleTime: 0,
+    refetchOnMount: "always",
   });
   const openQ = useQuery({
     queryKey: ["dash-cobranza-abierta", scopeKey],
     queryFn: () => fetchCobranzaAbierta(scope, 200),
     enabled: on,
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
 

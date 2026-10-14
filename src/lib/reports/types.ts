@@ -50,6 +50,7 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
       { key: "client_name", label: "Cliente", width: 28 },
       { key: "curp", label: "CURP", width: 20 },
       { key: "program_code", label: "Programa", width: 10 },
+      { key: "group_name", label: "Empresa / torneo", width: 24 },
       { key: "folio", label: "Folio", width: 18 },
       { key: "start_date", label: "Vigencia inicio", format: "date", width: 14 },
       { key: "end_date", label: "Vigencia fin", format: "date", width: 14 },
@@ -77,8 +78,8 @@ export const REPORT_SPECS: Record<string, ReportSpec> = {
         ] },
     ],
     columns: [
-      { key: "client_name", label: "Cliente", width: 26 },
-      { key: "folio", label: "Folio", width: 18 },
+      { key: "client_name", label: "Quién paga", width: 26 },
+      { key: "folio", label: "Concepto", width: 30 },
       { key: "amount", label: "Monto", format: "money", align: "right", width: 12 },
       { key: "due_date", label: "Vence", format: "date", width: 12 },
       { key: "paid_at", label: "Pagado", format: "date", width: 12 },
