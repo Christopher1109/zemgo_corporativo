@@ -72,12 +72,12 @@ function ClientDetail() {
   // Solo se muestra lo del programa activo (programas, certificados y siniestros de otros programas no aparecen).
   const programId = useActiveProgramId();
 
-  const { data: client, isLoading } = useQuery({
+  const { data: client, isLoading, error: clientError } = useQuery({
     queryKey: ["client", clientId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("*, sales_reps(id, full_name, code), companies(id, legal_name)")
+        .select("*, sales_reps(id, full_name, code), companies!clients_company_id_fkey(id, legal_name)")
         .eq("id", clientId)
         .single();
       if (error) throw error;
@@ -148,6 +148,13 @@ function ClientDetail() {
     },
   });
 
+  if (clientError) {
+    return (
+      <div className="p-6 text-center text-sm text-destructive">
+        No se pudo cargar el cliente: {(clientError as any)?.message ?? "error desconocido"}
+      </div>
+    );
+  }
   if (isLoading || !client) {
     return <div className="p-6 text-center text-muted-foreground">Cargando…</div>;
   }
