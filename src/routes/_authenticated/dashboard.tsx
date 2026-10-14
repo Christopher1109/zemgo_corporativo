@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useMemo } from "react";
 import {
   Users, CreditCard, Wallet, TrendingDown, Bell,
@@ -11,8 +10,7 @@ import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { fetchKpis } from "@/lib/dashboard-queries";
-import { getAlertsOverview } from "@/lib/alerts.functions";
+import { fetchCobranzaResumen, fetchCobranzaAbierta, cobranzaLink, cobranzaDetail, isCobranzaOverdue } from "@/lib/dashboard-queries";
 import { supabase } from "@/integrations/supabase/client";
 import { parseISO, formatDistanceToNow } from "date-fns";
 
@@ -32,39 +30,20 @@ function Dashboard() {
   const scopeKey = scope ?? "none";
   const on = !!scope;
 
-  const opts = { staleTime: 5 * 60_000 };
-  const kpiQ = useQuery({ queryKey: ["dash-kpi", scopeKey], queryFn: () => fetchKpis(scope), enabled: on, ...opts });
 
 
-  const alertsFn = useServerFn(getAlertsOverview);
-  const alertsQ = useQuery({
-    queryKey: ["dash-alerts", scopeKey],
-    queryFn: () => alertsFn({ data: { program_id: scope } }),
+  // Cobranza unificada: clientes + empresas + torneos (misma fuente que Finanzas, Alertas y Pagos).
+  const finQ = useQuery({
+    queryKey: ["dash-cobranza", scopeKey],
+    queryFn: () => fetchCobranzaResumen(scope),
     enabled: on,
     staleTime: 60_000,
   });
-
-  // Financial: por cobrar / vencido (sum of pending+overdue / overdue amounts)
-  const finQ = useQuery({
-    queryKey: ["dash-fin", scopeKey],
-    queryFn: async () => {
-      let q = supabase
-        .from("payments")
-        .select("amount, status, due_date, policies!inner(program_id)")
-        .in("status", ["pending", "overdue"])
-        .limit(5000);
-      q = q.eq("policies.program_id", scope!);
-      const { data, error } = await q;
-      if (error) throw error;
-      let receivable = 0, overdue = 0;
-      for (const p of data ?? []) {
-        const a = Number((p as any).amount);
-        receivable += a;
-        if ((p as any).status === "overdue") overdue += a;
-      }
-      return { receivable, overdue };
-    },
+  const openQ = useQuery({
+    queryKey: ["dash-cobranza-abierta", scopeKey],
+    queryFn: () => fetchCobranzaAbierta(scope, 200),
     enabled: on,
+    staleTime: 60_000,
   });
 
 
@@ -119,14 +98,28 @@ function Dashboard() {
     enabled: on,
   });
 
-  const kpi = kpiQ.data;
+  const fin = finQ.data;
+  const breakdown = (k: "por_cobrar" | "vencido" | "cobrado_mes") => {
+    if (!fin) return undefined;
+    const parts = [
+      ["Clientes", fin.por_tipo.cliente[k]],
+      ["Empresas", fin.por_tipo.empresa[k]],
+      ["Torneos", fin.por_tipo.torneo[k]],
+    ].filter(([, v]) => Number(v) > 0);
+    return parts.length ? parts.map(([l, v]) => `${l} ${fmtMoney(Number(v))}`).join(" · ") : undefined;
+  };
 
 
-  // Alerts top items
+  // Próximos cobros: vencidos primero, luego por fecha (clientes, empresas y torneos).
   const alertItems = useMemo(() => {
-    const upcoming = (alertsQ.data?.upcoming ?? []) as any[];
-    return upcoming.slice(0, 6);
-  }, [alertsQ.data]);
+    const rows = [...(openQ.data ?? [])];
+    rows.sort((a, b) => {
+      const oa = isCobranzaOverdue(a), ob = isCobranzaOverdue(b);
+      if (oa !== ob) return oa ? -1 : 1;
+      return String(a.due_date).localeCompare(String(b.due_date));
+    });
+    return rows.slice(0, 6);
+  }, [openQ.data]);
 
   return (
     <div className="space-y-8 pb-4">
@@ -152,10 +145,17 @@ function Dashboard() {
       </section>
 
       {/* Financial KPIs */}
-      <section className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <KpiBlock label="Por cobrar" value={fmtMoney(finQ.data?.receivable ?? 0)} icon={Wallet} loading={finQ.isLoading} />
-        <KpiBlock label="Vencido" value={fmtMoney(finQ.data?.overdue ?? 0)} icon={TrendingDown} loading={finQ.isLoading} tone="danger" />
-        <KpiBlock label="Cobrado este mes" value={fmtMoney(Number(kpi?.mtd_collected ?? 0))} icon={CreditCard} loading={kpiQ.isLoading} tone="program" />
+      <section className="grid gap-3 grid-cols-2 lg:grid-cols-5">
+        <KpiBlock label="Por cobrar (30 días + vencido)" value={fmtMoney(fin?.por_cobrar ?? 0)} sub={breakdown("por_cobrar")} icon={Wallet} loading={finQ.isLoading} />
+        <KpiBlock label="Vencido" value={fmtMoney(fin?.vencido ?? 0)} sub={breakdown("vencido")} icon={TrendingDown} loading={finQ.isLoading} tone="danger" />
+        <KpiBlock label="Cobrado este mes" value={fmtMoney(fin?.cobrado_mes ?? 0)} sub={breakdown("cobrado_mes")} icon={CreditCard} loading={finQ.isLoading} tone="program" />
+        <KpiBlock
+          label="Activaciones pendientes"
+          value={fmtMoney(fin?.activaciones ?? 0)}
+          sub={fin ? `${fin.activaciones_count} prospecto(s) sin su primer pago` : undefined}
+          icon={UserPlus}
+          loading={finQ.isLoading}
+        />
         <KpiBlock label="Nuevos clientes (mes)" value={String(newClientsQ.data ?? 0)} icon={UserPlus} loading={newClientsQ.isLoading} />
       </section>
 
@@ -174,18 +174,18 @@ function Dashboard() {
             </Button>
           </CardHeader>
           <CardContent className="p-0">
-            {alertsQ.isLoading ? (
+            {openQ.isLoading ? (
               <div className="p-5 space-y-2">{[...Array(4)].map((_, i) => <div key={i} className="h-11 rounded-lg bg-muted/40 animate-pulse" />)}</div>
             ) : alertItems.length === 0 ? (
               <div className="p-8 text-center text-sm text-muted-foreground">Sin recordatorios pendientes. 🎉</div>
             ) : (
               <ul className="divide-y divide-border/60">
-                {alertItems.map((r: any) => {
-                  const days = Math.ceil((new Date(r.due_date).getTime() - Date.now()) / 86400000);
-                  const isOverdue = r.status === "overdue";
-                  const c = r.policies?.clients;
+                {alertItems.map((r) => {
+                  const days = Math.ceil((new Date(`${r.due_date}T12:00:00`).getTime() - Date.now()) / 86400000);
+                  const isOverdue = isCobranzaOverdue(r);
                   return (
-                    <li key={r.id} className="px-5 py-3 flex items-center justify-between gap-3 transition-colors hover:bg-muted/30">
+                    <li key={r.id} className="transition-colors hover:bg-muted/30">
+                     <Link {...(cobranzaLink(r) as any)} className="px-5 py-3 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <span
                           className={cn(
@@ -194,9 +194,9 @@ function Dashboard() {
                           )}
                         />
                         <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">{c?.first_name} {c?.last_name}</div>
+                          <div className="text-sm font-medium truncate">{r.debtor_name}</div>
                           <div className="text-xs text-muted-foreground truncate">
-                            Folio {r.policies?.folio} · {fmtMoney(Number(r.amount))}
+                            {cobranzaDetail(r)} · {fmtMoney(Number(r.amount))}
                           </div>
                         </div>
                       </div>
@@ -207,6 +207,7 @@ function Dashboard() {
                             ? <Badge className="bg-orange-500/10 text-orange-600 border border-orange-500/20 text-[10px] font-medium">{days}d</Badge>
                             : <Badge variant="secondary" className="text-[10px] font-medium">{days}d</Badge>}
                       </div>
+                     </Link>
                     </li>
                   );
                 })}
@@ -321,7 +322,7 @@ function ShortcutCard({ to, icon: Icon, label }: { to: string; icon: any; label:
   );
 }
 
-function KpiBlock({ label, value, icon: Icon, tone, loading }: { label: string; value: string; icon: any; tone?: "danger" | "program"; loading?: boolean }) {
+function KpiBlock({ label, value, sub, icon: Icon, tone, loading }: { label: string; value: string; sub?: string; icon: any; tone?: "danger" | "program"; loading?: boolean }) {
   const accent = tone === "danger" ? "var(--destructive)" : "var(--program-primary)";
   return (
     <Card className="shadow-card rounded-2xl border-border/70 overflow-hidden">
@@ -345,6 +346,7 @@ function KpiBlock({ label, value, icon: Icon, tone, loading }: { label: string; 
             {value}
           </div>
         )}
+        {!loading && sub && <div className="mt-1 text-[11px] leading-snug text-muted-foreground">{sub}</div>}
       </CardContent>
     </Card>
   );

@@ -50,7 +50,7 @@ async function fetchProgramPolicies(programId: string) {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from("policies")
-      .select("id, folio, policy_number, certificate_number, status, created_at, issue_date, program_id, company_id, metadata, companies(legal_name), clients(id, first_name, last_name, curp, rfc, date_of_birth, gender, metadata), payments(status, paid_at), dependents(full_name, relationship, date_of_birth, metadata)")
+      .select("id, folio, policy_number, certificate_number, status, created_at, issue_date, program_id, company_id, metadata, companies(legal_name, group_type), clients(id, first_name, last_name, curp, rfc, date_of_birth, gender, metadata), payments(status, paid_at), dependents(full_name, relationship, date_of_birth, metadata)")
       .eq("program_id", programId)
       .range(from, from + 999);
     if (error) throw error;
@@ -125,7 +125,8 @@ function AltasTab({ program }: { program: any }) {
           return { ...p, first_paid: paid[0] ?? null };
         })
         // Individuales: cuando ya pagaron. Empresas: la empresa paga en bloque, entran al darse de alta.
-        .filter((p) => p.first_paid || p.company_id);
+        // Torneos/equipos: solo cuando el grupo (o el jugador) ya pagó y su certificado está vigente.
+        .filter((p) => p.first_paid || (p.company_id && (!p.companies?.group_type || p.status === "active")));
     },
   });
 
@@ -133,7 +134,7 @@ function AltasTab({ program }: { program: any }) {
     const m = new Map<string, { label: string; rows: any[] }>();
     for (const p of data) {
       const { key, label } = p.company_id
-        ? { key: `empresa-${p.company_id}`, label: `Empresa: ${p.companies?.legal_name ?? "sin nombre"}` }
+        ? { key: `empresa-${p.company_id}`, label: `${p.companies?.group_type ? "Torneo/equipo" : "Empresa"}: ${p.companies?.legal_name ?? "sin nombre"}` }
         : { ...cutoffKey(p.first_paid), label: `Individuales · ${cutoffKey(p.first_paid).label}` };
       if (!m.has(key)) m.set(key, { label, rows: [] });
       m.get(key)!.rows.push(p);

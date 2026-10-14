@@ -66,6 +66,19 @@ export const getAlertsOverview = createServerFn({ method: "GET" })
     const charges = await chargesQ;
     if (charges.error) throw new Error(charges.error.message);
 
+    // Cobros de torneos/equipos: cobro grupal (paga el encargado) y pagos de jugadores (cada quien paga).
+    let groupQ = (sb as any)
+      .from("v_cobranza")
+      .select("*")
+      .in("kind", ["torneo", "torneo_jugador"])
+      .in("status", ["pending", "overdue"])
+      .lte("due_date", new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10))
+      .order("due_date", { ascending: true })
+      .limit(500);
+    if (programId) groupQ = groupQ.eq("program_id", programId);
+    const groupCharges = await groupQ;
+    if (groupCharges.error) throw new Error(groupCharges.error.message);
+
     // Renovaciones de certificados de empresa (fin de vigencia en los próximos 90 días), agrupadas por empresa y fecha.
     let compRenQ = sb
       .from("policies")
@@ -89,6 +102,7 @@ export const getAlertsOverview = createServerFn({ method: "GET" })
     return {
       companyRenewals: [...groups.values()].sort((a, b) => a.end_date.localeCompare(b.end_date)),
       companyCharges: (charges.data ?? []) as any[],
+      groupCharges: (groupCharges.data ?? []) as any[],
       upcoming: upcoming.data ?? [],
       renewals: renewals.data ?? [],
       suspended: suspended.data ?? [],

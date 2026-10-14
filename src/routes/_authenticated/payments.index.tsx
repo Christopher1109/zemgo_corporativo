@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useProgram, useActiveProgramId } from "@/lib/program-context";
 import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
+import { COBRANZA_KIND_LABEL, cobranzaLink, cobranzaDetail, type CobranzaRow } from "@/lib/dashboard-queries";
 
 export const Route = createFileRoute("/_authenticated/payments/")({
   head: () => ({
@@ -44,6 +45,13 @@ function attemptInfo(p: any): { label: string; tone: string } {
   return { label: "Sin intento de pago", tone: "bg-muted text-muted-foreground border-border" };
 }
 
+const KINDS: Array<{ value: string; label: string; kinds: string[] }> = [
+  { value: "all", label: "Todos", kinds: [] },
+  { value: "cliente", label: "Clientes", kinds: ["cliente"] },
+  { value: "empresa", label: "Empresas", kinds: ["empresa"] },
+  { value: "torneo", label: "Torneos y equipos", kinds: ["torneo", "torneo_jugador"] },
+];
+
 const VIEWS: Array<{ value: string; label: string; statuses: string[] }> = [
   { value: "open", label: "Por cobrar", statuses: ["pending", "overdue", "failed"] },
   { value: "paid", label: "Ya pagados", statuses: ["paid"] },
@@ -57,6 +65,7 @@ function PaymentsList() {
   const [view, setView] = useState("open");
   const [statuses, setStatuses] = useState<string[]>(["pending", "overdue", "failed"]);
   const [search, setSearch] = useState("");
+  const [kind, setKind] = useState("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [page, setPage] = useState(0);
@@ -65,34 +74,29 @@ function PaymentsList() {
   const programId = useActiveProgramId();
   const paidView = view === "paid" || view === "attempted";
 
+  // Misma fuente que el dashboard: clientes, mensualidades de empresa y torneos.
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["payments-list", programId, statuses, from, to, search, page, paidView],
+    queryKey: ["payments-list", programId, statuses, from, to, search, page, paidView, kind],
     queryFn: async () => {
-      let q = supabase
-        .from("payments")
-        .select(
-          "id, amount, paid_amount, due_date, status, method, paid_at, provider, provider_transaction_id, control_number, failure_reason, policies!inner(id, folio, program_id, clients!inner(id, first_name, last_name, curp), programs(id, name, code, color_primary))",
-        )
+      let q = (supabase.from as any)("v_cobranza")
+        .select("*")
         .order(paidView ? "paid_at" : "due_date", { ascending: !paidView, nullsFirst: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
-      if (statuses.length) q = q.in("status", statuses as any);
+      if (statuses.length) q = q.in("status", statuses);
       if (from) q = q.gte("due_date", from);
       if (to) q = q.lte("due_date", to);
-      if (programId) q = q.eq("policies.program_id", programId);
+      if (programId) q = q.eq("program_id", programId);
+      const kinds = KINDS.find((k) => k.value === kind)?.kinds ?? [];
+      if (kinds.length) q = q.in("kind", kinds);
+      const term = search.trim().replace(/[,()%*]/g, " ").trim();
+      if (term) {
+        q = q.or(
+          ["debtor_name", "group_name", "folio", "curp"].map((c) => `${c}.ilike.*${term}*`).join(","),
+        );
+      }
       const { data, error } = await q;
       if (error) throw error;
-      let list = (data ?? []) as any[];
-      const s = search.trim().toLowerCase();
-      if (s) {
-        list = list.filter((r) => {
-          const c = r.policies?.clients;
-          return (
-            (r.policies?.folio ?? "").toLowerCase().includes(s) ||
-            `${c?.first_name ?? ""} ${c?.last_name ?? ""}`.toLowerCase().includes(s) ||
-            (c?.curp ?? "").toLowerCase().includes(s)
-          );
-        });
-      }
+      const list = (data ?? []) as CobranzaRow[];
       if (paidView) {
         list.sort((a, b) => (b.paid_at ?? "").localeCompare(a.paid_at ?? ""));
       } else {
@@ -122,8 +126,8 @@ function PaymentsList() {
         <div>
           <h1 className="text-2xl font-semibold">Cobranza</h1>
           <p className="text-sm text-muted-foreground">
-            {activeProgram?.name} · {rows.length} pagos ·
-            solo consulta, los cobros se realizan en el portal del cliente
+            {activeProgram?.name} · clientes, mensualidades de empresa y torneos ·
+            los pagos de empresa y torneo se registran en su ficha
           </p>
         </div>
       </div>
@@ -141,6 +145,22 @@ function PaymentsList() {
         ))}
       </div>
 
+
+      <div className="flex flex-wrap gap-2">
+        {KINDS.map((k) => (
+          <Button
+            key={k.value}
+            size="sm"
+            variant={kind === k.value ? "secondary" : "ghost"}
+            onClick={() => {
+              setKind(k.value);
+              setPage(0);
+            }}
+          >
+            {k.label}
+          </Button>
+        ))}
+      </div>
 
       <Card className="p-4 space-y-3">
         <div className="grid md:grid-cols-3 gap-3">
@@ -173,8 +193,8 @@ function PaymentsList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Certificado</TableHead>
+              <TableHead>Quién paga</TableHead>
+              <TableHead>Concepto</TableHead>
               <TableHead>Programa</TableHead>
               <TableHead className="text-right">Monto</TableHead>
               <TableHead>Vencimiento</TableHead>
@@ -191,28 +211,40 @@ function PaymentsList() {
             )}
 
             {rows.map((r: any) => {
-              const c = r.policies?.clients;
-              const prog = r.policies?.programs;
+              const prog = { code: r.program_code, color_primary: r.program_color };
               const days = r.due_date
-                ? Math.floor((new Date(r.due_date).getTime() - Date.now()) / 86400000)
+                ? Math.floor((new Date(`${r.due_date}T12:00:00`).getTime() - Date.now()) / 86400000)
                 : null;
               const att = attemptInfo(r);
               return (
                 <TableRow
                   key={r.id}
                   className="cursor-pointer"
-                  onClick={() => navigate({ to: "/payments/$paymentId", params: { paymentId: r.id } })}
+                  onClick={() => navigate(cobranzaLink(r) as any)}
                 >
-                  <TableCell>{c?.first_name} {c?.last_name}</TableCell>
                   <TableCell>
-                    <Link
-                      to="/policies/$policyId"
-                      params={{ policyId: r.policies.id }}
-                      className="font-mono text-xs text-primary underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {r.policies?.folio}
-                    </Link>
+                    <div>{r.debtor_name}</div>
+                    <Badge variant="outline" className="mt-0.5 text-[10px]">
+                      {COBRANZA_KIND_LABEL[r.kind as keyof typeof COBRANZA_KIND_LABEL] ?? r.kind}
+                    </Badge>
+                    {r.is_activation && (
+                      <Badge variant="outline" className="mt-0.5 ml-1 text-[10px] border-amber-400 text-amber-700">Activación</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {r.policy_id ? (
+                      <Link
+                        to="/policies/$policyId"
+                        params={{ policyId: r.policy_id }}
+                        className="font-mono text-xs text-primary underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {r.folio}
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">{cobranzaDetail(r)}</span>
+                    )}
+                    {r.kind === "torneo_jugador" && <div className="text-[11px] text-muted-foreground">{r.group_name}</div>}
                   </TableCell>
                   <TableCell>
                     <span className="inline-flex items-center gap-1.5 text-xs">
