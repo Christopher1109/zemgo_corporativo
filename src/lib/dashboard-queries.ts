@@ -79,3 +79,119 @@ export async function fetchRecentActivity(scope: Scope, limit = 20): Promise<Act
   if (error) throw error;
   return (data as ActivityRow[]) ?? [];
 }
+
+// ---------------- Cobranza unificada (clientes + empresas + torneos) ----------------
+// Todo sale de la vista v_cobranza / RPC get_cobranza_resumen para que el
+// dashboard, Finanzas, Alertas, Pagos y Reportes cuadren entre sí.
+
+export type CobranzaKind = "cliente" | "empresa" | "torneo" | "torneo_jugador";
+export const COBRANZA_KIND_LABEL: Record<CobranzaKind, string> = {
+  cliente: "Cliente",
+  empresa: "Empresa",
+  torneo: "Torneo / equipo",
+  torneo_jugador: "Jugador de torneo",
+};
+
+export type CobranzaResumen = {
+  por_cobrar: number;
+  por_cobrar_count: number;
+  vencido: number;
+  vencido_count: number;
+  cobrado_mes: number;
+  cobrado_mes_count: number;
+  cobrado_mes_anterior: number;
+  activaciones: number;
+  activaciones_count: number;
+  por_tipo: Record<"cliente" | "empresa" | "torneo", { por_cobrar: number; vencido: number; cobrado_mes: number }>;
+};
+
+export async function fetchCobranzaResumen(scope: Scope): Promise<CobranzaResumen> {
+  const { data, error } = await supabase.rpc("get_cobranza_resumen" as any, { _program_id: scope });
+  if (error) throw error;
+  const d: any = data ?? {};
+  const n = (v: any) => Number(v ?? 0);
+  const tipo = (k: string) => ({
+    por_cobrar: n(d.por_tipo?.[k]?.por_cobrar),
+    vencido: n(d.por_tipo?.[k]?.vencido),
+    cobrado_mes: n(d.por_tipo?.[k]?.cobrado_mes),
+  });
+  return {
+    por_cobrar: n(d.por_cobrar),
+    por_cobrar_count: n(d.por_cobrar_count),
+    vencido: n(d.vencido),
+    vencido_count: n(d.vencido_count),
+    cobrado_mes: n(d.cobrado_mes),
+    cobrado_mes_count: n(d.cobrado_mes_count),
+    cobrado_mes_anterior: n(d.cobrado_mes_anterior),
+    activaciones: n(d.activaciones),
+    activaciones_count: n(d.activaciones_count),
+    por_tipo: { cliente: tipo("cliente"), empresa: tipo("empresa"), torneo: tipo("torneo") },
+  };
+}
+
+export type CobranzaRow = {
+  kind: CobranzaKind;
+  source: "payments" | "company_charges";
+  id: string;
+  program_id: string;
+  program_code: string;
+  program_name: string;
+  program_color: string | null;
+  debtor_name: string;
+  group_name: string | null;
+  client_id: string | null;
+  company_id: string | null;
+  policy_id: string | null;
+  folio: string | null;
+  curp: string | null;
+  policy_status: string | null;
+  amount: number;
+  paid_amount: number | null;
+  status: string;
+  due_date: string | null;
+  paid_at: string | null;
+  method: string | null;
+  bank_reference: string | null;
+  is_activation: boolean;
+  insured_count: number | null;
+  period: string | null;
+};
+
+/** A dónde lleva cada renglón de cobranza. */
+export function cobranzaLink(r: Pick<CobranzaRow, "kind" | "source" | "id" | "company_id">):
+  | { to: "/payments/$paymentId"; params: { paymentId: string } }
+  | { to: "/companies/$companyId"; params: { companyId: string } } {
+  if (r.kind === "empresa" || r.kind === "torneo") return { to: "/companies/$companyId", params: { companyId: r.company_id! } };
+  return { to: "/payments/$paymentId", params: { paymentId: r.id } };
+}
+
+/** Descripción corta del renglón: folio del certificado, o empresa/torneo con # de asegurados. */
+export function cobranzaDetail(r: CobranzaRow): string {
+  if (r.kind === "empresa") {
+    const p = r.period ? new Date(`${r.period}T12:00:00`).toLocaleDateString("es-MX", { month: "long", year: "numeric" }) : "";
+    return `Empresa · mensualidad ${p}${r.insured_count ? ` · ${r.insured_count} asegurados` : ""}`;
+  }
+  if (r.kind === "torneo") return `Torneo / equipo · cobro grupal${r.insured_count ? ` · ${r.insured_count} jugadores` : ""}`;
+  if (r.kind === "torneo_jugador") return `Folio ${r.folio ?? "—"} · ${r.group_name ?? "Torneo"}`;
+  return `Folio ${r.folio ?? "—"}`;
+}
+
+export const isCobranzaOverdue = (r: Pick<CobranzaRow, "status" | "due_date">) =>
+  r.status === "overdue" ||
+  (r.status === "pending" && !!r.due_date && r.due_date < new Date().toLocaleDateString("en-CA", { timeZone: "America/Monterrey" }));
+
+/** Cobros abiertos (Por cobrar): próximos 30 días + vencidos, sin activaciones de prospectos. */
+export async function fetchCobranzaAbierta(scope: Scope, limit = 50): Promise<CobranzaRow[]> {
+  const horizon = new Date(Date.now() + 30 * 86400000).toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
+  let q = (supabase.from as any)("v_cobranza")
+    .select("*")
+    .in("status", ["pending", "overdue"])
+    .eq("is_activation", false)
+    .lte("due_date", horizon)
+    .order("due_date", { ascending: true })
+    .limit(limit);
+  if (scope) q = q.eq("program_id", scope);
+  const { data, error } = await q;
+  if (error) throw error;
+  return ((data ?? []) as any[]).map((r) => ({ ...r, amount: Number(r.amount), paid_amount: r.paid_amount == null ? null : Number(r.paid_amount) }));
+}

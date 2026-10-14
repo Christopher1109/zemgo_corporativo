@@ -42,11 +42,12 @@ export async function queryCartera(supabase: SupabaseClient, filters: ReportFilt
 }
 
 export async function queryCobranza(supabase: SupabaseClient, filters: ReportFilters): Promise<ReportResult> {
-  let q = supabase.from("payments").select(`
-      id, amount, paid_amount, due_date, paid_at, method, status,
-      policies!inner(folio, program_id, clients(first_name, last_name))
-    `).order("due_date", { ascending: false }).limit(5000);
-  q = q.eq("policies.program_id", programOf(filters));
+  // Misma fuente que el dashboard: clientes, mensualidades de empresa y torneos/equipos.
+  let q = (supabase.from as any)("v_cobranza")
+    .select("kind, debtor_name, group_name, folio, period, insured_count, amount, paid_amount, due_date, paid_at, method, status")
+    .order("due_date", { ascending: false })
+    .limit(5000);
+  q = q.eq("program_id", programOf(filters));
   if (filters.status && filters.status !== "all") q = q.eq("status", filters.status);
   const from = dateOrNull(filters.date_from); const to = dateOrNull(filters.date_to);
   if (from) q = q.gte("due_date", from);
@@ -54,15 +55,20 @@ export async function queryCobranza(supabase: SupabaseClient, filters: ReportFil
   const { data, error } = await q;
   if (error) throw error;
   const today = new Date().toISOString().slice(0, 10);
-  const rows = (data ?? []).map((r: any) => {
+  const concept = (r: any) =>
+    r.kind === "empresa" ? `Empresa · mensualidad ${String(r.period ?? "").slice(0, 7)} (${r.insured_count ?? 0} asegurados)`
+    : r.kind === "torneo" ? `Torneo · cobro grupal${r.insured_count ? ` (${r.insured_count} jugadores)` : ""}`
+    : r.kind === "torneo_jugador" ? `${r.folio ?? ""} · ${r.group_name ?? "Torneo"}`
+    : r.folio ?? "";
+  const rows = ((data ?? []) as any[]).map((r: any) => {
     const days = r.status === "paid" || !r.due_date ? 0
       : Math.max(0, Math.floor((Date.parse(today) - Date.parse(r.due_date)) / 86400000));
     return {
-      client_name: `${r.policies?.clients?.first_name ?? ""} ${r.policies?.clients?.last_name ?? ""}`.trim(),
-      folio: r.policies?.folio ?? "",
+      client_name: r.debtor_name ?? "",
+      folio: concept(r),
       amount: Number(r.paid_amount ?? r.amount ?? 0),
       due_date: r.due_date,
-      paid_at: r.paid_at ? r.paid_at.slice(0, 10) : null,
+      paid_at: r.paid_at ? String(r.paid_at).slice(0, 10) : null,
       method: r.method ?? "",
       status: r.status,
       days_overdue: days,

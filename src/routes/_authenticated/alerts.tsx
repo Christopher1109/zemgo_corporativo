@@ -91,7 +91,7 @@ function AlertsPage() {
   const counts = useMemo(() => {
     if (!data) return { reminders15: 0, reminders30: 0, overdue: 0, renewals30: 0, suspended: 0, overdueAmount: 0, upcomingAmount: 0 };
     let reminders15 = 0, reminders30 = 0, overdue = 0, overdueAmount = 0, upcomingAmount = 0;
-    for (const p of [...((data as any).companyCharges ?? []), ...(data.upcoming as any[])]) {
+    for (const p of [...((data as any).companyCharges ?? []), ...((data as any).groupCharges ?? []), ...(data.upcoming as any[])]) {
       const d = daysFrom(p.due_date);
       if (p.status === "overdue") { overdue++; overdueAmount += Number(p.amount); }
       else {
@@ -126,6 +126,12 @@ function AlertsPage() {
       const d = daysFrom(r.due_date);
       return matchBucket(d, r.status === "overdue", bucket) &&
         (!s || (r.companies?.legal_name ?? "").toLowerCase().includes(s));
+    });
+  const groupFiltered = ((data as any)?.groupCharges ?? [])
+    .filter((r: any) => {
+      const d = daysFrom(r.due_date);
+      return matchBucket(d, r.status === "overdue", bucket) &&
+        (!s || `${r.debtor_name ?? ""} ${r.group_name ?? ""} ${r.folio ?? ""}`.toLowerCase().includes(s));
     });
   const renFiltered = (data?.renewals ?? [])
     .filter((r: any) => {
@@ -209,7 +215,7 @@ function AlertsPage() {
       <Tabs defaultValue="reminders" className="w-full">
         <TabsList className="grid w-full grid-cols-4 max-w-3xl">
           <TabsTrigger value="reminders">
-            <Bell className="h-4 w-4 mr-2" /> Recordatorios ({remFiltered.length + chargesFiltered.length})
+            <Bell className="h-4 w-4 mr-2" /> Recordatorios ({remFiltered.length + chargesFiltered.length + groupFiltered.length})
           </TabsTrigger>
           <TabsTrigger value="payment-reminders">
             <Send className="h-4 w-4 mr-2" /> Recordatorios de pago
@@ -226,6 +232,7 @@ function AlertsPage() {
           {q.isLoading ? <Skeleton /> : (
             <div className="space-y-4">
               {chargesFiltered.length > 0 && <CompanyChargesList rows={chargesFiltered} />}
+              {groupFiltered.length > 0 && <GroupChargesList rows={groupFiltered} />}
               <RemindersList rows={remFiltered} />
             </div>
           )}
@@ -519,6 +526,48 @@ function CompanyChargesList({ rows }: { rows: any[] }) {
                   <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-xs">
                     <Link to="/companies/$companyId" params={{ companyId: r.company_id }}>
                       <CreditCard className="h-3 w-3 mr-1" /> Ver empresa
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function GroupChargesList({ rows }: { rows: any[] }) {
+  return (
+    <div className="grid gap-2">
+      <div className="text-xs font-medium uppercase text-muted-foreground">Cobros de torneos y equipos</div>
+      {rows.map((r) => {
+        const d = daysFrom(r.due_date);
+        const isOverdue = r.status === "overdue";
+        return (
+          <Card key={r.id} className={cn(semaforo(d, isOverdue))}>
+            <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium text-sm">{r.debtor_name}</span>
+                  <ProgramChip p={{ code: r.program_code, name: r.program_name, color_primary: r.program_color }} />
+                  <Badge variant="outline" className="text-[10px]">
+                    {r.kind === "torneo" ? `Cobro grupal${r.insured_count ? ` · ${r.insured_count} jugadores` : ""}` : `Jugador · ${r.group_name ?? "Torneo"}`}
+                  </Badge>
+                  {isOverdue
+                    ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vencido hace {Math.abs(d)}d</Badge>
+                    : <Badge variant="outline" className="text-[10px]">Vence en {d}d</Badge>}
+                </div>
+                {r.folio && <div className="text-[11px] text-muted-foreground mt-0.5">Folio {r.folio}</div>}
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-semibold">${fmtMx(Number(r.amount))}</div>
+                <div className="text-[11px] text-muted-foreground">Vence {r.due_date}</div>
+                <div className="flex gap-1 justify-end mt-1">
+                  <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-xs">
+                    <Link to="/companies/$companyId" params={{ companyId: r.company_id }}>
+                      <CreditCard className="h-3 w-3 mr-1" /> Ver torneo
                     </Link>
                   </Button>
                 </div>

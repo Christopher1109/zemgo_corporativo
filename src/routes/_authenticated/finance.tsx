@@ -49,28 +49,23 @@ function FinanceOverview() {
   const { data: payments = [] } = useQuery({
     queryKey: ["finance-payments", programId],
     queryFn: async () => {
-      let q = supabase
-        .from("payments")
-        .select("id, amount, paid_amount, status, method, due_date, paid_at, policies!inner(program_id, client_id, clients(first_name, last_name), programs(name, code, color_primary))")
-        .gte("due_date", new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10))
-        .eq("policies.program_id", programId)
-        // Los certificados de empresa se cobran en el cobro consolidado de la empresa (abajo), no uno por uno.
-        .is("policies.company_id", null);
-      const { data, error } = await q.limit(5000);
-      if (error) throw error;
-
-      const { data: charges, error: cErr } = await (supabase as any)
-        .from("company_charges")
-        .select("id, amount, paid_amount, status, method, due_date, paid_at, companies(legal_name), programs(name, code, color_primary)")
+      // Misma fuente que el dashboard: clientes, empresas (mensualidad) y torneos.
+      // Las activaciones de prospectos no cuentan como cartera por cobrar.
+      const { data, error } = await (supabase.from as any)("v_cobranza")
+        .select("*")
         .eq("program_id", programId)
-        .gte("due_date", new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10));
-      if (cErr) throw cErr;
-      // Se integran como un cobro más, con la empresa como "cliente".
-      const companyRows = (charges ?? []).map((c: any) => ({
-        ...c,
-        policies: { programs: c.programs, clients: { first_name: c.companies?.legal_name ?? "Empresa", last_name: "" } },
-      }));
-      return [...(data ?? []), ...companyRows] as any[];
+        .gte("due_date", new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10))
+        .limit(10000);
+      if (error) throw error;
+      return ((data ?? []) as any[])
+        .filter((r) => !(r.is_activation && (r.status === "pending" || r.status === "overdue")))
+        .map((r) => ({
+          ...r,
+          policies: {
+            programs: { code: r.program_code, name: r.program_name, color_primary: r.program_color },
+            clients: { first_name: r.debtor_name, last_name: "" },
+          },
+        }));
     },
   });
 
