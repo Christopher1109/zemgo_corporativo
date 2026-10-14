@@ -50,7 +50,7 @@ async function fetchProgramPolicies(programId: string) {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from("policies")
-      .select("id, folio, policy_number, certificate_number, status, created_at, issue_date, program_id, company_id, metadata, companies(legal_name, group_type), clients(id, first_name, last_name, curp, rfc, date_of_birth, gender, metadata), payments(status, paid_at), dependents(full_name, relationship, date_of_birth, metadata)")
+      .select("id, folio, policy_number, certificate_number, status, created_at, issue_date, start_date, end_date, program_id, company_id, metadata, companies(legal_name, group_type, coverage_start, coverage_end), clients(id, first_name, last_name, curp, rfc, date_of_birth, gender, metadata), payments(status, paid_at), dependents(full_name, relationship, date_of_birth, metadata)")
       .eq("program_id", programId)
       .range(from, from + 999);
     if (error) throw error;
@@ -58,6 +58,21 @@ async function fetchProgramPolicies(programId: string) {
     if (!data || data.length < 1000) break;
   }
   return out;
+}
+
+/** Torneo/equipo con vigencia menor a un año: alta al inicio y baja automática al terminar. */
+function isShortGroup(p: any) {
+  if (!p?.companies?.group_type || !p.start_date || !p.end_date) return false;
+  const days = (Date.parse(String(p.end_date).slice(0, 10)) - Date.parse(String(p.start_date).slice(0, 10))) / 86400000;
+  return days < 360;
+}
+const fmtShort = (d?: string | null) =>
+  d ? new Date(`${String(d).slice(0, 10)}T12:00:00`).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }) : "—";
+/** Fecha de movimiento para HIR: torneos usan su inicio (alta) o fin de vigencia (baja). */
+function movementDateFor(p: any, kind: "ALTA" | "BAJA", fallback: string) {
+  if (!p?.companies?.group_type) return fallback;
+  const d = kind === "ALTA" ? p.start_date : p.end_date;
+  return d ? String(d).slice(0, 10) : fallback;
 }
 
 /** Número de póliza de la aseguradora para el archivo: el más común entre los renglones (o el de la plantilla). */
@@ -133,14 +148,21 @@ function AltasTab({ program }: { program: any }) {
   const groups = useMemo(() => {
     const m = new Map<string, { label: string; rows: any[] }>();
     for (const p of data) {
+      const short = isShortGroup(p);
       const { key, label } = p.company_id
-        ? { key: `empresa-${p.company_id}`, label: `${p.companies?.group_type ? "Torneo/equipo" : "Empresa"}: ${p.companies?.legal_name ?? "sin nombre"}` }
+        ? {
+            key: `${short ? "zcorta" : "empresa"}-${p.company_id}`,
+            label: p.companies?.group_type
+              ? `Torneo/equipo: ${p.companies?.legal_name ?? "sin nombre"} · vigencia ${fmtShort(p.start_date)} al ${fmtShort(p.end_date)}${short ? " · vigencia corta: alta con fecha de inicio y baja automática al terminar" : " · anual"}`
+              : `Empresa: ${p.companies?.legal_name ?? "sin nombre"}`,
+          }
         : { ...cutoffKey(p.first_paid), label: `Individuales · ${cutoffKey(p.first_paid).label}` };
       if (!m.has(key)) m.set(key, { label, rows: [] });
       m.get(key)!.rows.push(p);
     }
-    return [...m.entries()].sort((a, b) =>
-      a[0].startsWith("empresa-") !== b[0].startsWith("empresa-") ? (a[0].startsWith("empresa-") ? -1 : 1) : b[0].localeCompare(a[0]));
+    // Empresas y torneos anuales primero, luego individuales, al final torneos de vigencia corta.
+    const rank = (k: string) => (k.startsWith("empresa-") ? 0 : k.startsWith("zcorta-") ? 2 : 1);
+    return [...m.entries()].sort((a, b) => rank(a[0]) - rank(b[0]) || b[0].localeCompare(a[0]));
   }, [data]);
 
   const [sel, setSel] = useState<Record<string, boolean>>({});
@@ -155,7 +177,7 @@ function AltasTab({ program }: { program: any }) {
     if (chosen.length === 0) return toast.error("Selecciona al menos una alta.");
     setBusy(true);
     try {
-      const movs = chosen.map((p: any) => movementFromPolicy(p, "ALTA", movDate));
+      const movs = chosen.map((p: any) => movementFromPolicy(p, "ALTA", movementDateFor(p, "ALTA", movDate)));
       const missing = movs.filter((m) => !m.date_of_birth || !m.sexo || !m.paterno).length;
       const blob = await buildHirMovementsFile(movs, { policyNumber: policyNumberFor(chosen) });
       const fileName = `ALTAS ${program.code} ${movDate}.xlsx`;
@@ -223,8 +245,14 @@ function AltasTab({ program }: { program: any }) {
       {data.length > 0 && <p className="text-xs text-muted-foreground">{porEnviar} por enviar · {data.length - porEnviar} enviadas esperando certificado</p>}
       {isLoading ? <div className="py-8 text-center text-muted-foreground">Cargando…</div> :
         groups.length === 0 ? <div className="py-8 text-center text-muted-foreground">No hay altas pendientes de certificado.</div> :
-        groups.map(([k, g]) => (
+        groups.map(([k, g], i) => (
           <div key={k} className="space-y-2">
+            {k.startsWith("zcorta-") && !groups[i - 1]?.[0].startsWith("zcorta-") && (
+              <div className="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm">
+                <b>Torneos y equipos de vigencia corta (no anual).</b> Se envían en el mismo archivo de altas con su fecha de
+                inicio de vigencia. El día que termina su vigencia aparecen solos en <b>2. Bajas para HIR</b>.
+              </div>
+            )}
             <h3 className="font-medium text-sm flex items-center gap-2">
               <Checkbox checked={g.rows.every((p) => sel[p.id])} onCheckedChange={(v) => toggleGroup(g.rows, !!v)} />
               {g.label} <Badge variant="secondary">{g.rows.length}</Badge>
@@ -241,7 +269,11 @@ function AltasTab({ program }: { program: any }) {
                     <TableCell className="font-mono text-xs">{p.clients?.curp}</TableCell>
                     <TableCell className="text-xs">{p.clients?.date_of_birth ? fmtDate(p.clients.date_of_birth) : <span className="text-amber-700">Falta</span>}</TableCell>
                     <TableCell className="font-mono text-xs">{p.folio}</TableCell>
-                    <TableCell>{new Date(p.first_paid ?? p.issue_date ?? p.created_at).toLocaleDateString("es-MX")}</TableCell>
+                    <TableCell>
+                      {p.companies?.group_type
+                        ? <span className="text-xs">Alta HIR: {fmtShort(movementDateFor(p, "ALTA", movDate))}</span>
+                        : new Date(p.first_paid ?? p.issue_date ?? p.created_at).toLocaleDateString("es-MX")}
+                    </TableCell>
                     <TableCell><SentBadge info={p.metadata?.insurer_alta_sent} /></TableCell>
                   </TableRow>
                 ))}
@@ -263,9 +295,14 @@ function BajasTab({ program }: { program: any }) {
     queryKey: ["cert-bajas", program.id],
     queryFn: async () => {
       const pols = await fetchProgramPolicies(program.id);
-      // Bajas que la aseguradora necesita: certificados cancelados que ya tenían número.
+      // Bajas que la aseguradora necesita: certificados cancelados que ya tenían número,
+      // y torneos de vigencia corta cuya vigencia ya terminó (baja automática).
+      const todayIso = new Date().toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
       return pols
-        .filter((p) => p.status === "cancelled" && String(p.certificate_number ?? "").trim())
+        .filter((p) => String(p.certificate_number ?? "").trim() && (
+          p.status === "cancelled" ||
+          (isShortGroup(p) && String(p.end_date).slice(0, 10) < todayIso && p.status !== "cancelled")
+        ))
         .sort((a, b) => String(b.metadata?.cancellation?.date ?? b.updated_at ?? "").localeCompare(String(a.metadata?.cancellation?.date ?? a.updated_at ?? "")));
     },
   });
@@ -281,7 +318,8 @@ function BajasTab({ program }: { program: any }) {
     if (chosen.length === 0) return toast.error("Selecciona al menos una baja.");
     setBusy(true);
     try {
-      const movs = chosen.map((p: any) => movementFromPolicy(p, "BAJA", movDate));
+      const movs = chosen.map((p: any) =>
+        movementFromPolicy(p, "BAJA", p.status === "cancelled" ? movDate : movementDateFor(p, "BAJA", movDate)));
       const blob = await buildHirMovementsFile(movs, { policyNumber: policyNumberFor(chosen) });
       const fileName = `BAJAS ${program.code} ${movDate}.xlsx`;
       downloadBlob(blob, fileName);
@@ -331,8 +369,12 @@ function BajasTab({ program }: { program: any }) {
                   <TableCell className="font-mono">{p.certificate_number}</TableCell>
                   <TableCell>{fullName(p.clients)}</TableCell>
                   <TableCell className="text-xs">{p.companies?.legal_name ?? "Individual"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{p.metadata?.cancellation?.reason ?? "—"}</TableCell>
-                  <TableCell className="text-xs">{fmtDate(p.metadata?.cancellation?.date)}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {p.status === "cancelled" ? (p.metadata?.cancellation?.reason ?? "—") : "Fin de vigencia del torneo"}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {p.status === "cancelled" ? fmtDate(p.metadata?.cancellation?.date) : fmtShort(p.end_date)}
+                  </TableCell>
                   <TableCell><SentBadge info={p.metadata?.insurer_baja_sent} /></TableCell>
                 </TableRow>
               ))}

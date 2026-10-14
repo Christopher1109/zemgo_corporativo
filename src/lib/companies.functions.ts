@@ -174,12 +174,25 @@ export const deleteCompany = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ company_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
+    // No se borra una empresa/torneo con dinero ya cobrado: se perdería de la cobranza y los reportes.
+    const [{ count: paidGroup }, { count: paidCharges }] = await Promise.all([
+      (supabase.from("payments") as any).select("id", { count: "exact", head: true }).eq("company_id", data.company_id).eq("status", "paid"),
+      (supabase as any).from("company_charges").select("id", { count: "exact", head: true }).eq("company_id", data.company_id).eq("status", "paid"),
+    ]);
+    if ((paidGroup ?? 0) + (paidCharges ?? 0) > 0) {
+      throw new Error("No se puede eliminar: ya tiene pagos registrados. Márcalo como inactivo para conservar su historial de cobranza.");
+    }
     // Detach clients and certificates (keep the people and their policies intact),
     // then remove the company shell and its import history.
     await supabase.from("clients").update({ company_id: null }).eq("company_id", data.company_id);
     await supabase.from("policies").update({ company_id: null }).eq("company_id", data.company_id);
     const { error } = await supabase.from("companies").delete().eq("id", data.company_id);
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(
+        error.message.includes("tiene_pagos")
+          ? "No se puede eliminar: ya tiene pagos registrados. Márcalo como inactivo para conservar su historial de cobranza."
+          : error.message,
+      );
     return { ok: true };
   });
 

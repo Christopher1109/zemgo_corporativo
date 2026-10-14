@@ -19,6 +19,7 @@ export async function queryCartera(supabase: SupabaseClient, filters: ReportFilt
   let q = supabase.from("policies").select(`
       folio, start_date, end_date, sum_insured, status,
       programs(code, name),
+      companies(legal_name, group_type),
       clients(first_name, last_name, curp)
     `).order("start_date", { ascending: false }).limit(5000);
   q = q.eq("program_id", programOf(filters));
@@ -32,6 +33,7 @@ export async function queryCartera(supabase: SupabaseClient, filters: ReportFilt
     client_name: `${r.clients?.first_name ?? ""} ${r.clients?.last_name ?? ""}`.trim(),
     curp: r.clients?.curp ?? "",
     program_code: r.programs?.code ?? "",
+    group_name: r.companies?.legal_name ? `${r.companies.group_type ? "Torneo" : "Empresa"}: ${r.companies.legal_name}` : "Individual",
     folio: r.folio,
     start_date: r.start_date,
     end_date: r.end_date,
