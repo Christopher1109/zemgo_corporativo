@@ -276,164 +276,29 @@ export const importCompanyEmployees = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-
-    const { data: companyRow, error: cErr } = await supabase
-      .from("companies")
-      .select("id, legal_name, program_id, created_at, coverage_start, coverage_end, pricing_mode, unit_price" as any)
-      .eq("id", data.company_id)
-      .single();
-    if (cErr) throw new Error(cErr.message);
-    const company = companyRow as any;
-
-    const programId = company.program_id as string;
-    const { data: prog } = await supabase
-      .from("programs")
-      .select("policy_number, default_premium")
-      .eq("id", programId)
-      .maybeSingle();
-
-    let issueDate = data.issue_date ?? new Date().toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
-    let startDate = data.start_date ?? issueDate;
-    let endDate = data.end_date ?? startDate;
-    let premium = data.premium ?? null;
-    if (data.group_terms) {
-      const c: any = company;
-      // Vigencia: la que se capturó al dar de alta el torneo/equipo; si no hay, un año desde el alta.
-      if (c.coverage_start && c.coverage_end) {
-        startDate = String(c.coverage_start).slice(0, 10);
-        endDate = String(c.coverage_end).slice(0, 10);
-      } else {
-        startDate = new Date(c.created_at as string).toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
-        const [y, m, d] = startDate.split("-");
-        endDate = `${Number(y) + 1}-${m}-${d}`;
-      }
-      issueDate = new Date().toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
-      // Costo: por jugador = el capturado en el grupo; costo total del torneo = lo carga el cobro grupal.
-      if (c.pricing_mode === "flat") premium = 0;
-      else if (c.unit_price != null) premium = Number(c.unit_price);
-      else premium = (prog as any)?.default_premium != null ? Number((prog as any).default_premium) : premium;
-    }
-
-    const details: Array<{ curp: string; name: string; ok: boolean; folio?: string; error?: string }> = [];
-    let created = 0;
-    let failed = 0;
-    const createdPolicies: Array<{ id: string; folio: string; first_name: string; last_name: string }> = [];
-
-    for (const r of data.rows) {
-      const curp = r.curp.trim().toUpperCase();
-      const name = `${r.first_name} ${r.last_name}`.trim();
-      try {
-        // Client: reuse when the CURP already exists, otherwise create.
-        let clientId: string | null = null;
-        const { data: existing } = await supabase
-          .from("clients")
-          .select("id")
-          .eq("curp", curp)
-          .maybeSingle();
-
-        if (existing) {
-          clientId = existing.id as string;
-          await supabase.from("clients").update({ company_id: data.company_id }).eq("id", clientId);
-        } else {
-          const { data: ins, error: insErr } = await supabase
-            .from("clients")
-            .insert({
-              first_name: r.first_name.trim(),
-              last_name: r.last_name.trim(),
-              curp,
-              rfc: r.rfc ? r.rfc.trim().toUpperCase() : null,
-              date_of_birth: r.date_of_birth || null,
-              gender: r.gender || null,
-              email: r.email || null,
-              phone: r.phone || null,
-              address_full: r.address_full || null,
-              marital_status: r.marital_status || null,
-              street: r.street || null,
-              colonia: r.colonia || null,
-              city: r.city || null,
-              state: r.state || null,
-              zip: r.zip || null,
-              metadata: r.curp_alert ? { curp_alert: r.curp_alert } : {},
-              company_id: data.company_id,
-              created_by: userId,
-            })
-            .select("id")
-            .single();
-          if (insErr) throw new Error(insErr.message);
-          clientId = ins.id as string;
-        }
-
-        // Enrollment
-        const { data: cp } = await supabase
-          .from("client_programs")
-          .select("id")
-          .eq("client_id", clientId)
-          .eq("program_id", programId)
-          .maybeSingle();
-        if (!cp) {
-          const { error: cpErr } = await supabase
-            .from("client_programs")
-            .insert({ client_id: clientId, program_id: programId, status: "prospect" });
-          if (cpErr) throw new Error(cpErr.message);
-        }
-
-        // One certificate per person
-        const { data: folio, error: folioErr } = await supabase.rpc("next_policy_folio", {
-          _program_id: programId,
-        });
-        if (folioErr) throw new Error(folioErr.message);
-
-        const { data: policy, error: polErr } = await supabase
-          .from("policies")
-          .insert({
-            client_id: clientId,
-            program_id: programId,
-            company_id: data.company_id,
-            folio: folio as string,
-            policy_number: prog?.policy_number ?? null,
-            certificate_number: folio as string,
-            issue_date: issueDate,
-            start_date: startDate,
-            end_date: endDate,
-            contracting_party: company.legal_name as string,
-            premium,
-            sum_insured: data.sum_insured ?? null,
-            status: "pending_payment",
-            created_by: userId,
-          })
-          .select("id, folio")
-          .single();
-        if (polErr) throw new Error(polErr.message);
-        createdPolicies.push({ id: policy.id as string, folio: policy.folio as string, first_name: r.first_name, last_name: r.last_name });
-
-        await supabase.from("beneficiaries").insert({
-          policy_id: policy.id,
-          full_name: (r.beneficiary_name || name).trim(),
-          relationship: r.beneficiary_relationship || "Beneficiario",
-          percentage: 100,
-          display_order: 0,
-        });
-
-        created += 1;
-        details.push({ curp, name, ok: true, folio: policy.folio as string });
-      } catch (e: any) {
-        failed += 1;
-        details.push({ curp, name, ok: false, error: e?.message ?? "Error desconocido" });
-      }
-    }
-
-    await supabase.from("company_imports").insert({
-      company_id: data.company_id,
-      file_name: data.file_name ?? null,
-      rows_detected: data.rows.length,
-      rows_created: created,
-      rows_failed: failed,
-      details,
-      created_by: userId,
+    const { supabase } = context;
+    // El alta se hace en la base (import_company_members): valida permisos del programa,
+    // crea cliente, inscripción, certificado y beneficiario, y registra la importación.
+    // (Insertar directo en clients fallaba por las reglas de seguridad al leerlo de vuelta.)
+    const { data: res, error } = await (supabase.rpc as any)("import_company_members", {
+      _company_id: data.company_id,
+      _rows: data.rows,
+      _file_name: data.file_name ?? null,
+      _issue_date: data.issue_date ?? null,
+      _start_date: data.start_date ?? null,
+      _end_date: data.end_date ?? null,
+      _premium: data.premium ?? null,
+      _sum_insured: data.sum_insured ?? null,
+      _group_terms: !!data.group_terms,
     });
-
-    return { created, failed, details, policies: createdPolicies };
+    if (error) throw new Error(error.message === "forbidden" ? "No tienes permiso para dar de alta asegurados en este programa." : error.message);
+    const r: any = res ?? {};
+    return {
+      created: Number(r.created ?? 0),
+      failed: Number(r.failed ?? 0),
+      details: (r.details ?? []) as Array<{ curp: string; name: string; ok: boolean; folio?: string; error?: string }>,
+      policies: (r.policies ?? []) as Array<{ id: string; folio: string; first_name: string; last_name: string }>,
+    };
   });
 
 async function assertGroupWriter(supabase: any, userId: string, companyId: string) {
