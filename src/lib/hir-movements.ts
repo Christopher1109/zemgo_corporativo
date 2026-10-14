@@ -4,8 +4,9 @@
 import { HIR_TEMPLATE_B64 } from "@/lib/hir-template";
 
 export type HirMovement = {
-  tipo: "ALTA" | "BAJA";
-  certificate_number?: string | null; // obligatorio en BAJAS
+  /** "" = asegurado que sigue activo (listado completo, p. ej. póliza de Vida): sin tipo de movimiento. */
+  tipo: "ALTA" | "BAJA" | "";
+  certificate_number?: string | null; // obligatorio en BAJAS y en los que siguen activos
   fecha_movimiento: string; // ISO yyyy-mm-dd
   paterno: string;
   materno: string;
@@ -15,9 +16,14 @@ export type HirMovement = {
   rfc_curp?: string | null;
 };
 
+// AP: así vienen los archivos que HIR ya procesó (SUBGRUPO 1, CATEGORÍA 5; en la relación sale como grupo "5-1").
 export const HIR_SUBGRUPO = 1;
 export const HIR_CATEGORIA = 5;
-export const HIR_DEFAULT_POLICY = "50601000157";
+// Vida: subgrupo 1, categoría 1.
+export const HIR_VIDA_SUBGRUPO = 1;
+export const HIR_VIDA_CATEGORIA = 1;
+export const HIR_DEFAULT_POLICY = "50601000157"; // Accidentes personales (AP): solo altas y bajas
+export const HIR_VIDA_POLICY = "27001000124"; // Vida: listado completo (activos + altas + bajas)
 
 // ---------------------------------------------------------------- Nombres
 
@@ -64,7 +70,7 @@ function excelSerial(iso: string | null | undefined): number | null {
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 // Estilos de la plantilla (fila de datos típica): A=36, B=37, C/D=38, E=39, F/G=40, H=41, I=42, J=43, K=44, L=38, M=45.
-function rowXml(r: number, mv: HirMovement) {
+function rowXml(r: number, mv: HirMovement, grp: { subgrupo: number; categoria: number }) {
   const cells: string[] = [];
   const str = (col: string, s: number, v?: string | null) =>
     cells.push(v ? `<c r="${col}${r}" s="${s}" t="inlineStr"><is><t>${esc(v)}</t></is></c>` : `<c r="${col}${r}" s="${s}"/>`);
@@ -73,8 +79,8 @@ function rowXml(r: number, mv: HirMovement) {
   str("A", 36, mv.tipo);
   const cert = String(mv.certificate_number ?? "").trim();
   if (/^\d+$/.test(cert)) num("B", 37, Number(cert)); else str("B", 37, cert || null);
-  num("C", 38, HIR_SUBGRUPO);
-  num("D", 38, HIR_CATEGORIA);
+  num("C", 38, grp.subgrupo);
+  num("D", 38, grp.categoria);
   num("E", 39, excelSerial(mv.fecha_movimiento));
   str("F", 40, mv.paterno.toUpperCase());
   str("G", 40, mv.materno.toUpperCase());
@@ -87,13 +93,17 @@ function rowXml(r: number, mv: HirMovement) {
   return `<row r="${r}" spans="1:13">${cells.join("")}</row>`;
 }
 
-export async function buildHirMovementsFile(movs: HirMovement[], opts: { policyNumber?: string | null } = {}): Promise<Blob> {
+export async function buildHirMovementsFile(
+  movs: HirMovement[],
+  opts: { policyNumber?: string | null; subgrupo?: number; categoria?: number } = {},
+): Promise<Blob> {
+  const grp = { subgrupo: opts.subgrupo ?? HIR_SUBGRUPO, categoria: opts.categoria ?? HIR_CATEGORIA };
   const JSZip = (await import("jszip")).default;
   const bin = Uint8Array.from(atob(HIR_TEMPLATE_B64), (ch) => ch.charCodeAt(0));
   const zip = await JSZip.loadAsync(bin);
   const path = "xl/worksheets/sheet1.xml";
   let xml = await zip.file(path)!.async("string");
-  const rows = movs.map((m, i) => rowXml(18 + i, m)).join("");
+  const rows = movs.map((m, i) => rowXml(18 + i, m, grp)).join("");
   xml = xml.replace("</sheetData>", `${rows}</sheetData>`);
   xml = xml.replace(/<dimension ref="[^"]*"\/>/, `<dimension ref="A1:O${Math.max(17, 17 + movs.length)}"/>`);
   const pol = String(opts.policyNumber ?? "").trim();
@@ -135,4 +145,10 @@ export function movementFromPolicy(p: any, tipo: "ALTA" | "BAJA", fecha: string)
     sexo: sexoOf(c),
     rfc_curp: tipo === "ALTA" ? (curp && !curp.startsWith("SIN-CURP") ? curp : c.rfc ?? null) : null,
   };
+}
+
+/** Renglón de un asegurado que sigue activo (con su certificado) para el listado completo. */
+export function activeRowFromPolicy(p: any, fecha: string): HirMovement {
+  const base = movementFromPolicy(p, "ALTA", fecha);
+  return { ...base, tipo: "", certificate_number: p.certificate_number ?? null };
 }
