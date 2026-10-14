@@ -345,7 +345,10 @@ export function FutCareGroupPanel({
           },
         });
         createdPolicies = res.policies ?? [];
-        if (res.failed) toast.warning(`${res.failed} persona(s) no se pudieron dar de alta.`);
+        if (res.failed) {
+          const first = (res.details ?? []).find((d: any) => !d.ok);
+          toast.error(`${res.failed} persona(s) no se pudieron dar de alta${first?.error ? `: ${first.error}` : "."}`, { duration: 10000 });
+        }
       }
       const bajaIds =
         bajaMode === "all" ? review.noVienen.map((p) => p.id) : bajaMode === "pick" ? [...picked] : [];
