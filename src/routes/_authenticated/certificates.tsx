@@ -18,7 +18,7 @@ import { CertificateBadge } from "@/components/certificates/CertificateBadge";
 import { parseInsurerFile, type InsurerFile, type InsurerRow } from "@/lib/insurer-file-parser";
 import { newWorkbook, styleHeader, downloadWorkbook, fullName, ageFrom, genderFromCurp, GENDER_LABEL, slugDate } from "@/lib/client-excel";
 import { matchAll, matchRow } from "@/lib/insurer-match";
-import { buildHirMovementsFile, downloadBlob, movementFromPolicy, HIR_DEFAULT_POLICY } from "@/lib/hir-movements";
+import { buildHirMovementsFile, downloadBlob, movementFromPolicy, activeRowFromPolicy, HIR_DEFAULT_POLICY, HIR_VIDA_POLICY, HIR_VIDA_SUBGRUPO, HIR_VIDA_CATEGORIA } from "@/lib/hir-movements";
 
 export const Route = createFileRoute("/_authenticated/certificates")({
   head: () => ({ meta: [{ title: "Altas, bajas y certificados — ZEMGO" }] }),
@@ -102,10 +102,12 @@ function CertificatesPage() {
             <TabsTrigger value="altas">1. Altas para HIR</TabsTrigger>
             <TabsTrigger value="bajas">2. Bajas para HIR</TabsTrigger>
             <TabsTrigger value="upload">3. Subir relación de HIR (PDF)</TabsTrigger>
+            <TabsTrigger value="activos">Activos y certificados</TabsTrigger>
           </TabsList>
           <TabsContent value="altas" className="mt-4"><AltasTab program={activeProgram} /></TabsContent>
           <TabsContent value="bajas" className="mt-4"><BajasTab program={activeProgram} /></TabsContent>
           <TabsContent value="upload" className="mt-4"><UploadTab program={activeProgram} /></TabsContent>
+          <TabsContent value="activos" className="mt-4"><ActivosTab program={activeProgram} /></TabsContent>
         </Tabs>
       )}
     </div>
@@ -168,8 +170,8 @@ function AltasTab({ program }: { program: any }) {
   const [sel, setSel] = useState<Record<string, boolean>>({});
   const [movDate, setMovDate] = useState(today);
   const [busy, setBusy] = useState(false);
-  // Por defecto se seleccionan las que aún no se han enviado.
-  useEffect(() => { setSel(Object.fromEntries(data.map((p: any) => [p.id, !p.metadata?.insurer_alta_sent]))); }, [data]);
+  // Por defecto vienen todas seleccionadas (también las ya enviadas que siguen sin certificado); se desmarcan a mano.
+  useEffect(() => { setSel(Object.fromEntries(data.map((p: any) => [p.id, true]))); }, [data]);
   const chosen = data.filter((p: any) => sel[p.id]);
   const porEnviar = data.filter((p: any) => !p.metadata?.insurer_alta_sent).length;
 
@@ -185,6 +187,7 @@ function AltasTab({ program }: { program: any }) {
       if (canWrite) {
         await markSent(program.id, chosen.map((p: any) => p.id), "alta", movDate, fileName);
         await qc.invalidateQueries({ queryKey: ["cert-pending", program.id] });
+        await qc.invalidateQueries({ queryKey: ["cert-activos", program.id] });
       }
       toast.success(`Archivo de altas con ${movs.length} asegurado(s) descargado.${missing ? ` Revisa ${missing} renglón(es) con datos incompletos.` : ""}`);
     } catch (e: any) {
@@ -290,7 +293,6 @@ function AltasTab({ program }: { program: any }) {
 function BajasTab({ program }: { program: any }) {
   const qc = useQueryClient();
   const canWrite = useCanWrite(program.id);
-  const [showSent, setShowSent] = useState(false);
   const { data = [], isLoading } = useQuery({
     queryKey: ["cert-bajas", program.id],
     queryFn: async () => {
@@ -303,7 +305,9 @@ function BajasTab({ program }: { program: any }) {
           p.status === "cancelled" ||
           (isShortGroup(p) && String(p.end_date).slice(0, 10) < todayIso && p.status !== "cancelled")
         ))
-        .sort((a, b) => String(b.metadata?.cancellation?.date ?? b.updated_at ?? "").localeCompare(String(a.metadata?.cancellation?.date ?? a.updated_at ?? "")));
+        // Primero las que faltan por enviar, luego las ya enviadas; dentro de cada grupo, la más reciente primero.
+        .sort((a, b) => Number(!!a.metadata?.insurer_baja_sent) - Number(!!b.metadata?.insurer_baja_sent)
+          || String(b.metadata?.cancellation?.date ?? b.updated_at ?? "").localeCompare(String(a.metadata?.cancellation?.date ?? a.updated_at ?? "")));
     },
   });
   const pending = data.filter((p: any) => !p.metadata?.insurer_baja_sent);
@@ -311,7 +315,8 @@ function BajasTab({ program }: { program: any }) {
   const [sel, setSel] = useState<Record<string, boolean>>({});
   const [movDate, setMovDate] = useState(today);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { setSel(Object.fromEntries(data.map((p: any) => [p.id, !p.metadata?.insurer_baja_sent]))); }, [data]);
+  // Se ven todas (por enviar y ya enviadas) y vienen todas seleccionadas; se desmarcan a mano.
+  useEffect(() => { setSel(Object.fromEntries(data.map((p: any) => [p.id, true]))); }, [data]);
   const chosen = data.filter((p: any) => sel[p.id]);
 
   async function downloadHir() {
@@ -333,7 +338,8 @@ function BajasTab({ program }: { program: any }) {
     } finally { setBusy(false); }
   }
 
-  const rows = showSent ? data : pending;
+  const rows = data;
+  const allSel = rows.length > 0 && rows.every((p: any) => sel[p.id]);
   return (
     <Card className="p-4 space-y-4">
       <p className="text-sm text-muted-foreground">
@@ -346,9 +352,7 @@ function BajasTab({ program }: { program: any }) {
             <label className="text-xs text-muted-foreground">Fecha de movimiento</label>
             <Input type="date" value={movDate} onChange={(e) => setMovDate(e.target.value)} className="w-[170px]" />
           </div>
-          <label className="flex items-center gap-2 text-sm pb-2">
-            <Checkbox checked={showSent} onCheckedChange={(v) => setShowSent(!!v)} /> Mostrar ya enviadas ({sent.length})
-          </label>
+          <p className="text-xs text-muted-foreground pb-2">{pending.length} por enviar · {sent.length} ya enviadas</p>
         </div>
         <Button onClick={downloadHir} disabled={busy || chosen.length === 0}>
           {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
@@ -357,10 +361,10 @@ function BajasTab({ program }: { program: any }) {
       </div>
       {!canWrite && <p className="text-xs text-amber-700">Puedes descargar el archivo, pero solo administradores o gerentes del programa lo marcan como enviado.</p>}
       {isLoading ? <div className="py-8 text-center text-muted-foreground">Cargando…</div> :
-        rows.length === 0 ? <div className="py-8 text-center text-muted-foreground">No hay bajas por enviar.</div> : (
+        rows.length === 0 ? <div className="py-8 text-center text-muted-foreground">No hay bajas.</div> : (
           <Table>
             <TableHeader><TableRow>
-              <TableHead /><TableHead>N° Cert.</TableHead><TableHead>Nombre</TableHead><TableHead>Empresa</TableHead><TableHead>Motivo</TableHead><TableHead>Fecha de baja</TableHead><TableHead>Envío a HIR</TableHead>
+              <TableHead><Checkbox checked={allSel} onCheckedChange={(v) => setSel(Object.fromEntries(rows.map((p: any) => [p.id, !!v])))} /></TableHead><TableHead>N° Cert.</TableHead><TableHead>Nombre</TableHead><TableHead>Empresa</TableHead><TableHead>Motivo</TableHead><TableHead>Fecha de baja</TableHead><TableHead>Envío a HIR</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {rows.map((p: any) => (
@@ -646,6 +650,187 @@ function UploadTab({ program }: { program: any }) {
           </div>
         </div>
       )}
+    </Card>
+  );
+}
+
+// ------------------------------------------------------------------ ACTIVOS Y CERTIFICADOS
+
+/** Asegurados vigentes del programa (no dados de baja), con y sin número de certificado de HIR. */
+function ActivosTab({ program }: { program: any }) {
+  const query = useQuery({
+    queryKey: ["cert-activos", program.id],
+    queryFn: async () => {
+      const pols = await fetchProgramPolicies(program.id);
+      const cancelled = pols.filter((p) => p.status === "cancelled" && String(p.certificate_number ?? "").trim());
+      const active = pols
+        .filter((p) => p.status !== "cancelled")
+        .filter((p) => {
+          if (String(p.certificate_number ?? "").trim()) return true;
+          // Mismo criterio que "Altas para HIR": individuales ya pagados, empresas al darse de alta, torneos activos.
+          const paid = (p.payments ?? []).some((x: any) => x.status === "paid" && x.paid_at);
+          return paid || (p.company_id && (!p.companies?.group_type || p.status === "active"));
+        });
+      return { active, cancelled };
+    },
+  });
+  const data = query.data?.active ?? [];
+  const cancelled = query.data?.cancelled ?? [];
+  const isLoading = query.isLoading;
+  const [estado, setEstado] = useState<"todos" | "con" | "sin">("todos");
+  const [empresa, setEmpresa] = useState("todas");
+  const [q, setQ] = useState("");
+
+  const hasCert = (p: any) => !!String(p.certificate_number ?? "").trim();
+  const empresas = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of data) m.set(p.company_id ?? "individual", p.companies?.legal_name ?? "Individuales");
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [data]);
+  const inEmpresa = data.filter((p: any) => empresa === "todas" || (p.company_id ?? "individual") === empresa);
+  const conCert = inEmpresa.filter(hasCert).length;
+  const qn = q.trim().toUpperCase();
+  const rows = inEmpresa
+    .filter((p: any) => estado === "todos" || (estado === "con" ? hasCert(p) : !hasCert(p)))
+    .filter((p: any) => !qn || `${fullName(p.clients)} ${p.clients?.curp ?? ""} ${p.certificate_number ?? ""}`.toUpperCase().includes(qn))
+    .sort((a: any, b: any) => Number(hasCert(a)) - Number(hasCert(b))
+      || String(a.companies?.legal_name ?? "").localeCompare(String(b.companies?.legal_name ?? ""))
+      || fullName(a.clients).localeCompare(fullName(b.clients)));
+
+  async function exportExcel() {
+    const wb = await newWorkbook();
+    const ws = wb.addWorksheet("Activos");
+    ws.columns = ["Apellidos y nombre","CURP","Fecha de nacimiento","No. empleado","Empresa","N° Certificado","Estado HIR","Póliza","Folio interno"].map((h) => ({ header: h, key: h }));
+    for (const p of rows) {
+      const c = p.clients ?? {};
+      ws.addRow([
+        fullName(c), c.curp ?? "", c.date_of_birth ?? "", c.metadata?.employee_number ?? "", p.companies?.legal_name ?? "Individual",
+        p.certificate_number ?? "", hasCert(p) ? "Con certificado" : p.metadata?.insurer_alta_sent ? "Alta enviada, sin certificado" : "Sin certificado (alta por enviar)",
+        p.policy_number ?? "", p.folio,
+      ]);
+    }
+    styleHeader(ws);
+    ws.getColumn(1).width = 38;
+    await downloadWorkbook(wb, `activos-${program.code}-${slugDate()}.xlsx`);
+  }
+
+  // ---- Listado completo para la póliza de Vida (formato HIR)
+  const [vidaDate, setVidaDate] = useState(today);
+  const [vidaBusy, setVidaBusy] = useState(false);
+  const vidaMonth = vidaDate.slice(0, 7);
+  const inScope = (p: any) => empresa === "todas" || (p.company_id ?? "individual") === empresa;
+  const bajaDate = (p: any) => String(p.metadata?.cancellation?.date ?? p.updated_at ?? "").slice(0, 10);
+  const vidaBajas = cancelled.filter((p: any) => inScope(p) && bajaDate(p).slice(0, 7) === vidaMonth);
+  const certNum = (p: any) => Number(String(p.certificate_number).replace(/\D/g, "")) || 0;
+
+  async function downloadVida() {
+    setVidaBusy(true);
+    try {
+      const con = inEmpresa.filter(hasCert).sort((a: any, b: any) => certNum(a) - certNum(b));
+      const sin = inEmpresa.filter((p: any) => !hasCert(p)).sort((a: any, b: any) => fullName(a.clients).localeCompare(fullName(b.clients)));
+      const movs = [
+        ...con.map((p: any) => activeRowFromPolicy(p, vidaDate)),
+        ...sin.map((p: any) => movementFromPolicy(p, "ALTA", vidaDate)),
+        ...vidaBajas.map((p: any) => movementFromPolicy(p, "BAJA", bajaDate(p) || vidaDate)),
+      ];
+      const blob = await buildHirMovementsFile(movs, { policyNumber: HIR_VIDA_POLICY, subgrupo: HIR_VIDA_SUBGRUPO, categoria: HIR_VIDA_CATEGORIA });
+      downloadBlob(blob, `VIDA ${HIR_VIDA_POLICY} ${program.code} ${vidaDate}.xlsx`);
+      toast.success(`Listado de Vida: ${con.length} activos con certificado, ${sin.length} altas y ${vidaBajas.length} bajas.`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo generar el archivo");
+    } finally { setVidaBusy(false); }
+  }
+
+  return (
+    <Card className="p-4 space-y-4">
+      <div className="rounded-md border p-3 space-y-2">
+        <h3 className="font-medium text-sm">Póliza de Vida {HIR_VIDA_POLICY} — listado completo (formato HIR)</h3>
+        <p className="text-xs text-muted-foreground">
+          Arriba todos los activos con su número de certificado (ordenados por certificado), abajo las altas con el certificado vacío
+          y al final las bajas del mes de la fecha de movimiento. Respeta el filtro de empresa. La póliza de AP ({HIR_DEFAULT_POLICY}) solo lleva
+          altas y bajas: usa las pestañas 1 y 2.
+        </p>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Fecha de movimiento</label>
+            <Input type="date" value={vidaDate} onChange={(e) => setVidaDate(e.target.value)} className="w-[170px]" />
+          </div>
+          <p className="text-xs text-muted-foreground pb-2">
+            {conCert} activos con certificado · {inEmpresa.length - conCert} altas · {vidaBajas.length} bajas de {vidaMonth}
+          </p>
+          <Button onClick={downloadVida} disabled={vidaBusy || isLoading || inEmpresa.length === 0}>
+            {vidaBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+            Descargar listado Vida
+          </Button>
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Todos los asegurados que siguen activos en Zemgo: los que ya tienen su número de certificado de HIR y los que todavía no
+        (altas por enviar o enviadas esperando la relación de HIR).
+      </p>
+      <div className="flex flex-wrap items-end gap-3 justify-between">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Empresa</label>
+            <Select value={empresa} onValueChange={setEmpresa}>
+              <SelectTrigger className="w-[240px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas</SelectItem>
+                {empresas.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Certificado</label>
+            <Select value={estado} onValueChange={(v) => setEstado(v as any)}>
+              <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos ({inEmpresa.length})</SelectItem>
+                <SelectItem value="con">Con certificado ({conCert})</SelectItem>
+                <SelectItem value="sin">Sin certificado ({inEmpresa.length - conCert})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Buscar</label>
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nombre, CURP o N° cert." className="w-[220px]" />
+          </div>
+        </div>
+        <Button variant="outline" onClick={exportExcel} disabled={rows.length === 0}>
+          <Download className="h-4 w-4 mr-2" /> Descargar Excel ({rows.length})
+        </Button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Badge variant="secondary">{inEmpresa.length} activos</Badge>
+        <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-800">{conCert} con certificado</Badge>
+        <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">{inEmpresa.length - conCert} sin certificado</Badge>
+      </div>
+      {isLoading ? <div className="py-8 text-center text-muted-foreground">Cargando…</div> :
+        rows.length === 0 ? <div className="py-8 text-center text-muted-foreground">No hay asegurados con ese filtro.</div> : (
+          <Table>
+            <TableHeader><TableRow>
+              <TableHead>N° Cert.</TableHead><TableHead>Nombre</TableHead><TableHead>CURP</TableHead><TableHead>No. emp.</TableHead><TableHead>Empresa</TableHead><TableHead>Estado</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {rows.map((p: any) => (
+                <TableRow key={p.id}>
+                  <TableCell><CertificateBadge number={p.certificate_number} /></TableCell>
+                  <TableCell>{fullName(p.clients)}</TableCell>
+                  <TableCell className="font-mono text-xs">{p.clients?.curp}</TableCell>
+                  <TableCell className="text-xs">{p.clients?.metadata?.employee_number ?? "—"}</TableCell>
+                  <TableCell className="text-xs">{p.companies?.legal_name ?? "Individual"}</TableCell>
+                  <TableCell>
+                    {hasCert(p)
+                      ? <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-800">Con certificado</Badge>
+                      : p.metadata?.insurer_alta_sent
+                        ? <Badge variant="outline" className="border-sky-300 bg-sky-50 text-sky-800">Alta enviada {fmtDate(p.metadata.insurer_alta_sent.at)} · sin certificado</Badge>
+                        : <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">Sin certificado · alta por enviar</Badge>}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
     </Card>
   );
 }
