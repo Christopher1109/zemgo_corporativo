@@ -22,7 +22,7 @@ async function loadCurrent(companyId: string): Promise<CurrentInsured[]> {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from("policies")
-      .select("status, certificate_number, clients(id, first_name, last_name, curp, rfc, metadata)")
+      .select("status, certificate_number, clients(id, first_name, last_name, curp, rfc, date_of_birth, metadata)")
       .eq("company_id", companyId)
       .range(from, from + 999);
     if (error) throw error;
@@ -39,6 +39,7 @@ async function loadCurrent(companyId: string): Promise<CurrentInsured[]> {
     byClient.set(c.id, {
       client_id: c.id, first_name: c.first_name, last_name: c.last_name ?? "", curp: c.curp, rfc: c.rfc,
       employee_number: c.metadata?.employee_number ?? null, policy_status: p.status, certificate_number: p.certificate_number,
+      date_of_birth: c.date_of_birth ?? null,
     });
   }
   return [...byClient.values()];
@@ -53,18 +54,19 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
   const [period, setPeriod] = useState(() => new Date().toISOString().slice(0, 7));
   const [rec, setRec] = useState<Reconciliation | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [sheetInfo, setSheetInfo] = useState<string | null>(null);
   const [newSel, setNewSel] = useState<Record<number, boolean>>({});
   const [bajaSel, setBajaSel] = useState<Record<string, boolean>>({});
   const [elsewhere, setElsewhere] = useState<Record<string, string>>({});
 
   function reset() {
-    setRec(null); setFileName(null); setWarnings([]); setNewSel({}); setBajaSel({}); setElsewhere({});
+    setRec(null); setFileName(null); setWarnings([]); setSheetInfo(null); setNewSel({}); setBajaSel({}); setElsewhere({});
   }
 
   async function onFile(file: File) {
     setBusy(true);
     try {
-      const parsed = await parseRosterFile(file, `${company.legal_name} ${period}`);
+      const parsed = await parseRosterFile(file, `${company.legal_name} ${period}`, period);
       if (parsed.people.length === 0) throw new Error(parsed.warnings[0] ?? "No se encontraron asegurados en el archivo.");
       const current = await loadCurrent(company.id);
       const r = reconcile(parsed, current);
@@ -79,11 +81,17 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
         }
       }
       setElsewhere(other);
-      setNewSel(Object.fromEntries(r.nuevos.map((p) => [p.row, !other[p.curp]])));
+      // Posibles duplicados y reingresos no reportados quedan desmarcados para revisarlos a mano.
+      const autoSelect = (p: RosterPerson) =>
+        !other[p.curp] && (!p.review || (p.review.kind === "reingreso" && !!p.reported_alta));
+      setNewSel(Object.fromEntries(r.nuevos.map((p) => [p.row, autoSelect(p)])));
       // Bajas: las reportadas por la empresa se aplican. Si alguien solo "no viene en la lista" pero sigue
       // activo en HIR (ya tiene certificado), se queda activo salvo que lo marques; si no está en HIR, se da de baja.
       setBajaSel(Object.fromEntries(r.bajas.map((b) => [b.current.client_id, b.explicit || !b.current.certificate_number])));
       setRec(r); setFileName(file.name); setWarnings(parsed.warnings);
+      setSheetInfo(parsed.movements_sheet
+        ? `Altas y bajas tomadas de la hoja «${parsed.movements_sheet}».${parsed.ignored_sheets.length ? ` Se ignoraron ${parsed.ignored_sheets.length} hojas de otros meses.` : ""}`
+        : null);
     } catch (e: any) {
       toast.error(e?.message ?? "No se pudo leer el archivo");
     } finally {
@@ -127,7 +135,7 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
     onOpenChange(false);
   }
 
-  const revisar = rec ? [...rec.nuevos, ...rec.siguen.map((s) => s.person)].filter((p) => p.alerts.length) : [];
+  const revisar = rec ? [...rec.nuevos, ...rec.siguen.map((s) => s.person)].filter((p) => p.alerts.length || p.review) : [];
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
@@ -153,6 +161,7 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
           {busy && <Loader2 className="h-4 w-4 animate-spin" />}
           {fileName && <span className="text-sm text-muted-foreground">{fileName}</span>}
         </div>
+        {sheetInfo && <p className="text-xs text-muted-foreground">{sheetInfo}</p>}
         {warnings.map((w, i) => <p key={i} className="text-xs text-amber-700">{w}</p>)}
 
         {rec && (
@@ -175,11 +184,14 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
                       {p.employee_number != null && <Badge variant="outline" className="text-[10px]">Emp. {p.employee_number}</Badge>}
                       {p.alerts.length > 0 && <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />}
                       {p.dependents.length > 0 && <Badge variant="secondary" className="text-[10px]">+{p.dependents.length} dependiente(s)</Badge>}
+                      {p.review?.kind === "duplicado" && <Badge variant="outline" className="text-[10px] bg-rose-50 text-rose-800 border-rose-200">Posible duplicado</Badge>}
+                      {p.review?.kind === "reingreso" && <Badge variant="outline" className="text-[10px] bg-sky-50 text-sky-800 border-sky-200">Reingreso</Badge>}
                       {p.reported_alta
                         ? <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-200">Alta reportada</Badge>
                         : <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-800 border-amber-200">No venía en la hoja de altas</Badge>}
                     </div>
                     <div className="text-xs text-muted-foreground font-mono">{p.curp} · {p.date_of_birth ?? "sin fecha"}</div>
+                    {p.review && <div className="text-xs text-amber-700">{p.review.message}</div>}
                     {elsewhere[p.curp] && <div className="text-xs text-amber-700">{elsewhere[p.curp]}: desmarcado por defecto.</div>}
                   </div>
                 </label>
@@ -226,6 +238,7 @@ export function MonthlyUpdateDialog({ company, open, onOpenChange }: Props) {
               {revisar.map((p) => (
                 <div key={p.row} className="border-b py-2 text-sm">
                   <div className="font-medium">{fullName(p)} <span className="font-mono text-xs text-muted-foreground">{p.curp}</span></div>
+                  {p.review && <div className="text-xs text-amber-700">{p.review.message}</div>}
                   {p.alerts.map((a, i) => <div key={i} className="text-xs text-amber-700">{a.message}</div>)}
                 </div>
               ))}
