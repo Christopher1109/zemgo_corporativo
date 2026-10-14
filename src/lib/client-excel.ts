@@ -27,7 +27,7 @@ export function genderFromCurp(curp?: string | null) {
 }
 
 const CLIENT_SELECT =
-  "id, first_name, last_name, curp, rfc, date_of_birth, gender, marital_status, email, phone, phone_alt, street, number, colonia, city, state, zip, address_full, payer_name, payer_phone, created_at, sales_reps(full_name), companies(legal_name)";
+  "id, first_name, last_name, curp, rfc, date_of_birth, gender, marital_status, email, phone, phone_alt, street, number, colonia, city, state, zip, address_full, payer_name, payer_phone, created_at, sales_reps(full_name), companies!clients_company_id_fkey(legal_name)";
 
 /** All clients enrolled in a program, with their policies (and payments) of that program. */
 export async function fetchProgramClients(programId: string, withPolicies = false) {
