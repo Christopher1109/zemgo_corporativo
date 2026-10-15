@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { coveragePeriod } from "@/lib/coverage-period";
 import { useProgramMismatch } from "@/components/ProgramMismatch";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -477,7 +478,7 @@ function CompanyDetailPage() {
                       )}
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
-                      {p.start_date ? `Vigencia ${fmtDate(p.start_date)} → ${fmtDate(p.end_date)}` : "Vigencia pendiente (al asignar certificado)"} · Lo paga la empresa en su cobro mensual
+                      {p.start_date ? (() => { const v = coveragePeriod(p, company.programs?.code); return `Vigencia ${v.monthly ? "mensual " : ""}${fmtDate(v.from)} → ${fmtDate(v.to)}`; })() : "Vigencia pendiente (al asignar certificado)"} · Lo paga la empresa en su cobro mensual
                     </div>
                   </div>
                   <Badge

@@ -1,4 +1,5 @@
 import { CertificateBadge } from "@/components/certificates/CertificateBadge";
+import { coveragePeriod } from "@/lib/coverage-period";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Download, Loader2 } from "lucide-react";
@@ -303,7 +304,7 @@ function ClientDetail() {
                       <TableCell>{p.programs?.name}</TableCell>
                       <TableCell className="font-mono text-xs">{p.policy_number ?? "—"}</TableCell>
                       <TableCell><CertificateBadge number={p.certificate_number} /></TableCell>
-                      <TableCell>{p.start_date ?? "—"} → {p.end_date ?? "—"}</TableCell>
+                      <TableCell>{(() => { const v = coveragePeriod(p, p.programs?.code); return `${v.from ?? "—"} → ${v.to ?? "—"}${v.monthly ? " (mensual)" : ""}`; })()}</TableCell>
                       <TableCell>
                         {urgent ? (
                           <div className="flex flex-col gap-1">

@@ -4,6 +4,7 @@
 // of Cloudflare Workers), then uploads the resulting bytes through a server
 // function which writes to Storage and updates the policy record.
 
+import { coveragePeriod } from "@/lib/coverage-period";
 import { createElement } from "react";
 import { getCertificatePayload, saveCertificatePdf } from "@/lib/certificate.functions";
 import { CertificateABC } from "./templates/CertificateABC";
@@ -28,13 +29,15 @@ function withAddress(client: any) {
 function buildDoc(programCode: string, data: any) {
   const code = (programCode ?? "").toUpperCase();
   const client = withAddress(data.client);
+  // ABC: vigencia mensual (mes en curso desde la fecha de alta); anuales: sus fechas tal cual.
+  const period = coveragePeriod(data.policy, code);
   const common = {
     folio: data.policy.folio,
     issue_date: data.policy.issue_date,
     client,
     beneficiaries: data.beneficiaries,
-    validity_from: data.policy.start_date,
-    validity_to: data.policy.end_date,
+    validity_from: period.from,
+    validity_to: period.to,
     contractor_signature_url: client?.contractor_signature_url ?? null,
     insured_signature_url: client?.signature_url ?? null,
   };

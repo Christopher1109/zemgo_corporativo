@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
+import { coveragePeriod } from "@/lib/coverage-period";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState, useEffect } from "react";
@@ -158,7 +159,7 @@ function NewIncident() {
               </span>
             </div>
             <div><div className="text-xs text-muted-foreground">Folio</div>{selected.folio}</div>
-            <div><div className="text-xs text-muted-foreground">Vigencia</div>{selected.start_date} → {selected.end_date}</div>
+            <div><div className="text-xs text-muted-foreground">Vigencia</div>{(() => { const v = coveragePeriod(selected as any, (selected as any).programs?.code); return `${v.from ?? "—"} → ${v.to ?? "—"}${v.monthly ? " (mensual)" : ""}`; })()}</div>
             <div><div className="text-xs text-muted-foreground">Suma asegurada</div>{selected.sum_insured ? `$${selected.sum_insured}` : "—"}</div>
             <div><div className="text-xs text-muted-foreground">Deducible</div>{selected.deductible ? `$${selected.deductible}` : "—"}</div>
           </Card>

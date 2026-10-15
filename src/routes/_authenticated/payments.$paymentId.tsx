@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { coveragePeriod } from "@/lib/coverage-period";
 import { useProgramMismatch } from "@/components/ProgramMismatch";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Info } from "lucide-react";
@@ -194,7 +195,7 @@ function PaymentDetail() {
             {prog?.name}
           </div>
         </div>
-        <Field label="Vigencia" value={pol.start_date ? `${pol.start_date} → ${pol.end_date ?? "—"}` : null} />
+        <Field label="Vigencia" value={pol.start_date ? (() => { const v = coveragePeriod(pol, prog?.code); return `${v.from} → ${v.to ?? "—"}${v.monthly ? " (mensual)" : ""}`; })() : null} />
         <Field label="Frecuencia" value={schedule ? (FREQ_LABELS[schedule.frequency] ?? schedule.frequency) : "Sin programación"} />
         <Field label="Próximo cobro programado" value={schedule?.next_due_date} />
         <Field label="Recordatorio" value={schedule ? `${schedule.reminder_days_before} días antes` : null} />
