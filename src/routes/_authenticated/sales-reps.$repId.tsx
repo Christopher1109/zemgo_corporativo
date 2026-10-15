@@ -1,4 +1,5 @@
 import { useProgram } from "@/lib/program-context";
+import { coveragePeriod } from "@/lib/coverage-period";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -408,7 +409,7 @@ function SalesRepDetailPage() {
                         <div className="text-[11px] text-muted-foreground mt-0.5">
                           {p.next_payment
                             ? `Próximo pago ${fmtDate(p.next_payment.due_date)} · ${fmtMx(p.next_payment.amount)}`
-                            : `Vigencia ${fmtDate(p.start_date)} → ${fmtDate(p.end_date)}`}
+                            : (() => { const v = coveragePeriod(p, p.programs?.code); return `Vigencia ${fmtDate(v.from)} → ${fmtDate(v.to)}`; })()}
                         </div>
                       </div>
                       <Badge variant="outline" className={g.className}>

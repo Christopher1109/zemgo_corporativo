@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { coveragePeriod } from "@/lib/coverage-period";
 import { useProgramMismatch } from "@/components/ProgramMismatch";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -257,7 +258,7 @@ function IncidentDetail() {
             <Field label="Folio certificado" value={incident.policies.folio} />
             <Field label="No. de póliza" value={incident.policies.policy_number ?? "—"} />
             <Field label="No. Certificado" value={incident.policies.certificate_number ?? "—"} />
-            <Field label="Vigencia" value={`${incident.policies.start_date ?? "—"} → ${incident.policies.end_date ?? "—"}`} />
+            <Field label="Vigencia" value={(() => { const v = coveragePeriod(incident.policies, incident.policies.programs?.code, incident.policies.programs?.billing_frequency); return `${v.from ?? "—"} → ${v.to ?? "—"}${v.monthly ? " (mensual)" : ""}`; })()} />
             <Field label="Suma asegurada" value={incident.policies.sum_insured ? `$${incident.policies.sum_insured}` : "—"} />
             <Field label="Deducible" value={incident.policies.deductible ? `$${incident.policies.deductible}` : "—"} />
           </Card>

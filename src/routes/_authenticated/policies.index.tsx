@@ -1,4 +1,5 @@
 import { CertificateBadge } from "@/components/certificates/CertificateBadge";
+import { coveragePeriod } from "@/lib/coverage-period";
 import { fmtProgramPrice } from "@/lib/program-price";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -166,8 +167,11 @@ function PoliciesList() {
                 </TableCell>
                 <TableCell><CertificateBadge number={r.certificate_number} /></TableCell>
                 <TableCell className="text-xs">
-                  {r.start_date ? new Date(r.start_date).toLocaleDateString("es-MX") : "—"} →{" "}
-                  {r.end_date ? new Date(r.end_date).toLocaleDateString("es-MX") : "—"}
+                  {(() => {
+                    const v = coveragePeriod(r, null, r.programs?.billing_frequency);
+                    const f = (d: string | null) => (d ? new Date(`${d}T12:00:00`).toLocaleDateString("es-MX") : "—");
+                    return `${f(v.from)} → ${f(v.to)}${v.monthly ? " (mensual)" : ""}`;
+                  })()}
                 </TableCell>
                 <TableCell>{fmtProgramPrice(r.programs)}</TableCell>
                 <TableCell>

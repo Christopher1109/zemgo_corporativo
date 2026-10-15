@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { coveragePeriod } from "@/lib/coverage-period";
 import { useProgramMismatch } from "@/components/ProgramMismatch";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -340,7 +341,7 @@ function PolicyDetail() {
                 <Field label="No. Certificado" value={policy.certificate_number ?? "—"} />
                 <Field label="Contratante" value={policy.contracting_party ?? "—"} />
                 <Field label="Emisión" value={policy.issue_date ?? "—"} />
-                <Field label="Vigencia" value={`${policy.start_date ?? "—"} → ${policy.end_date ?? "—"}`} />
+                <Field label="Vigencia" value={(() => { const v = coveragePeriod(policy, policy.programs?.code, policy.programs?.billing_frequency); return v.monthly ? `Mensual: ${v.from ?? "—"} → ${v.to ?? "—"} (alta ${policy.start_date ?? "—"})` : `${policy.start_date ?? "—"} → ${policy.end_date ?? "—"}`; })()} />
                 <Field label="Precio" value={fmtProgramPrice(policy.programs)} />
                 <Field label="Suma asegurada" value={policy.sum_insured ? `$${Number(policy.sum_insured).toLocaleString("es-MX")}` : "—"} />
                 <Field label="Deducible" value={policy.deductible ? `$${Number(policy.deductible).toLocaleString("es-MX")}` : "—"} />
