@@ -176,11 +176,25 @@ export function SalesRepFormDialog({
 
   if (done) {
     const links = linksFor(done.programId, done.slug);
+    // Liga para entrar al CRM (pantalla de inicio de sesión) con sus credenciales.
+    const crmUrl = `${typeof window !== "undefined" ? window.location.origin : "https://www.zemgocrm.com"}/auth`;
+    const instructions = done.email
+      ? [
+          "Cómo entrar al CRM:",
+          `1. Abre ${crmUrl}`,
+          `2. Escribe tu usuario (${done.email}) y tu contraseña.`,
+          "3. En \"Resumen\" y \"Mis clientes\" verás tu cartera, renovaciones y comisiones.",
+          "4. Para registrar clientes nuevos, comparte tus ligas de registro (abajo); quedan asignados a ti automáticamente.",
+        ].join("\n")
+      : "";
     const all = [
       `Vendedor: ${name.trim()}`,
-      ...links.map((l) => `${l.name}: ${l.url}`),
+      done.email ? `\nCRM: ${crmUrl}` : "",
       done.email ? `Usuario: ${done.email}` : "",
       done.password ? `Contraseña: ${done.password}` : "",
+      instructions ? `\n${instructions}` : "",
+      links.length ? "\nLigas de registro para tus clientes:" : "",
+      ...links.map((l) => `${l.name}: ${l.url}`),
     ].filter(Boolean).join("\n");
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -190,9 +204,13 @@ export function SalesRepFormDialog({
             <DialogDescription>Copia estas ligas y accesos para enviárselos al vendedor.</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            {links.map((l) => <CopyRow key={l.url} label={l.name} value={l.url} />)}
+            {done.email && <CopyRow label="Liga del CRM" value={crmUrl} />}
             {done.email && <CopyRow label="Usuario (correo)" value={done.email} />}
             {done.password && <CopyRow label="Contraseña" value={done.password} />}
+            {instructions && (
+              <pre className="whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground font-sans">{instructions}</pre>
+            )}
+            {links.map((l) => <CopyRow key={l.url} label={l.name} value={l.url} />)}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => copy(all)}>
