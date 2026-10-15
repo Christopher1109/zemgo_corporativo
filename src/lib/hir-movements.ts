@@ -14,6 +14,8 @@ export type HirMovement = {
   date_of_birth: string | null; // ISO
   sexo: 1 | 2 | null; // 1 = Masculino, 2 = Femenino
   rfc_curp?: string | null;
+  /** Columna M: saldo insoluto / suma asegurada / sueldo mensual (Vida: 200,000). */
+  suma_asegurada?: number | null;
 };
 
 // AP: así vienen los archivos que HIR ya procesó (SUBGRUPO 1, CATEGORÍA 5; en la relación sale como grupo "5-1").
@@ -50,11 +52,19 @@ export function surnamesOf(c: any): [string, string] {
   return splitSurnames(c?.last_name ?? "");
 }
 
+/** 1 = Masculino, 2 = Femenino.
+ *  1) CURP completa y válida (posición 11 = H/M).
+ *  2) Sexo capturado en la ficha (M/H = masculino, F = femenino).
+ *  3) CURP mal capturada pero reconocible (3-4 letras + fecha + H/M + 5 letras).
+ *  Ojo: un RFC con homoclave (p. ej. MOHD840201M43) NO es CURP; su "M" es de la homoclave, no de "Mujer". */
 export function sexoOf(c: any): 1 | 2 | null {
-  const curp = String(c?.curp ?? "").toUpperCase();
-  if (/^[A-Z]{4}\d{6}[HM]/.test(curp)) return curp[10] === "H" ? 1 : 2;
-  if (c?.gender === "M" || c?.gender === "H") return 1;
-  if (c?.gender === "F") return 2;
+  const curp = String(c?.curp ?? "").toUpperCase().replace(/^SIN-CURP-/, "").replace(/\s+/g, "");
+  if (/^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d$/.test(curp)) return curp[10] === "H" ? 1 : 2;
+  const g = String(c?.gender ?? "").toUpperCase();
+  if (g === "M" || g === "H") return 1;
+  if (g === "F") return 2;
+  const loose = /^[A-Z]{3,4}\d{6}([HM])[A-Z]{5}/.exec(curp);
+  if (loose) return loose[1] === "H" ? 1 : 2;
   return null;
 }
 
@@ -89,7 +99,7 @@ function rowXml(r: number, mv: HirMovement, grp: { subgrupo: number; categoria: 
   num("J", 43, mv.sexo);
   str("K", 44, null);
   str("L", 38, mv.rfc_curp ? mv.rfc_curp.toUpperCase() : null);
-  str("M", 45, null);
+  num("M", 45, mv.suma_asegurada ?? null);
   return `<row r="${r}" spans="1:13">${cells.join("")}</row>`;
 }
 
@@ -147,8 +157,9 @@ export function movementFromPolicy(p: any, tipo: "ALTA" | "BAJA", fecha: string)
   };
 }
 
-/** Renglón de un asegurado que sigue activo (con su certificado) para el listado completo. */
+/** Renglón de un asegurado que sigue activo (con su certificado) para el listado completo de Vida:
+ *  va como ALTA con su número de certificado. */
 export function activeRowFromPolicy(p: any, fecha: string): HirMovement {
   const base = movementFromPolicy(p, "ALTA", fecha);
-  return { ...base, tipo: "", certificate_number: p.certificate_number ?? null };
+  return { ...base, tipo: "ALTA", certificate_number: p.certificate_number ?? null };
 }
