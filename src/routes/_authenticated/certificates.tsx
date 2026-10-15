@@ -725,8 +725,6 @@ function ActivosTab({ program }: { program: any }) {
   const [vidaBusy, setVidaBusy] = useState(false);
   const vidaMonth = vidaDate.slice(0, 7);
   const inScope = (p: any) => empresa === "todas" || (p.company_id ?? "individual") === empresa;
-  const bajaDate = (p: any) => String(p.metadata?.cancellation?.date ?? p.updated_at ?? "").slice(0, 10);
-  const vidaBajas = cancelled.filter((p: any) => inScope(p) && bajaDate(p).slice(0, 7) === vidaMonth);
   const certNum = (p: any) => Number(String(p.certificate_number).replace(/\D/g, "")) || 0;
 
   async function downloadVida() {
@@ -737,11 +735,10 @@ function ActivosTab({ program }: { program: any }) {
       const movs = [
         ...con.map((p: any) => activeRowFromPolicy(p, vidaDate)),
         ...sin.map((p: any) => movementFromPolicy(p, "ALTA", vidaDate)),
-        ...vidaBajas.map((p: any) => movementFromPolicy(p, "BAJA", bajaDate(p) || vidaDate)),
       ];
       const blob = await buildHirMovementsFile(movs, { policyNumber: HIR_VIDA_POLICY, subgrupo: HIR_VIDA_SUBGRUPO, categoria: HIR_VIDA_CATEGORIA });
       downloadBlob(blob, `VIDA ${HIR_VIDA_POLICY} ${program.code} ${vidaDate}.xlsx`);
-      toast.success(`Listado de Vida: ${con.length} activos con certificado, ${sin.length} altas y ${vidaBajas.length} bajas.`);
+      toast.success(`Listado de Vida: ${con.length} activos con certificado y ${sin.length} altas.`);
     } catch (e: any) {
       toast.error(e?.message ?? "No se pudo generar el archivo");
     } finally { setVidaBusy(false); }
@@ -752,8 +749,8 @@ function ActivosTab({ program }: { program: any }) {
       <div className="rounded-md border p-3 space-y-2">
         <h3 className="font-medium text-sm">Póliza de Vida {HIR_VIDA_POLICY} — listado completo (formato HIR)</h3>
         <p className="text-xs text-muted-foreground">
-          Arriba todos los activos con su número de certificado (ordenados por certificado), abajo las altas con el certificado vacío
-          y al final las bajas del mes de la fecha de movimiento. Respeta el filtro de empresa. La póliza de AP ({HIR_DEFAULT_POLICY}) solo lleva
+          Arriba todos los activos con su número de certificado (ordenados por certificado), abajo las altas con el certificado vacío.
+          No lleva bajas. Respeta el filtro de empresa. La póliza de AP ({HIR_DEFAULT_POLICY}) solo lleva
           altas y bajas: usa las pestañas 1 y 2.
         </p>
         <div className="flex flex-wrap items-end gap-3">
@@ -762,7 +759,7 @@ function ActivosTab({ program }: { program: any }) {
             <Input type="date" value={vidaDate} onChange={(e) => setVidaDate(e.target.value)} className="w-[170px]" />
           </div>
           <p className="text-xs text-muted-foreground pb-2">
-            {conCert} activos con certificado · {inEmpresa.length - conCert} altas · {vidaBajas.length} bajas de {vidaMonth}
+            {conCert} activos con certificado · {inEmpresa.length - conCert} altas
           </p>
           <Button onClick={downloadVida} disabled={vidaBusy || isLoading || inEmpresa.length === 0}>
             {vidaBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
