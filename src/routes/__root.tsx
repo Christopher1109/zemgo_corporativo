@@ -112,8 +112,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // Español y sin traducción automática: el traductor de Chrome reemplaza los textos de la página
+    // y React deja de poder actualizarlos (p. ej. contadores que se quedan en 0).
+    <html lang="es" translate="no" className="notranslate">
       <head>
+        <meta name="google" content="notranslate" />
         <HeadContent />
       </head>
       <body>
