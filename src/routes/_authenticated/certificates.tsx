@@ -315,9 +315,12 @@ function BajasTab({ program }: { program: any }) {
   const [sel, setSel] = useState<Record<string, boolean>>({});
   const [movDate, setMovDate] = useState(today);
   const [busy, setBusy] = useState(false);
-  // Se ven todas (por enviar y ya enviadas) y vienen todas seleccionadas; se desmarcan a mano.
-  useEffect(() => { setSel(Object.fromEntries(data.map((p: any) => [p.id, true]))); }, [data]);
-  const chosen = data.filter((p: any) => sel[p.id]);
+  // Como en altas: por default solo se ven las que faltan por enviar (todas seleccionadas). Al descargar
+  // quedan marcadas como enviadas y salen de la lista. "Ver historial" muestra las ya enviadas, sin seleccionar.
+  const [showHistory, setShowHistory] = useState(false);
+  useEffect(() => { setSel(Object.fromEntries(data.map((p: any) => [p.id, !p.metadata?.insurer_baja_sent]))); }, [data]);
+  const rows = showHistory ? data : pending;
+  const chosen = rows.filter((p: any) => sel[p.id]);
 
   async function downloadHir() {
     if (chosen.length === 0) return toast.error("Selecciona al menos una baja.");
@@ -338,13 +341,13 @@ function BajasTab({ program }: { program: any }) {
     } finally { setBusy(false); }
   }
 
-  const rows = data;
   const allSel = rows.length > 0 && rows.every((p: any) => sel[p.id]);
   return (
     <Card className="p-4 space-y-4">
       <p className="text-sm text-muted-foreground">
         Asegurados dados de baja en Zemgo (actualización mensual de la empresa, cancelaciones) que ya tenían certificado de HIR.
-        El archivo sale en el formato de HIR (BAJAS) con su número de certificado.
+        El archivo sale en el formato de HIR (BAJAS) con su número de certificado. Al descargarlo, las bajas quedan marcadas
+        como enviadas y salen de esta lista; puedes consultarlas en "Ver historial".
       </p>
       <div className="flex flex-wrap items-end gap-3 justify-between">
         <div className="flex flex-wrap items-end gap-4">
@@ -352,7 +355,10 @@ function BajasTab({ program }: { program: any }) {
             <label className="text-xs text-muted-foreground">Fecha de movimiento</label>
             <Input type="date" value={movDate} onChange={(e) => setMovDate(e.target.value)} className="w-[170px]" />
           </div>
-          <p className="text-xs text-muted-foreground pb-2">{pending.length} por enviar · {sent.length} ya enviadas</p>
+          <label className="flex items-center gap-2 text-sm pb-2">
+            <Checkbox checked={showHistory} onCheckedChange={(v) => setShowHistory(!!v)} /> Ver historial (ya enviadas: {sent.length})
+          </label>
+          <p className="text-xs text-muted-foreground pb-2">{pending.length} por enviar</p>
         </div>
         <Button onClick={downloadHir} disabled={busy || chosen.length === 0}>
           {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
@@ -361,7 +367,7 @@ function BajasTab({ program }: { program: any }) {
       </div>
       {!canWrite && <p className="text-xs text-amber-700">Puedes descargar el archivo, pero solo administradores o gerentes del programa lo marcan como enviado.</p>}
       {isLoading ? <div className="py-8 text-center text-muted-foreground">Cargando…</div> :
-        rows.length === 0 ? <div className="py-8 text-center text-muted-foreground">No hay bajas.</div> : (
+        rows.length === 0 ? <div className="py-8 text-center text-muted-foreground">{showHistory ? "No hay bajas." : "No hay bajas por enviar."}</div> : (
           <Table>
             <TableHeader><TableRow>
               <TableHead><Checkbox checked={allSel} onCheckedChange={(v) => setSel(Object.fromEntries(rows.map((p: any) => [p.id, !!v])))} /></TableHead><TableHead>N° Cert.</TableHead><TableHead>Nombre</TableHead><TableHead>Empresa</TableHead><TableHead>Motivo</TableHead><TableHead>Fecha de baja</TableHead><TableHead>Envío a HIR</TableHead>
