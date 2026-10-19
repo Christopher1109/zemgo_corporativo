@@ -205,8 +205,8 @@ function dependentsLine(deps: CertificateABCProps["dependents"]): string {
 }
 
 const COVERAGES_ABC: Array<{ label: string; amount: string; italic?: boolean }> = [
-  { label: "Por fallecimiento", amount: "$200,000" },
-  { label: "En Muerte accidental, personas mayores de 18 años, apoyo de:", amount: "$50,000", italic: true },
+  { label: "Por fallecimiento del titular", amount: "$200,000" },
+  { label: "En muerte accidental para el titular, apoyo de:", amount: "$50,000", italic: true },
   { label: "Atención Médica por accidente", amount: "$25,000" },
   { label: "Servicios funerarios", amount: "$25,000" },
 ];
