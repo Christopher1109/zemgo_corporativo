@@ -176,9 +176,9 @@ programs:
 
 program_coverages para ABC:
 
-- DEATH: 'Por fallecimiento', $200,000
+- DEATH: 'Por fallecimiento del titular', $200,000
 
-- ACC_DEATH_ADULT: 'En Muerte accidental, personas mayores de 18 años, apoyo de:', $50,000
+- ACC_DEATH_ADULT: 'En muerte accidental para el titular, apoyo de:', $50,000
 
 - ACCIDENT_MED: 'Atención Médica por accidente', $25,000
 
