@@ -1,4 +1,5 @@
 {
+  "id": "/dashboard",
   "name": "ZEMGO Corporativo",
   "short_name": "ZEMGO",
   "description": "Sistema Interno para ZEMGO despacho de seguros.",
@@ -20,5 +21,7 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "scope": "/",
+  "lang": "es-MX"
 }
