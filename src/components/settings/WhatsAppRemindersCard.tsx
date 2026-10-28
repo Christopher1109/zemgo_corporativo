@@ -67,7 +67,7 @@ export function WhatsAppRemindersCard() {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2"><MessageCircle className="h-4 w-4" /> Recordatorios de pago por WhatsApp</CardTitle>
         <CardDescription className="text-xs">
-          Cada día a las 10:00 a.m. se manda la plantilla <code>payment_reminder</code> a los clientes individuales cuyo pago vence en los días indicados por programa.
+          Cada día a las 10:00 a.m. se manda el recordatorio a los clientes individuales cuyo pago vence en los días indicados por programa: ABC usa <code>recordatorio_pago_abc</code> y FutCare <code>recordatorio_pago_futcare</code> (cada una en su propia cuenta de WhatsApp).
           Los asegurados de empresas no reciben recordatorios (paga la empresa).
         </CardDescription>
       </CardHeader>
@@ -127,7 +127,7 @@ export function WhatsAppRemindersCard() {
               {testing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}Mandar prueba
             </Button>
           </div>
-          <p className="text-[11px] text-muted-foreground">Llega como "Prueba", monto $100 y vencimiento en 5 días. Funciona aunque el envío automático esté apagado.</p>
+          <p className="text-[11px] text-muted-foreground">Llega con la plantilla del programa elegido, como "Prueba", monto $100 y vencimiento en 5 días. Funciona aunque el envío automático esté apagado.</p>
           {result && <p className="text-sm">{result}</p>}
         </div>
       </CardContent>
