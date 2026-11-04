@@ -142,6 +142,21 @@
     color: var(--color-foreground);
     font-feature-settings: "tnum" 1, "cv05" 1;
     -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  /* Celular: evita que el iPhone haga zoom al tocar un campo (pasa con letra < 16px)
+     y que el texto cambie de tamaño al girar la pantalla. */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  @media (max-width: 767px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 }
 

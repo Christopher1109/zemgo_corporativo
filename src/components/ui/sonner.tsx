@@ -6,6 +6,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       className="toaster group"
+      // Respeta la barra de estado del iPhone (hora, batería) cuando se usa como app
+      mobileOffset={{ top: "calc(env(safe-area-inset-top) + 12px)", bottom: "calc(env(safe-area-inset-bottom) + 84px)" }}
       toastOptions={{
         classNames: {
           toast:

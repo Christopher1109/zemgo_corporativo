@@ -232,9 +232,9 @@ function AltasTab({ program }: { program: any }) {
         El archivo sale en el formato de HIR (ALTAS) y las altas quedan marcadas como <b>enviadas</b> hasta que subas la relación de HIR con su número.
       </p>
       <div className="flex flex-wrap items-end gap-3 justify-between">
-        <div className="space-y-1">
+        <div className="w-full sm:w-auto space-y-1">
           <label className="text-xs text-muted-foreground">Fecha de movimiento</label>
-          <Input type="date" value={movDate} onChange={(e) => setMovDate(e.target.value)} className="w-[170px]" />
+          <Input type="date" value={movDate} onChange={(e) => setMovDate(e.target.value)} className="w-full sm:w-[170px]" />
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="ghost" size="sm" onClick={downloadGeneral} disabled={chosen.length === 0}>Listado general (Excel)</Button>
@@ -351,9 +351,9 @@ function BajasTab({ program }: { program: any }) {
       </p>
       <div className="flex flex-wrap items-end gap-3 justify-between">
         <div className="flex flex-wrap items-end gap-4">
-          <div className="space-y-1">
+          <div className="w-full sm:w-auto space-y-1">
             <label className="text-xs text-muted-foreground">Fecha de movimiento</label>
-            <Input type="date" value={movDate} onChange={(e) => setMovDate(e.target.value)} className="w-[170px]" />
+            <Input type="date" value={movDate} onChange={(e) => setMovDate(e.target.value)} className="w-full sm:w-[170px]" />
           </div>
           <label className="flex items-center gap-2 text-sm pb-2">
             <Checkbox checked={showHistory} onCheckedChange={(v) => setShowHistory(!!v)} /> Ver historial (ya enviadas: {sent.length})
@@ -534,9 +534,9 @@ function UploadTab({ program }: { program: any }) {
       {parsed && (
         <div className="space-y-5">
           <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1">
+            <div className="w-full sm:w-auto space-y-1">
               <label className="text-xs text-muted-foreground">Número de póliza</label>
-              <Input value={policyNumber} onChange={(e) => setPolicyNumber(e.target.value)} className="w-[220px] font-mono" />
+              <Input value={policyNumber} onChange={(e) => setPolicyNumber(e.target.value)} className="w-full sm:w-[220px] font-mono" />
             </div>
             <Badge variant="secondary">{parsed.rows.length} asegurados en el archivo</Badge>
             <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-800">{nuevos.length} certificados nuevos por asignar</Badge>
@@ -588,7 +588,7 @@ function UploadTab({ program }: { program: any }) {
                   <span className="font-mono">N° {x.row.certificate_number}</span>
                   <span>{x.row.name}</span><span className="font-mono text-xs">{x.row.rfc}</span>
                   <Select value={x.chosen || "none"} onValueChange={(v) => setAmbig((p) => p.map((y, j) => j === i ? { ...y, chosen: v === "none" ? "" : v } : y))}>
-                    <SelectTrigger className="w-[360px]"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-full sm:w-[360px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">No asignar</SelectItem>
                       {x.options.map((o) => (
@@ -608,7 +608,7 @@ function UploadTab({ program }: { program: any }) {
                 <div className="space-y-2">
                   <p className="text-sm font-medium">HIR los sigue teniendo, pero en Zemgo están dados de baja ({hirButCancelled.length})</p>
                   <p className="text-xs text-muted-foreground">Decide qué hacer con cada uno: <b>Regresar al sistema</b> los vuelve a activar con su certificado; <b>Confirmar baja</b> los deja fuera y ya no volverán a aparecer aquí.</p>
-                  <div className="space-y-1">
+                  <div className="w-full sm:w-auto space-y-1">
                     {hirButCancelled.map(({ row, policy }) => (
                       <div key={policy.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-sm">
                         <div>
@@ -627,7 +627,7 @@ function UploadTab({ program }: { program: any }) {
                 </div>
               )}
               {notInHir.length > 0 && (
-                <div className="space-y-1">
+                <div className="w-full sm:w-auto space-y-1">
                   <p className="text-sm font-medium">Activos en Zemgo con certificado que HIR no lista ({notInHir.length})</p>
                   <ul className="text-sm list-disc pl-5">
                     {notInHir.map((p) => <li key={p.id}>N° {p.certificate_number} — {fullName(p.clients)} · {p.companies?.legal_name ?? "Individual"}</li>)}
@@ -635,7 +635,7 @@ function UploadTab({ program }: { program: any }) {
                 </div>
               )}
               {unmatched.length > 0 && (
-                <div className="space-y-1">
+                <div className="w-full sm:w-auto space-y-1">
                   <p className="text-sm font-medium">HIR los lista, pero no existen en Zemgo ({unmatched.length})</p>
                   <ul className="text-sm list-disc pl-5">
                     {unmatched.map((r, i) => <li key={i}>N° {r.certificate_number} — {r.name} — <span className="font-mono">{r.rfc}</span></li>)}
@@ -757,9 +757,9 @@ function ActivosTab({ program }: { program: any }) {
           altas y bajas: usa las pestañas 1 y 2.
         </p>
         <div className="flex flex-wrap items-end gap-3">
-          <div className="space-y-1">
+          <div className="w-full sm:w-auto space-y-1">
             <label className="text-xs text-muted-foreground">Mes a declarar (fecha: día 10)</label>
-            <Input type="month" value={vidaMonth} onChange={(e) => e.target.value && setVidaMonth(e.target.value)} className="w-[170px]" />
+            <Input type="month" value={vidaMonth} onChange={(e) => e.target.value && setVidaMonth(e.target.value)} className="w-full sm:w-[170px]" />
           </div>
           <p className="text-xs text-muted-foreground pb-2">
             {conCert} activos con certificado · {inEmpresa.length - conCert} altas
@@ -776,20 +776,20 @@ function ActivosTab({ program }: { program: any }) {
       </p>
       <div className="flex flex-wrap items-end gap-3 justify-between">
         <div className="flex flex-wrap items-end gap-3">
-          <div className="space-y-1">
+          <div className="w-full sm:w-auto space-y-1">
             <label className="text-xs text-muted-foreground">Empresa</label>
             <Select value={empresa} onValueChange={setEmpresa}>
-              <SelectTrigger className="w-[240px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[240px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todas">Todas</SelectItem>
                 {empresas.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
+          <div className="w-full sm:w-auto space-y-1">
             <label className="text-xs text-muted-foreground">Certificado</label>
             <Select value={estado} onValueChange={(v) => setEstado(v as any)}>
-              <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[220px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos ({inEmpresa.length})</SelectItem>
                 <SelectItem value="con">Con certificado ({conCert})</SelectItem>
@@ -797,9 +797,9 @@ function ActivosTab({ program }: { program: any }) {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
+          <div className="w-full sm:w-auto space-y-1">
             <label className="text-xs text-muted-foreground">Buscar</label>
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nombre, CURP o N° cert." className="w-[220px]" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nombre, CURP o N° cert." className="w-full sm:w-[220px]" />
           </div>
         </div>
         <Button variant="outline" onClick={exportExcel} disabled={rows.length === 0}>

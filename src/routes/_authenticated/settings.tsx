@@ -134,7 +134,7 @@ function ProgramAlertsCard({ program }: { program: Program }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div
             className="h-8 w-8 rounded-md grid place-items-center text-white text-xs font-bold"
             style={{ backgroundColor: program.color_primary ?? "var(--program-primary)" }}
@@ -215,7 +215,7 @@ function ProgramPolicyCard({ program }: { program: Program }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div
             className="h-8 w-8 rounded-md grid place-items-center text-white text-xs font-bold"
             style={{ backgroundColor: program.color_primary ?? "var(--program-primary)" }}

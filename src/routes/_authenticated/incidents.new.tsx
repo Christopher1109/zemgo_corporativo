@@ -129,11 +129,11 @@ function NewIncident() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-4">
+    <div className="md:p-6 max-w-4xl mx-auto space-y-4">
       <Button asChild variant="ghost" size="sm"><Link to="/incidents"><ArrowLeft className="h-4 w-4 mr-1" />Volver</Link></Button>
       <h1 className="text-2xl font-bold">Reportar siniestro</h1>
 
-      <Card className="p-6 space-y-4">
+      <Card className="p-4 sm:p-6 space-y-4">
         <div>
           <Label>Certificado activo *</Label>
           <Select value={policyId} onValueChange={setPolicyId}>

@@ -127,12 +127,12 @@ function Dashboard() {
   return (
     <div className="space-y-8 pb-4">
       {/* Header */}
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             {scope ? activeProgram?.name : "ZEMGO"}
           </p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Dashboard</h1>
+          <h1 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight">Dashboard</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {scope ? "Resumen operativo del programa activo" : "Selecciona un programa para comenzar"}
           </p>

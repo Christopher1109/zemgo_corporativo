@@ -213,7 +213,7 @@ function AlertsPage() {
       </Card>
 
       <Tabs defaultValue="reminders" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-3xl">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto max-w-3xl">
           <TabsTrigger value="reminders">
             <Bell className="h-4 w-4 mr-2" /> Recordatorios ({remFiltered.length + chargesFiltered.length + groupFiltered.length})
           </TabsTrigger>
@@ -428,7 +428,7 @@ function KpiCard({ label, value, sub, color, icon: Icon }: any) {
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
           {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
         </div>
