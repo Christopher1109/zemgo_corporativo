@@ -99,7 +99,7 @@ function IncidentsDashboard() {
 
   void programs;
   return (
-    <div className="p-6 space-y-4 max-w-7xl mx-auto">
+    <div className="md:p-6 space-y-4 max-w-7xl mx-auto">
       <Button asChild variant="ghost" size="sm"><Link to="/incidents"><ArrowLeft className="h-4 w-4 mr-1" />Volver</Link></Button>
       <h1 className="text-2xl font-bold">Dashboard de Siniestros{activeProgram ? ` · ${activeProgram.code}` : ""}</h1>
 

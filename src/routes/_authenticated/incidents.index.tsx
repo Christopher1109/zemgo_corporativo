@@ -84,15 +84,15 @@ function IncidentsList() {
   );
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="md:p-6 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <AlertTriangle className="h-6 w-6" /> Siniestros
           </h1>
           <p className="text-sm text-muted-foreground">Gestión de reportes y pases médicos</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
             <Link to="/incidents/dashboard"><BarChart3 className="h-4 w-4 mr-1" />Dashboard</Link>
           </Button>

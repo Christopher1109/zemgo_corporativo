@@ -74,12 +74,12 @@ function ClientsList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Clientes</h1>
           <p className="text-sm text-muted-foreground">Clientes individuales y sus afiliaciones. Los asegurados de empresas se consolidan en <Link to="/companies" className="underline">Empresas</Link>.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={downloadMissing} disabled={downloading}>
           {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
           Descargar datos de clientes

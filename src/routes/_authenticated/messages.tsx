@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, Send, User, Bot, PlayCircle, Bell } from "lucide-react";
+import { MessageCircle, Send, User, Bot, PlayCircle, Bell, ArrowLeft } from "lucide-react";
 import { PaymentRemindersView } from "@/components/messages/PaymentRemindersView";
 import { toast } from "sonner";
 import { useProgram } from "@/lib/program-context";
@@ -155,7 +155,7 @@ function MessagesPage() {
 
 
   return (
-    <div className="h-full flex flex-col p-6 gap-4">
+    <div className="h-full flex flex-col md:p-6 gap-4">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <MessageCircle className="h-6 w-6" />
@@ -209,9 +209,9 @@ function MessagesPage() {
           onOpenConversation={(waPhone) => { setProgramFilter("active"); setSelected(waPhone); setView("conversations"); }}
         />
       ) : (
-      <Card className="flex-1 min-h-0 flex overflow-hidden">
+      <Card className="h-[75dvh] shrink-0 md:h-auto md:shrink md:flex-1 md:min-h-0 flex overflow-hidden">
         {/* Lista de conversaciones */}
-        <div className="w-80 shrink-0 border-r overflow-y-auto">
+        <div className={`w-full md:w-80 shrink-0 md:border-r overflow-y-auto ${selected ? "hidden md:block" : ""}`}>
           {loadingList ? (
             <div className="p-4 text-sm text-muted-foreground">Cargando conversaciones…</div>
           ) : listError ? (
@@ -277,15 +277,23 @@ function MessagesPage() {
         </div>
 
         {/* Hilo de conversación */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className={`flex-1 flex-col min-w-0 ${selected ? "flex" : "hidden md:flex"}`}>
           {!selected ? (
             <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
               Selecciona una conversación
             </div>
           ) : (
             <>
-              <div className="px-4 py-3 border-b flex items-center justify-between gap-2">
+              <div className="px-3 md:px-4 py-3 border-b flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setSelected(null)}
+                    className="md:hidden -ml-1 p-1.5 rounded-md hover:bg-muted"
+                    aria-label="Volver a conversaciones"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
                   <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                     <User className="h-4 w-4" />
                   </div>
@@ -333,7 +341,7 @@ function MessagesPage() {
                   thread.map((m) => (
                     <div key={m.id} className={`flex ${m.direction === "outbound" ? "justify-end" : "justify-start"}`}>
                       <div
-                        className={`max-w-[70%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words ${
+                        className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words ${
                           m.message_type === "template"
                             ? "bg-amber-50 border border-amber-200 text-amber-950 rounded-br-sm"
                             : m.direction === "outbound"

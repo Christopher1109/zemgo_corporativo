@@ -74,7 +74,7 @@ export function SidebarNotifications() {
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 max-h-[420px] overflow-y-auto">
+      <DropdownMenuContent align="end" className="w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(420px,70dvh)] overflow-y-auto">
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>Alertas activas</span>
           <span className="text-xs text-muted-foreground font-normal">{total} en total</span>
