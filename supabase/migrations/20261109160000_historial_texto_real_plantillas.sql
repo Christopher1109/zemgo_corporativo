@@ -18,20 +18,20 @@ BEGIN
 
   IF v_tpl = 'recordatorio_pago_abc' THEN
     RETURN format(E'Hola, %s, ¡muy buen día!\n\n'
-      E'Gracias por confiar en nuestra protección ABC y permitirnos ser parte de tu tranquilidad y respaldo cuando más lo necesitas.\n\n'
-      E'Queremos seguir acompañándote con la seguridad que mereces. Por eso, te compartimos los detalles de tu próximo pago, para que puedas continuar disfrutando de todos los beneficios.\n\n'
-      E'💰 Pago mensual: $%s\n'
-      E'📅 Fecha límite de pago: %s\n\n'
-      E'Puedes realizar tu pago de manera fácil y segura directamente aquí: https://www.zemgoportal.com/portal/\n\n'
-      E'Estamos a tus órdenes. Que tengas un excelente día.', v_name, v_amount, v_date);
+      || E'Gracias por confiar en nuestra protección ABC y permitirnos ser parte de tu tranquilidad y respaldo cuando más lo necesitas.\n\n'
+      || E'Queremos seguir acompañándote con la seguridad que mereces. Por eso, te compartimos los detalles de tu próximo pago, para que puedas continuar disfrutando de todos los beneficios.\n\n'
+      || E'💰 Pago mensual: $%s\n'
+      || E'📅 Fecha límite de pago: %s\n\n'
+      || E'Puedes realizar tu pago de manera fácil y segura directamente aquí: https://www.zemgoportal.com/portal/\n\n'
+      || E'Estamos a tus órdenes. Que tengas un excelente día.', v_name, v_amount, v_date);
   ELSIF v_tpl = 'recordatorio_pago_futcare' THEN
     RETURN format(E'Hola, %s.\n\n'
-      E'Ha sido un gusto acompañarte durante este año. Sabemos que disfrutar de este deporte también significa estar preparado para cualquier imprevisto dentro y fuera de la cancha, así que muchas gracias por confiar en nuestra protección FUT-CARE.\n\n'
-      E'Queremos recordarte que, para continuar con la protección futbolera, es necesario realizar la renovación correspondiente el día:\n\n'
-      E'📅 Fecha límite de pago: %s\n'
-      E'💰 Pago anual: $%s\n\n'
-      E'Puedes realizar tu pago directo y seguro a través del siguiente enlace: https://www.zemgoportal.com/portal/\n\n'
-      E'Si tienes alguna duda o necesitas apoyo con tu renovación, estamos para ayudarte.', v_name, v_date, v_amount);
+      || E'Ha sido un gusto acompañarte durante este año. Sabemos que disfrutar de este deporte también significa estar preparado para cualquier imprevisto dentro y fuera de la cancha, así que muchas gracias por confiar en nuestra protección FUT-CARE.\n\n'
+      || E'Queremos recordarte que, para continuar con la protección futbolera, es necesario realizar la renovación correspondiente el día:\n\n'
+      || E'📅 Fecha límite de pago: %s\n'
+      || E'💰 Pago anual: $%s\n\n'
+      || E'Puedes realizar tu pago directo y seguro a través del siguiente enlace: https://www.zemgoportal.com/portal/\n\n'
+      || E'Si tienes alguna duda o necesitas apoyo con tu renovación, estamos para ayudarte.', v_name, v_date, v_amount);
   END IF;
   RETURN NULL;
 END $function$;
