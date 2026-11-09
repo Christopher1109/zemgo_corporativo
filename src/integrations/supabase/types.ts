@@ -3041,6 +3041,39 @@ export type Database = {
           },
         ]
       }
+      v_cobranza: {
+        Row: {
+          amount: number | null
+          bank_reference: string | null
+          client_id: string | null
+          company_id: string | null
+          control_number: string | null
+          curp: string | null
+          debtor_name: string | null
+          due_date: string | null
+          failure_reason: string | null
+          folio: string | null
+          group_name: string | null
+          id: string | null
+          insured_count: number | null
+          is_activation: boolean | null
+          kind: string | null
+          method: string | null
+          paid_amount: number | null
+          paid_at: string | null
+          period: string | null
+          policy_id: string | null
+          policy_status: string | null
+          program_code: string | null
+          program_color: string | null
+          program_id: string | null
+          program_name: string | null
+          provider_transaction_id: string | null
+          source: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       apply_certificate_assignments: {
@@ -3084,6 +3117,7 @@ export type Database = {
         Args: { _file_name?: string; _incident_id: string; _token: string }
         Returns: Json
       }
+      cobranza_access: { Args: { _program_id: string }; Returns: string[] }
       create_payment_schedule_for_policy: {
         Args: { _policy_id: string }
         Returns: string
@@ -3117,6 +3151,7 @@ export type Database = {
       generate_company_charges: { Args: never; Returns: number }
       generate_pending_payments: { Args: never; Returns: undefined }
       get_action_items: { Args: { _program_id: string }; Returns: Json }
+      get_cobranza_resumen: { Args: { _program_id: string }; Returns: Json }
       get_dashboard_kpis: { Args: { _program_id: string }; Returns: Json }
       get_google_sheets_credentials: { Args: never; Returns: Json }
       get_google_sheets_credentials_meta: { Args: never; Returns: Json }
@@ -3207,6 +3242,20 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      import_company_members: {
+        Args: {
+          _company_id: string
+          _end_date?: string
+          _file_name?: string
+          _group_terms?: boolean
+          _issue_date?: string
+          _premium?: number
+          _rows: Json
+          _start_date?: string
+          _sum_insured?: number
+        }
+        Returns: Json
       }
       is_any_program_admin: { Args: { _user_id: string }; Returns: boolean }
       is_last_admin_in_program: {
