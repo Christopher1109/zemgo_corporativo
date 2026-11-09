@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { localTodayIso, paidAtToIso } from "@/lib/paid-at";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -25,7 +26,7 @@ const METHODS = [
 ];
 
 export function MarkPaidDialog({ open, onOpenChange, payment, onDone }: Props) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localTodayIso();
   const [method, setMethod] = useState("bank_transfer");
   const [paidAt, setPaidAt] = useState(today);
   const [reference, setReference] = useState("");
@@ -46,7 +47,7 @@ export function MarkPaidDialog({ open, onOpenChange, payment, onDone }: Props) {
         data: {
           payment_id: payment.id,
           method: method as any,
-          paid_at: new Date(paidAt + "T12:00:00").toISOString(),
+          paid_at: paidAtToIso(paidAt),
           reference: refRequired ? reference : null,
           paid_amount: amountChanged ? numericAmount : null,
           notes: notes || null,
