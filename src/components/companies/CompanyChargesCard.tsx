@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { paidAtToIso } from "@/lib/paid-at";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CalendarClock, CheckCircle2, CreditCard, Loader2, RotateCcw } from "lucide-react";
@@ -75,7 +76,7 @@ export function RegisterCompanyPaymentDialog({ charge, onClose, onDone }: { char
     const { error } = await supabase.rpc("mark_company_charge_paid" as any, {
       _charge_id: charge.id,
       _method: form.method,
-      _paid_at: new Date(`${form.paid_at}T12:00:00`).toISOString(),
+      _paid_at: paidAtToIso(form.paid_at),
       _reference: form.reference.trim() || null,
       _paid_amount: form.amount ? Number(form.amount) : null,
       _notes: form.notes.trim() || null,
