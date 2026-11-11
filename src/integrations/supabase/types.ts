@@ -3384,6 +3384,10 @@ export type Database = {
         Args: { _incident_id: string; _reason: string }
         Returns: undefined
       }
+      reminder_template_body: {
+        Args: { p: Json; v_tpl: string }
+        Returns: string
+      }
       renew_policy: {
         Args: { _overrides?: Json; _source_id: string }
         Returns: Json
