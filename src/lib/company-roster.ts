@@ -43,6 +43,9 @@ export type RosterFile = {
 const MONTHS: Record<string, number> = {
   ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6, JULIO: 7, AGOSTO: 8,
   SEPTIEMBRE: 9, SETIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12,
+  // Abreviaturas que usan las empresas en el nombre de la hoja ("ALTAS Y BAJAS NOV").
+  ENE: 1, FEB: 2, MAR: 3, ABR: 4, MAY: 5, JUN: 6, JUL: 7, AGO: 8,
+  SEP: 9, SEPT: 9, SET: 9, OCT: 10, NOV: 11, DIC: 12,
 };
 
 /** Mes y año (si viene) en el nombre de la hoja: "ALTAS Y BAJAS OCTUBRE 26" → {month: 10, year: 2026}. */
