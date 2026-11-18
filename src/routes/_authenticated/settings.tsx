@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { UsersSettingsTab } from "@/components/settings/users-settings-tab";
 import { WhatsAppRemindersCard } from "@/components/settings/WhatsAppRemindersCard";
+import { NewClientEmailCard } from "@/components/settings/NewClientEmailCard";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Configuración — ZEMGO" }] }),
@@ -56,6 +57,7 @@ function SettingsPage() {
         <TabsContent value="alerts" className="mt-5">
           <section className="space-y-3">
             <WhatsAppRemindersCard />
+            <NewClientEmailCard />
             <p className="text-sm text-muted-foreground">
               Define cuántos días antes del vencimiento se generan recordatorios automáticos.
               Se acepta una lista de offsets (ej. <code>15, 30, 60</code>).
