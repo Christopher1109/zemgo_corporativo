@@ -82,8 +82,12 @@ function policyNumberFor(rows: any[]) {
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? HIR_DEFAULT_POLICY;
 }
 
+/** Nombre de la aseguradora que se muestra en pantalla según el programa. */
+const insurerName = (code?: string | null) => (String(code ?? "").toUpperCase() === "MCV" ? "Zurich" : "HIR");
+
 function CertificatesPage() {
   const { activeProgram } = useProgram();
+  const ins = insurerName(activeProgram?.code);
   return (
     <div className="space-y-5">
       <div>
@@ -91,7 +95,7 @@ function CertificatesPage() {
           <FileCheck2 className="h-6 w-6" style={{ color: "var(--program-primary)" }} /> Altas, bajas y certificados
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Descarga las altas y bajas en el formato de HIR para enviarlas a la aseguradora, y sube la relación de asegurados (PDF) que regresa HIR para asignar los números de certificado.
+          Descarga las altas y bajas en el formato de {ins} para enviarlas a la aseguradora, y sube la relación de asegurados (PDF) que regresa {ins} para asignar los números de certificado.
         </p>
       </div>
       {!activeProgram ? (
@@ -99,9 +103,9 @@ function CertificatesPage() {
       ) : (
         <Tabs defaultValue="altas">
           <TabsList className="flex-wrap h-auto">
-            <TabsTrigger value="altas">1. Altas para HIR</TabsTrigger>
-            <TabsTrigger value="bajas">2. Bajas para HIR</TabsTrigger>
-            <TabsTrigger value="upload">3. Subir relación de HIR (PDF)</TabsTrigger>
+            <TabsTrigger value="altas">1. Altas para {ins}</TabsTrigger>
+            <TabsTrigger value="bajas">2. Bajas para {ins}</TabsTrigger>
+            <TabsTrigger value="upload">3. Subir relación de {ins} (PDF)</TabsTrigger>
             <TabsTrigger value="activos">Activos y certificados</TabsTrigger>
           </TabsList>
           <TabsContent value="altas" className="mt-4"><AltasTab program={activeProgram} /></TabsContent>
@@ -129,6 +133,7 @@ function SentBadge({ info }: { info?: any }) {
 // ------------------------------------------------------------------ 1. ALTAS
 
 function AltasTab({ program }: { program: any }) {
+  const ins = insurerName(program?.code);
   const qc = useQueryClient();
   const canWrite = useCanWrite(program.id);
   const { data = [], isLoading } = useQuery({
@@ -229,7 +234,7 @@ function AltasTab({ program }: { program: any }) {
     <Card className="p-4 space-y-4">
       <p className="text-sm text-muted-foreground">
         Todos los asegurados nuevos del programa que aún no tienen número de certificado: altas de empresas y clientes individuales que ya pagaron.
-        El archivo sale en el formato de HIR (ALTAS) y las altas quedan marcadas como <b>enviadas</b> hasta que subas la relación de HIR con su número.
+        El archivo sale en el formato de {ins} (ALTAS) y las altas quedan marcadas como <b>enviadas</b> hasta que subas la relación de {ins} con su número.
       </p>
       <div className="flex flex-wrap items-end gap-3 justify-between">
         <div className="w-full sm:w-auto space-y-1">
@@ -240,7 +245,7 @@ function AltasTab({ program }: { program: any }) {
           <Button variant="ghost" size="sm" onClick={downloadGeneral} disabled={chosen.length === 0}>Listado general (Excel)</Button>
           <Button onClick={downloadHir} disabled={busy || chosen.length === 0}>
             {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-            Descargar altas para HIR ({chosen.length})
+            Descargar altas para {ins} ({chosen.length})
           </Button>
         </div>
       </div>
@@ -253,7 +258,7 @@ function AltasTab({ program }: { program: any }) {
             {k.startsWith("zcorta-") && !groups[i - 1]?.[0].startsWith("zcorta-") && (
               <div className="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm">
                 <b>Torneos y equipos de vigencia corta (no anual).</b> Se envían en el mismo archivo de altas con su fecha de
-                inicio de vigencia. El día que termina su vigencia aparecen solos en <b>2. Bajas para HIR</b>.
+                inicio de vigencia. El día que termina su vigencia aparecen solos en <b>2. Bajas para {ins}</b>.
               </div>
             )}
             <h3 className="font-medium text-sm flex items-center gap-2">
@@ -262,7 +267,7 @@ function AltasTab({ program }: { program: any }) {
             </h3>
             <Table>
               <TableHeader><TableRow>
-                <TableHead /><TableHead>Nombre</TableHead><TableHead>CURP</TableHead><TableHead>Nacimiento</TableHead><TableHead>Folio</TableHead><TableHead>Alta / primer pago</TableHead><TableHead>Envío a HIR</TableHead>
+                <TableHead /><TableHead>Nombre</TableHead><TableHead>CURP</TableHead><TableHead>Nacimiento</TableHead><TableHead>Folio</TableHead><TableHead>Alta / primer pago</TableHead><TableHead>Envío a {ins}</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {g.rows.map((p) => (
@@ -274,7 +279,7 @@ function AltasTab({ program }: { program: any }) {
                     <TableCell className="font-mono text-xs">{p.folio}</TableCell>
                     <TableCell>
                       {p.companies?.group_type
-                        ? <span className="text-xs">Alta HIR: {fmtShort(movementDateFor(p, "ALTA", movDate))}</span>
+                        ? <span className="text-xs">Alta {ins}: {fmtShort(movementDateFor(p, "ALTA", movDate))}</span>
                         : new Date(p.first_paid ?? p.issue_date ?? p.created_at).toLocaleDateString("es-MX")}
                     </TableCell>
                     <TableCell><SentBadge info={p.metadata?.insurer_alta_sent} /></TableCell>
@@ -291,6 +296,7 @@ function AltasTab({ program }: { program: any }) {
 // ------------------------------------------------------------------ 2. BAJAS
 
 function BajasTab({ program }: { program: any }) {
+  const ins = insurerName(program?.code);
   const qc = useQueryClient();
   const canWrite = useCanWrite(program.id);
   const { data = [], isLoading } = useQuery({
@@ -345,8 +351,8 @@ function BajasTab({ program }: { program: any }) {
   return (
     <Card className="p-4 space-y-4">
       <p className="text-sm text-muted-foreground">
-        Asegurados dados de baja en Zemgo (actualización mensual de la empresa, cancelaciones) que ya tenían certificado de HIR.
-        El archivo sale en el formato de HIR (BAJAS) con su número de certificado. Al descargarlo, las bajas quedan marcadas
+        Asegurados dados de baja en Zemgo (actualización mensual de la empresa, cancelaciones) que ya tenían certificado de {ins}.
+        El archivo sale en el formato de {ins} (BAJAS) con su número de certificado. Al descargarlo, las bajas quedan marcadas
         como enviadas y salen de esta lista; puedes consultarlas en "Ver historial".
       </p>
       <div className="flex flex-wrap items-end gap-3 justify-between">
@@ -362,7 +368,7 @@ function BajasTab({ program }: { program: any }) {
         </div>
         <Button onClick={downloadHir} disabled={busy || chosen.length === 0}>
           {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-          Descargar bajas para HIR ({chosen.length})
+          Descargar bajas para {ins} ({chosen.length})
         </Button>
       </div>
       {!canWrite && <p className="text-xs text-amber-700">Puedes descargar el archivo, pero solo administradores o gerentes del programa lo marcan como enviado.</p>}
@@ -370,7 +376,7 @@ function BajasTab({ program }: { program: any }) {
         rows.length === 0 ? <div className="py-8 text-center text-muted-foreground">{showHistory ? "No hay bajas." : "No hay bajas por enviar."}</div> : (
           <Table>
             <TableHeader><TableRow>
-              <TableHead><Checkbox checked={allSel} onCheckedChange={(v) => setSel(Object.fromEntries(rows.map((p: any) => [p.id, !!v])))} /></TableHead><TableHead>N° Cert.</TableHead><TableHead>Nombre</TableHead><TableHead>Empresa</TableHead><TableHead>Motivo</TableHead><TableHead>Fecha de baja</TableHead><TableHead>Envío a HIR</TableHead>
+              <TableHead><Checkbox checked={allSel} onCheckedChange={(v) => setSel(Object.fromEntries(rows.map((p: any) => [p.id, !!v])))} /></TableHead><TableHead>N° Cert.</TableHead><TableHead>Nombre</TableHead><TableHead>Empresa</TableHead><TableHead>Motivo</TableHead><TableHead>Fecha de baja</TableHead><TableHead>Envío a {ins}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {rows.map((p: any) => (
@@ -395,12 +401,13 @@ function BajasTab({ program }: { program: any }) {
   );
 }
 
-// ------------------------------------------------------------------ 3. SUBIR RELACIÓN DE HIR
+// ------------------------------------------------------------------ 3. SUBIR RELACIÓN DE {ins}
 
 type Match = { row: InsurerRow; policy: any; include: boolean; how: string };
 type Ambig = { row: InsurerRow; options: any[]; chosen: string };
 
 function UploadTab({ program }: { program: any }) {
+  const ins = insurerName(program?.code);
   const qc = useQueryClient();
   const canWrite = useCanWrite(program.id);
   const [file, setFile] = useState<File | null>(null);
@@ -428,7 +435,7 @@ function UploadTab({ program }: { program: any }) {
       if (action === "reactivate") {
         const prev = { cancellation: meta.cancellation ?? null, insurer_baja_sent: meta.insurer_baja_sent ?? null };
         delete meta.cancellation; delete meta.insurer_baja_sent; delete meta.baja_confirmed;
-        meta.reactivated = { at: now, by: auth.user?.id ?? null, reason: "HIR lo sigue listando", previous: prev };
+        meta.reactivated = { at: now, by: auth.user?.id ?? null, reason: `${ins} lo sigue listando`, previous: prev };
         update = { status: "active", metadata: meta };
       } else {
         meta.baja_confirmed = { at: now, by: auth.user?.id ?? null };
@@ -470,7 +477,7 @@ function UploadTab({ program }: { program: any }) {
         if (c.policy) { if (!c.policy.metadata?.baja_confirmed) hc.push({ row, policy: c.policy }); continue; }
         u.push(row);
       }
-      // Certificados vigentes en Zemgo (de esta póliza) que HIR ya no lista.
+      // Certificados vigentes en Zemgo (de esta póliza) que {ins} ya no lista.
       const listed = new Set(res.rows.map((r) => r.certificate_number));
       const pol = (res.policy_number ?? "").trim();
       const missing = active.filter((p) => String(p.certificate_number ?? "").trim() && !listed.has(String(p.certificate_number))
@@ -527,8 +534,8 @@ function UploadTab({ program }: { program: any }) {
         {file && <span className="text-sm text-muted-foreground">{file.name}</span>}
       </div>
       <p className="text-xs text-muted-foreground">
-        Sube el PDF "Relación de Asegurados" que manda HIR (lista completa de la póliza). Se asigna el número de certificado a cada alta,
-        se completa el RFC con homoclave y se avisa de cualquier diferencia entre HIR y Zemgo. También acepta un Excel/CSV con columnas N° Certificado, Nombre, RFC y Fecha de Alta.
+        Sube el PDF "Relación de Asegurados" que manda {ins} (lista completa de la póliza). Se asigna el número de certificado a cada alta,
+        se completa el RFC con homoclave y se avisa de cualquier diferencia entre {ins} y Zemgo. También acepta un Excel/CSV con columnas N° Certificado, Nombre, RFC y Fecha de Alta.
       </p>
 
       {parsed && (
@@ -557,7 +564,7 @@ function UploadTab({ program }: { program: any }) {
             {visible.length === 0 ? <p className="text-sm text-muted-foreground">No hay certificados nuevos en este archivo.</p> : (
               <Table>
                 <TableHeader><TableRow>
-                  <TableHead /><TableHead>N° Cert.</TableHead><TableHead>Nombre (HIR)</TableHead><TableHead>RFC (HIR)</TableHead><TableHead>Cliente en Zemgo</TableHead><TableHead>Actual</TableHead><TableHead>Coincidió por</TableHead><TableHead>Alta HIR</TableHead>
+                  <TableHead /><TableHead>N° Cert.</TableHead><TableHead>Nombre ({ins})</TableHead><TableHead>RFC ({ins})</TableHead><TableHead>Cliente en Zemgo</TableHead><TableHead>Actual</TableHead><TableHead>Coincidió por</TableHead><TableHead>Alta {ins}</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {visible.map((x) => {
@@ -603,10 +610,10 @@ function UploadTab({ program }: { program: any }) {
 
           {(hirButCancelled.length > 0 || notInHir.length > 0 || unmatched.length > 0) && (
             <section className="space-y-3 rounded-md border border-amber-300 bg-amber-50/60 p-3">
-              <h3 className="font-medium flex items-center gap-2 text-amber-900"><AlertTriangle className="h-4 w-4" /> Diferencias entre HIR y Zemgo</h3>
+              <h3 className="font-medium flex items-center gap-2 text-amber-900"><AlertTriangle className="h-4 w-4" /> Diferencias entre {ins} y Zemgo</h3>
               {hirButCancelled.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">HIR los sigue teniendo, pero en Zemgo están dados de baja ({hirButCancelled.length})</p>
+                  <p className="text-sm font-medium">{ins} los sigue teniendo, pero en Zemgo están dados de baja ({hirButCancelled.length})</p>
                   <p className="text-xs text-muted-foreground">Decide qué hacer con cada uno: <b>Regresar al sistema</b> los vuelve a activar con su certificado; <b>Confirmar baja</b> los deja fuera y ya no volverán a aparecer aquí.</p>
                   <div className="w-full sm:w-auto space-y-1">
                     {hirButCancelled.map(({ row, policy }) => (
@@ -615,7 +622,7 @@ function UploadTab({ program }: { program: any }) {
                           N° {row.certificate_number} — {row.name}{" "}
                           {policy.metadata?.insurer_baja_sent
                             ? <span className="text-muted-foreground">· baja enviada el {fmtDate(policy.metadata.insurer_baja_sent.at)}</span>
-                            : <span className="text-amber-800">· baja aún no enviada a HIR</span>}
+                            : <span className="text-amber-800">· baja aún no enviada a {ins}</span>}
                         </div>
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline" disabled={!canWrite || rowBusy === policy.id} onClick={() => resolveCancelled(policy, "reactivate")}>Regresar al sistema</Button>
@@ -628,7 +635,7 @@ function UploadTab({ program }: { program: any }) {
               )}
               {notInHir.length > 0 && (
                 <div className="w-full sm:w-auto space-y-1">
-                  <p className="text-sm font-medium">Activos en Zemgo con certificado que HIR no lista ({notInHir.length})</p>
+                  <p className="text-sm font-medium">Activos en Zemgo con certificado que {ins} no lista ({notInHir.length})</p>
                   <ul className="text-sm list-disc pl-5">
                     {notInHir.map((p) => <li key={p.id}>N° {p.certificate_number} — {fullName(p.clients)} · {p.companies?.legal_name ?? "Individual"}</li>)}
                   </ul>
@@ -636,7 +643,7 @@ function UploadTab({ program }: { program: any }) {
               )}
               {unmatched.length > 0 && (
                 <div className="w-full sm:w-auto space-y-1">
-                  <p className="text-sm font-medium">HIR los lista, pero no existen en Zemgo ({unmatched.length})</p>
+                  <p className="text-sm font-medium">{ins} los lista, pero no existen en Zemgo ({unmatched.length})</p>
                   <ul className="text-sm list-disc pl-5">
                     {unmatched.map((r, i) => <li key={i}>N° {r.certificate_number} — {r.name} — <span className="font-mono">{r.rfc}</span></li>)}
                   </ul>
@@ -664,6 +671,7 @@ function UploadTab({ program }: { program: any }) {
 
 /** Asegurados vigentes del programa (no dados de baja), con y sin número de certificado de HIR. */
 function ActivosTab({ program }: { program: any }) {
+  const ins = insurerName(program?.code);
   const query = useQuery({
     queryKey: ["cert-activos", program.id],
     queryFn: async () => {
@@ -673,7 +681,7 @@ function ActivosTab({ program }: { program: any }) {
         .filter((p) => p.status !== "cancelled")
         .filter((p) => {
           if (String(p.certificate_number ?? "").trim()) return true;
-          // Mismo criterio que "Altas para HIR": individuales ya pagados, empresas al darse de alta, torneos activos.
+          // Mismo criterio que "Altas para {ins}": individuales ya pagados, empresas al darse de alta, torneos activos.
           const paid = (p.payments ?? []).some((x: any) => x.status === "paid" && x.paid_at);
           return paid || (p.company_id && (!p.companies?.group_type || p.status === "active"));
         });
@@ -706,7 +714,7 @@ function ActivosTab({ program }: { program: any }) {
   async function exportExcel() {
     const wb = await newWorkbook();
     const ws = wb.addWorksheet("Activos");
-    ws.columns = ["Apellidos y nombre","CURP","Fecha de nacimiento","No. empleado","Empresa","N° Certificado","Estado HIR","Póliza","Folio interno"].map((h) => ({ header: h, key: h }));
+    ws.columns = ["Apellidos y nombre","CURP","Fecha de nacimiento","No. empleado","Empresa","N° Certificado",`Estado ${ins}`,"Póliza","Folio interno"].map((h) => ({ header: h, key: h }));
     for (const p of rows) {
       const c = p.clients ?? {};
       ws.addRow([
@@ -720,7 +728,7 @@ function ActivosTab({ program }: { program: any }) {
     await downloadWorkbook(wb, `activos-${program.code}-${slugDate()}.xlsx`);
   }
 
-  // ---- Listado completo para la póliza de Vida (formato HIR)
+  // ---- Listado completo para la póliza de Vida (formato {ins})
   // Vida se declara siempre el día 10 del mes; todos los renglones llevan suma asegurada de 200,000.
   const [vidaMonth, setVidaMonth] = useState(() => today().slice(0, 7));
   const [vidaBusy, setVidaBusy] = useState(false);
@@ -750,7 +758,7 @@ function ActivosTab({ program }: { program: any }) {
   return (
     <Card className="p-4 space-y-4">
       <div className="rounded-md border p-3 space-y-2">
-        <h3 className="font-medium text-sm">Póliza de Vida {HIR_VIDA_POLICY} — listado completo (formato HIR)</h3>
+        <h3 className="font-medium text-sm">Póliza de Vida {HIR_VIDA_POLICY} — listado completo (formato {ins})</h3>
         <p className="text-xs text-muted-foreground">
           Todos van como ALTA con suma asegurada de $200,000 y fecha de movimiento el día 10 del mes. Arriba los activos con su número de
           certificado (ordenados por certificado) y abajo las altas con el certificado vacío. No lleva bajas. Respeta el filtro de empresa. La póliza de AP ({HIR_DEFAULT_POLICY}) solo lleva
@@ -771,8 +779,8 @@ function ActivosTab({ program }: { program: any }) {
         </div>
       </div>
       <p className="text-sm text-muted-foreground">
-        Todos los asegurados que siguen activos en Zemgo: los que ya tienen su número de certificado de HIR y los que todavía no
-        (altas por enviar o enviadas esperando la relación de HIR).
+        Todos los asegurados que siguen activos en Zemgo: los que ya tienen su número de certificado de {ins} y los que todavía no
+        (altas por enviar o enviadas esperando la relación de {ins}).
       </p>
       <div className="flex flex-wrap items-end gap-3 justify-between">
         <div className="flex flex-wrap items-end gap-3">
