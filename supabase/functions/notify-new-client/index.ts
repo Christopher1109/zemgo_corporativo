@@ -91,13 +91,22 @@ Deno.serve(async (req: Request) => {
 
   try {
     const cfg = await rest(supabaseUrl, serviceKey, "system_config?select=key,value&key=like.notify.new_client.*");
-    const emails: string[] = (cfg.find((r: any) => r.key === "notify.new_client.emails")?.value ?? []).filter(Boolean);
-    if (!emails.length) return json({ ok: false, error: "No hay correos destinatarios configurados" }, 200);
+    const general: string[] = (cfg.find((r: any) => r.key === "notify.new_client.emails")?.value ?? []).filter(Boolean);
+    const byProgram: Record<string, string[]> = cfg.find((r: any) => r.key === "notify.new_client.emails_by_program")?.value ?? {};
+    // Correos del programa; si no tiene propios, la lista general.
+    const recipientsFor = (code: string) => {
+      const own = (byProgram[String(code ?? "").toUpperCase()] ?? []).filter(Boolean);
+      return own.length ? own : general;
+    };
 
     let data: Json;
+    let programCode = "";
     if (body.test) {
+      programCode = String(body.program_code ?? "");
+      const progs = await rest(supabaseUrl, serviceKey, "programs?select=code,name");
+      const progName = progs.find((p: any) => p.code === programCode.toUpperCase())?.name ?? "Programa de prueba";
       data = {
-        test: true, name: "Cliente de Prueba", program: "FutCare", folio: "FC-000123", amount: 950,
+        test: true, name: "Cliente de Prueba", program: progName, folio: "PRUEBA-000123", amount: 950,
         method: "Tarjeta", paidAt: new Date().toLocaleString("es-MX", { timeZone: "America/Monterrey" }),
         phone: "8112345678", email: "cliente@ejemplo.com", link: baseUrl ? `${baseUrl}/clients` : "",
       };
@@ -111,6 +120,7 @@ Deno.serve(async (req: Request) => {
       );
       if (!pay?.policy?.client) return json({ ok: false, error: "Pago sin cliente" }, 404);
       const c = pay.policy.client;
+      programCode = pay.policy.program?.code ?? "";
       data = {
         name: `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim(),
         program: pay.policy.program?.name ?? pay.policy.program?.code ?? "",
@@ -123,6 +133,9 @@ Deno.serve(async (req: Request) => {
         link: baseUrl ? `${baseUrl}/clients/${c.id}` : "",
       };
     }
+
+    const emails = recipientsFor(programCode);
+    if (!emails.length) return json({ ok: false, error: `No hay correos configurados para ${data.program} ni correos generales` }, 200);
 
     const mail = buildEmail(data);
     const res = await fetch("https://api.resend.com/emails", {
