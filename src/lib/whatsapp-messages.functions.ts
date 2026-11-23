@@ -35,20 +35,31 @@ export interface WhatsappThreadMessage {
 // módulo "clients". Las funciones validan por su cuenta que quien llama
 // tenga un perfil de personal — no exponen nada a quien no debería verlo.
 
+// Con program_code: solo los mensajes de ese programa (un número compartido entre clientes de
+// varios programas aparece en cada uno con lo suyo) + números sin cliente identificado.
 export const listWhatsappConversations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<WhatsappConversation[]> => {
-    const { data, error } = await context.supabase.rpc("get_whatsapp_conversations");
+  .inputValidator((d?: { program_code?: string | null }) =>
+    z.object({ program_code: z.string().nullable().optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ data: input, context }): Promise<WhatsappConversation[]> => {
+    const { data, error } = await (context.supabase.rpc as any)("get_whatsapp_conversations", {
+      _program_code: input.program_code ?? null,
+    });
     if (error) throw new Error(error.message);
     return (data as unknown as WhatsappConversation[]) ?? [];
   });
 
 export const listWhatsappThread = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { wa_phone: string }) => z.object({ wa_phone: z.string().min(5) }).parse(d))
+  .inputValidator((d: { wa_phone: string; program_code?: string | null }) =>
+    z.object({ wa_phone: z.string().min(5), program_code: z.string().nullable().optional() }).parse(d),
+  )
   .handler(async ({ data, context }): Promise<WhatsappThreadMessage[]> => {
-    const { data: rows, error } = await context.supabase.rpc("get_whatsapp_thread", {
+    // Con program_code se ocultan los mensajes de otro programa (p. ej. un recordatorio de ABC en FutCare).
+    const { data: rows, error } = await (context.supabase.rpc as any)("get_whatsapp_thread", {
       _wa_phone: data.wa_phone,
+      _program_code: data.program_code ?? null,
     });
     if (error) throw new Error(error.message);
     return (rows as unknown as WhatsappThreadMessage[]) ?? [];
