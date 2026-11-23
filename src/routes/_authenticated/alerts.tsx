@@ -580,6 +580,13 @@ function GroupChargesList({ rows }: { rows: any[] }) {
   );
 }
 
+/** Cobro atrasado de alguien que sigue cubierto: programa anual, póliza activa y vigencia sin terminar. */
+function coverageActive(r: any): boolean {
+  const pol = r.policies;
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Monterrey" });
+  return pol?.status === "active" && pol?.programs?.billing_frequency === "yearly" && !!pol?.end_date && pol.end_date >= today;
+}
+
 function RemindersList({ rows }: { rows: any[] }) {
   if (rows.length === 0) return <EmptyState text="Sin recordatorios para este filtro." />;
   return (
@@ -588,15 +595,18 @@ function RemindersList({ rows }: { rows: any[] }) {
         const d = daysFrom(r.due_date);
         const isOverdue = r.status === "overdue";
         const c = r.policies?.clients;
+        const covered = isOverdue && coverageActive(r);
         return (
-          <Card key={r.id} className={cn(semaforo(d, isOverdue))}>
+          <Card key={r.id} className={cn(covered ? "bg-amber-500/10 border-l-4 border-l-amber-500" : semaforo(d, isOverdue))}>
             <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-sm">{c?.first_name} {c?.last_name}</span>
                   <ProgramChip p={r.policies?.programs} />
                   <Badge variant="outline" className="font-mono text-[10px]">{r.policies?.folio}</Badge>
-                  {isOverdue
+                  {covered
+                    ? <Badge className="bg-amber-500 text-white text-[10px]" title={`Sigue cubierto hasta ${r.policies?.end_date}; falta su pago`}>Pago pendiente hace {Math.abs(d)}d · cubierto</Badge>
+                    : isOverdue
                     ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vencido hace {Math.abs(d)}d</Badge>
                     : d <= 5
                       ? <Badge className="bg-destructive text-destructive-foreground text-[10px]">Vence en {d}d</Badge>
