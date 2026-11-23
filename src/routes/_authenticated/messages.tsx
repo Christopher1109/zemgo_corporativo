@@ -79,8 +79,8 @@ function MessagesPage() {
     isError: listError,
     error: listErrorObj,
   } = useQuery({
-    queryKey: ["whatsapp", "conversations"],
-    queryFn: () => listFn(),
+    queryKey: ["whatsapp", "conversations", activeCode],
+    queryFn: () => listFn({ data: { program_code: activeCode } }),
     refetchInterval: 15_000, // "casi en vivo" sin necesidad de websockets
   });
 
@@ -90,8 +90,8 @@ function MessagesPage() {
     isError: threadError,
     error: threadErrorObj,
   } = useQuery({
-    queryKey: ["whatsapp", "thread", selected],
-    queryFn: () => threadFn({ data: { wa_phone: selected! } }),
+    queryKey: ["whatsapp", "thread", selected, activeCode],
+    queryFn: () => threadFn({ data: { wa_phone: selected!, program_code: activeCode } }),
     enabled: !!selected,
     refetchInterval: selected ? 8_000 : false,
   });

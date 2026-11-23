@@ -101,8 +101,8 @@ export function PaymentRemindersView({ programCode, programName, onOpenConversat
   const selected = data.find((r) => r.id === selectedId) ?? null;
 
   const { data: thread = [], isLoading: loadingThread } = useQuery({
-    queryKey: ["whatsapp", "thread", selected?.wa_phone],
-    queryFn: () => threadFn({ data: { wa_phone: selected!.wa_phone! } }),
+    queryKey: ["whatsapp", "thread", selected?.wa_phone, programCode],
+    queryFn: () => threadFn({ data: { wa_phone: selected!.wa_phone!, program_code: programCode } }),
     enabled: !!selected?.wa_phone,
     refetchInterval: selected?.wa_phone ? 10_000 : false,
   });
