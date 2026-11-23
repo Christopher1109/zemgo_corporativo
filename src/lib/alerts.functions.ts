@@ -15,7 +15,7 @@ export const getAlertsOverview = createServerFn({ method: "GET" })
     let upcomingQ = sb
       .from("payments")
       .select(
-        "id, amount, due_date, status, bank_reference, policies!inner(id, folio, status, program_id, company_id, programs(code, name, color_primary), clients(first_name, last_name, email, phone, state))"
+        "id, amount, due_date, status, bank_reference, policies!inner(id, folio, status, end_date, program_id, company_id, programs(code, name, color_primary, billing_frequency), clients(first_name, last_name, email, phone, state))"
       )
       .in("status", ["pending", "overdue"])
       // Solo clientes con cobertura: el cobro de activación de un prospecto no es un recordatorio.

@@ -11,7 +11,10 @@ const MAP: Record<string, { label: string; cls: string }> = {
   processing:{ label: "Procesando", cls: "bg-amber-100 text-amber-800 border-amber-300" },
 };
 
-export function PaymentStatusBadge({ status }: { status: string }) {
-  const cfg = MAP[status] ?? { label: status, cls: "" };
+// Cobro atrasado de alguien que sigue cubierto (FutCare con vigencia activa): no es "Vencido".
+const COVERED_OVERDUE = { label: "Pago pendiente", cls: "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-200" };
+
+export function PaymentStatusBadge({ status, coverageActive }: { status: string; coverageActive?: boolean | null }) {
+  const cfg = status === "overdue" && coverageActive ? COVERED_OVERDUE : MAP[status] ?? { label: status, cls: "" };
   return <Badge variant="outline" className={cn("font-medium", cfg.cls)}>{cfg.label}</Badge>;
 }

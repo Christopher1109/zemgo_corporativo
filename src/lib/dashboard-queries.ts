@@ -155,6 +155,8 @@ export type CobranzaRow = {
   is_activation: boolean;
   insured_count: number | null;
   period: string | null;
+  /** Cobro atrasado pero el asegurado sigue cubierto (programa anual con vigencia activa). */
+  coverage_active?: boolean | null;
 };
 
 /** A dónde lleva cada renglón de cobranza. */

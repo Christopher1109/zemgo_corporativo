@@ -258,10 +258,10 @@ function PaymentsList() {
                     {r.paid_at ? new Date(r.paid_at).toLocaleDateString("es-MX") : "—"}
                   </TableCell>
 
-                  <TableCell className={days !== null && days < 0 ? "text-red-600 font-medium" : ""}>
+                  <TableCell className={days !== null && days < 0 ? (r.coverage_active ? "text-amber-700 font-medium" : "text-red-600 font-medium") : ""}>
                     {days === null ? "—" : days < 0 ? `${Math.abs(days)} atras.` : `${days}`}
                   </TableCell>
-                  <TableCell><PaymentStatusBadge status={r.status} /></TableCell>
+                  <TableCell><PaymentStatusBadge status={r.status} coverageActive={r.coverage_active} /></TableCell>
                   <TableCell>
                     <Badge variant="outline" className={att.tone}>{att.label}</Badge>
                     {r.failure_reason && (

@@ -193,7 +193,7 @@ function Dashboard() {
                         <span
                           className={cn(
                             "h-2 w-2 shrink-0 rounded-full",
-                            isOverdue ? "bg-destructive" : days <= 15 ? "bg-orange-500" : "bg-emerald-500",
+                            isOverdue ? (r.coverage_active ? "bg-amber-500" : "bg-destructive") : days <= 15 ? "bg-orange-500" : "bg-emerald-500",
                           )}
                         />
                         <div className="min-w-0">
@@ -204,7 +204,9 @@ function Dashboard() {
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        {isOverdue
+                        {isOverdue && r.coverage_active
+                          ? <Badge className="bg-amber-500/10 text-amber-700 border border-amber-500/20 text-[10px] font-medium" title="Sigue cubierto; falta su pago">Pago pendiente {Math.abs(days)}d</Badge>
+                          : isOverdue
                           ? <Badge className="bg-destructive/10 text-destructive border border-destructive/20 text-[10px] font-medium">Vencido {Math.abs(days)}d</Badge>
                           : days <= 15
                             ? <Badge className="bg-orange-500/10 text-orange-600 border border-orange-500/20 text-[10px] font-medium">{days}d</Badge>
