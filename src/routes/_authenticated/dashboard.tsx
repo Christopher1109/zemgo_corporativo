@@ -16,6 +16,7 @@ import { parseISO, formatDistanceToNow } from "date-fns";
 
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { fetchRenewals, hasRenewals, monthRange, monthFromToday, monthLabel } from "@/lib/renewals";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — ZEMGO" }] }),
@@ -99,6 +100,21 @@ function Dashboard() {
       return count ?? 0;
     },
     enabled: on,
+  });
+
+  // Renovaciones del próximo mes (solo programas anuales: FutCare y Manos con Valor).
+  const nextMonth = monthFromToday(1);
+  const showRenewals = hasRenewals(activeProgram?.code);
+  const renewalsQ = useQuery({
+    queryKey: ["dash-renewals", scopeKey, nextMonth],
+    queryFn: async () => {
+      const { from, to } = monthRange(nextMonth);
+      const rows = await fetchRenewals(scope!, from, to);
+      return rows.filter((r) => r.renewal_status !== "cancelado").length;
+    },
+    enabled: on && showRenewals,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const fin = finQ.data;
@@ -235,16 +251,20 @@ function Dashboard() {
           </CardHeader>
           <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3 p-5">
             {([
-              ["Clientes activos", summaryQ.data?.active, "/clients"],
-              ["Prospectos", summaryQ.data?.prospect, "/clients"],
-              ["Inactivos", summaryQ.data?.inactive, "/clients"],
-              ["Certificados vigentes", summaryQ.data?.vigentes, "/policies"],
-              ["Sin número de certificado", summaryQ.data?.sinCert, "/certificates"],
-              ["Siniestros abiertos", summaryQ.data?.siniestros, "/incidents"],
-            ] as const).map(([label, v, to]) => (
+              ["Clientes activos", summaryQ.data?.active, "/clients", undefined],
+              ["Prospectos", summaryQ.data?.prospect, "/clients", undefined],
+              ["Inactivos", summaryQ.data?.inactive, "/clients", undefined],
+              ["Certificados vigentes", summaryQ.data?.vigentes, "/policies", undefined],
+              ["Sin número de certificado", summaryQ.data?.sinCert, "/certificates", undefined],
+              ["Siniestros abiertos", summaryQ.data?.siniestros, "/incidents", undefined],
+              ...(showRenewals
+                ? [[`Renuevan en ${monthLabel(nextMonth).split(" ")[0].toLowerCase()}`, renewalsQ.data, "/renewals", { month: nextMonth }] as const]
+                : []),
+            ] as const).map(([label, v, to, search]) => (
               <Link
                 key={label}
                 to={to}
+                search={search as any}
                 className="group rounded-xl border border-border/70 bg-muted/20 p-4 transition-all hover:bg-card hover:shadow-card-hover hover:border-border"
               >
                 <div className="flex items-start justify-between gap-2">

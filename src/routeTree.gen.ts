@@ -23,6 +23,7 @@ import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMiCarteraRouteImport } from './routes/_authenticated/mi-cartera'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
 import { Route as AuthenticatedPoliciesRouteImport } from './routes/_authenticated/policies'
+import { Route as AuthenticatedRenewalsRouteImport } from './routes/_authenticated/renewals'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
@@ -122,6 +123,11 @@ const AuthenticatedPaymentsRoute = AuthenticatedPaymentsRouteImport.update({
 const AuthenticatedPoliciesRoute = AuthenticatedPoliciesRouteImport.update({
   id: '/policies',
   path: '/policies',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRenewalsRoute = AuthenticatedRenewalsRouteImport.update({
+  id: '/renewals',
+  path: '/renewals',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
@@ -314,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/mi-cartera': typeof AuthenticatedMiCarteraRouteWithChildren
   '/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/policies': typeof AuthenticatedPoliciesRouteWithChildren
+  '/renewals': typeof AuthenticatedRenewalsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
@@ -354,6 +361,7 @@ export interface FileRoutesByTo {
   '/finance': typeof AuthenticatedFinanceRoute
   '/hospitals': typeof AuthenticatedHospitalsRoute
   '/messages': typeof AuthenticatedMessagesRoute
+  '/renewals': typeof AuthenticatedRenewalsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
@@ -401,6 +409,7 @@ export interface FileRoutesById {
   '/_authenticated/mi-cartera': typeof AuthenticatedMiCarteraRouteWithChildren
   '/_authenticated/payments': typeof AuthenticatedPaymentsRouteWithChildren
   '/_authenticated/policies': typeof AuthenticatedPoliciesRouteWithChildren
+  '/_authenticated/renewals': typeof AuthenticatedRenewalsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
@@ -448,6 +457,7 @@ export interface FileRouteTypes {
     | '/mi-cartera'
     | '/payments'
     | '/policies'
+    | '/renewals'
     | '/reports'
     | '/settings'
     | '/clients/$clientId'
@@ -488,6 +498,7 @@ export interface FileRouteTypes {
     | '/finance'
     | '/hospitals'
     | '/messages'
+    | '/renewals'
     | '/reports'
     | '/settings'
     | '/clients/$clientId'
@@ -534,6 +545,7 @@ export interface FileRouteTypes {
     | '/_authenticated/mi-cartera'
     | '/_authenticated/payments'
     | '/_authenticated/policies'
+    | '/_authenticated/renewals'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/clients/$clientId'
@@ -676,6 +688,13 @@ declare module '@tanstack/react-router' {
       path: '/policies'
       fullPath: '/policies'
       preLoaderRoute: typeof AuthenticatedPoliciesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/renewals': {
+      id: '/_authenticated/renewals'
+      path: '/renewals'
+      fullPath: '/renewals'
+      preLoaderRoute: typeof AuthenticatedRenewalsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/reports': {
@@ -995,6 +1014,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMiCarteraRoute: typeof AuthenticatedMiCarteraRouteWithChildren
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRouteWithChildren
   AuthenticatedPoliciesRoute: typeof AuthenticatedPoliciesRouteWithChildren
+  AuthenticatedRenewalsRoute: typeof AuthenticatedRenewalsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedCompaniesCompanyIdRoute: typeof AuthenticatedCompaniesCompanyIdRoute
@@ -1016,6 +1036,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMiCarteraRoute: AuthenticatedMiCarteraRouteWithChildren,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRouteWithChildren,
   AuthenticatedPoliciesRoute: AuthenticatedPoliciesRouteWithChildren,
+  AuthenticatedRenewalsRoute: AuthenticatedRenewalsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedCompaniesCompanyIdRoute: AuthenticatedCompaniesCompanyIdRoute,
