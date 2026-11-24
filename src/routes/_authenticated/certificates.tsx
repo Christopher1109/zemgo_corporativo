@@ -411,6 +411,9 @@ function UploadTab({ program }: { program: any }) {
   const [ambig, setAmbig] = useState<Ambig[]>([]);
   const [hirButCancelled, setHirButCancelled] = useState<{ row: InsurerRow; policy: any }[]>([]);
   const [notInHir, setNotInHir] = useState<any[]>([]);
+  // Dados de baja en Zemgo antes de recibir certificado, sin baja enviada a HIR: se les guarda el
+  // certificado (siguen de baja) para que aparezcan en "Bajas para HIR".
+  const [pendingBaja, setPendingBaja] = useState<{ row: InsurerRow; policy: any }[]>([]);
   const [overwrite, setOverwrite] = useState(false);
   const [busy, setBusy] = useState(false);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
@@ -460,14 +463,19 @@ function UploadTab({ program }: { program: any }) {
       const all = await fetchProgramPolicies(program.id);
       const active = all.filter((p) => p.status !== "cancelled"); // las bajas no reciben certificado
       const cancelled = all.filter((p) => p.status === "cancelled");
-      const m: Match[] = [], u: InsurerRow[] = [], a: Ambig[] = [], hc: { row: InsurerRow; policy: any }[] = [];
+      const m: Match[] = [], u: InsurerRow[] = [], a: Ambig[] = [], hc: { row: InsurerRow; policy: any }[] = [], pb: { row: InsurerRow; policy: any }[] = [];
       const results = matchAll(res.rows, active);
       for (const row of res.rows) {
         const r = results.get(row) ?? {};
         if (r.policy) { m.push({ row, policy: r.policy, include: true, how: r.how! }); continue; }
         if (r.options?.length) { a.push({ row, options: r.options, chosen: "" }); continue; }
         const c = matchRow(row, cancelled);
-        if (c.policy) { if (!c.policy.metadata?.baja_confirmed) hc.push({ row, policy: c.policy }); continue; }
+        if (c.policy) {
+          const meta = c.policy.metadata ?? {};
+          if (!String(c.policy.certificate_number ?? "").trim() && !meta.insurer_baja_sent && !meta.baja_confirmed) pb.push({ row, policy: c.policy });
+          else if (!meta.baja_confirmed) hc.push({ row, policy: c.policy });
+          continue;
+        }
         u.push(row);
       }
       // Certificados vigentes en Zemgo (de esta póliza) que HIR ya no lista.
@@ -476,7 +484,7 @@ function UploadTab({ program }: { program: any }) {
       const missing = active.filter((p) => String(p.certificate_number ?? "").trim() && !listed.has(String(p.certificate_number))
         && (!pol || String(p.policy_number ?? "") === pol));
       setParsed(res); setPolicyNumber(res.policy_number ?? ""); setMatched(m); setUnmatched(u); setAmbig(a);
-      setHirButCancelled(hc); setNotInHir(missing);
+      setHirButCancelled(hc); setNotInHir(missing); setPendingBaja(pb);
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo leer el archivo");
       setParsed(null);
@@ -502,6 +510,7 @@ function UploadTab({ program }: { program: any }) {
     const items = [
       ...matched.filter((x) => x.include).map((x) => item(x.row, x.policy.id)),
       ...ambig.filter((x) => x.chosen).map((x) => item(x.row, x.chosen)),
+      ...pendingBaja.map((x) => item(x.row, x.policy.id)),
     ];
     if (items.length === 0) return toast.error("No hay renglones seleccionados.");
     if (conflicts > 0 && overwrite && !window.confirm(`Se sobrescribirán ${conflicts} números de certificado existentes. ¿Continuar?`)) return;
@@ -512,8 +521,8 @@ function UploadTab({ program }: { program: any }) {
     setBusy(false);
     if (error) return toast.error(error.message === "forbidden" ? "Solo administradores o gerentes del programa pueden asignar certificados." : error.message);
     const r = data as any;
-    toast.success(`${nuevos.length} certificados nuevos asignados (${r.applied} renglones confirmados)${r.skipped ? `, ${r.skipped} omitidos` : ""}${r.rfc_updated ? ` · ${r.rfc_updated} RFC completados` : ""}.`);
-    setParsed(null); setFile(null); setMatched([]); setAmbig([]); setUnmatched([]); setHirButCancelled([]); setNotInHir([]);
+    toast.success(`${nuevos.length} certificados nuevos asignados (${r.applied} renglones confirmados)${r.skipped ? `, ${r.skipped} omitidos` : ""}${r.rfc_updated ? ` · ${r.rfc_updated} RFC completados` : ""}${pendingBaja.length ? ` · ${pendingBaja.length} pasan a Bajas para HIR` : ""}.`);
+    setParsed(null); setFile(null); setMatched([]); setAmbig([]); setUnmatched([]); setHirButCancelled([]); setNotInHir([]); setPendingBaja([]);
     qc.invalidateQueries();
   }
 
@@ -598,6 +607,21 @@ function UploadTab({ program }: { program: any }) {
                   </Select>
                 </div>
               ))}
+            </section>
+          )}
+
+          {pendingBaja.length > 0 && (
+            <section className="space-y-2 rounded-md border border-sky-300 bg-sky-50/60 p-3">
+              <h3 className="font-medium text-sky-900">Se dieron de baja antes de tener certificado ({pendingBaja.length})</h3>
+              <p className="text-xs text-muted-foreground">
+                HIR ya les asignó certificado, pero en Zemgo están dados de baja y su baja no se ha enviado. Al confirmar se les guarda
+                el certificado (siguen de baja) y aparecen en <b>2. Bajas para HIR</b> para descargarla.
+              </p>
+              <ul className="text-sm space-y-0.5">
+                {pendingBaja.map(({ row, policy }) => (
+                  <li key={policy.id}>N° {row.certificate_number} — {row.name}{policy.companies?.legal_name ? ` · ${policy.companies.legal_name}` : ""}</li>
+                ))}
+              </ul>
             </section>
           )}
 
