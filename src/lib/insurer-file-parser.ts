@@ -51,7 +51,8 @@ async function pdfLines(file: File): Promise<string[]> {
 }
 
 const num = (v: string) => Number(String(v).replace(/[$,\s]/g, ""));
-const COV_RE = /\b(MA|PMB|RGM|GFM|GF|AP|IPT|MAC|PT|[A-Z]{2,4})\s+\$?([\d,]+(?:\.\d{1,2})?)\s+\$?([\d,]+\.\d{2})\b/g;
+// HIR escribe los montos como "$ 50,000.00" (con espacio después del signo).
+const COV_RE = /\b(MA|PMB|RGM|GFM|GF|AP|IPT|MAC|PT|[A-Z]{2,4})\s+\$?\s?([\d,]+(?:\.\d{1,2})?)\s+\$?\s?([\d,]+\.\d{2})\b/g;
 
 function coveragesIn(text: string): Coverage[] {
   const out: Coverage[] = [];
@@ -70,15 +71,19 @@ function finish(r: InsurerRow) {
 export function parseLines(lines: string[]): InsurerFile {
   const policy_number = findPolicyNumber(lines.slice(0, 40).join(" ")) ?? findPolicyNumber(lines.join(" "));
   const rows: InsurerRow[] = [];
+  // Al final del PDF HIR pone un resumen por subgrupo y el "Total" (sumas de toda la póliza). Esos
+  // renglones de cobertura NO son del último asegurado: a partir de ahí ya no se le suman.
+  let inSummary = false;
   for (const raw of lines) {
     const line = raw.toUpperCase();
+    if (/\bSUBGRUPO\b|^\s*TOTAL\b|N[°º] DE CERTIFICADOS/.test(line)) inSummary = true;
     const rfc = line.match(RFC_RE);
     // HIR antepone la columna Grupo ("5-1") al número de certificado: se omite.
     const cert = line.match(/^\s*(?:(\d{1,3}-\d{1,3})\s+)?(\d{1,6})\b/);
     if (!rfc || !cert) {
       // Renglón de cobertura (MA / PMB / RGM…) del último asegurado.
       const last = rows[rows.length - 1];
-      if (last) { const c = coveragesIn(line); if (c.length) { last.insurer_premium_detail = [...(last.insurer_premium_detail ?? []), ...c]; finish(last); } }
+      if (last && !inSummary) { const c = coveragesIn(line); if (c.length) { last.insurer_premium_detail = [...(last.insurer_premium_detail ?? []), ...c]; finish(last); } }
       continue;
     }
     const before = line.slice(cert[0].length, rfc.index).replace(TIPO_RE, " ").replace(/[^A-ZÑÁÉÍÓÚÜ .]/g, " ").replace(/\s+/g, " ").trim();

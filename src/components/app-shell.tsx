@@ -33,6 +33,8 @@ type NavItem = {
   icon: any;
   module: ModuleKey | null;
   requires?: "manage_users";
+  /** Solo se muestra en estos programas (códigos). */
+  programs?: string[];
 };
 
 const NAV: NavItem[] = [
@@ -46,6 +48,7 @@ const NAV: NavItem[] = [
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, module: "incidents" },
   { to: "/hospitals", label: "Hospitales", icon: Hospital, module: "hospitals" },
   { to: "/alerts", label: "Alertas y renovaciones", icon: Bell, module: "alerts" },
+  { to: "/renewals", label: "Renovaciones", icon: RefreshCw, module: "alerts", programs: ["FUTCARE", "MCV"] },
   { to: "/messages", label: "Mensajes", icon: MessageCircle, module: "messages" },
   { to: "/sales-reps", label: "Vendedores", icon: Briefcase, module: "sales_reps" },
   { to: "/reports", label: "Reportes", icon: BarChart3, module: "reports" },
@@ -95,6 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       ] as NavItem[])
     : NAV.filter((n) => {
         if (n.requires === "manage_users") return !!level?.canManageUsers;
+        if (n.programs && !n.programs.includes(String(activeProgram?.code ?? "").toUpperCase())) return false;
         if (isSuperAdmin) return true;
         if (n.module === null) return true;
         return canAccessModule(programModules, n.module);
