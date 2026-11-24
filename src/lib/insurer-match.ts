@@ -69,3 +69,23 @@ export function matchAll(rows: InsurerRow[], active: any[]) {
   }
   return out;
 }
+
+/**
+ * Empareja un renglón de la relación de AP con un dependiente (cónyuge/hijo) de los titulares de Zemgo.
+ * HIR los lista como "TITULAR" en otro grupo (6-1) y sin prima. Se exige que coincidan todos los apellidos y
+ * nombres que trae HIR (máx. 3) o el RFC/CURP base, y que el resultado sea único.
+ */
+export function matchDependent(row: InsurerRow, pols: any[]): { policy: any; dependent: any } | null {
+  const rowTokens = tokens(row.name);
+  const need = Math.min(3, rowTokens.length);
+  const rfc10 = row.rfc.slice(0, 10);
+  const hits: { policy: any; dependent: any }[] = [];
+  for (const p of pols) {
+    for (const d of p.dependents ?? []) {
+      if (!String(d.full_name ?? "").trim()) continue;
+      const curp10 = String(d.metadata?.curp ?? "").toUpperCase().slice(0, 10);
+      if ((curp10 && curp10 === rfc10) || nameScore(row.name, d.full_name) >= need) hits.push({ policy: p, dependent: d });
+    }
+  }
+  return hits.length === 1 ? hits[0] : null;
+}
