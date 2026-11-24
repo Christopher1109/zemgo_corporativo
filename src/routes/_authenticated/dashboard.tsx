@@ -16,7 +16,7 @@ import { parseISO, formatDistanceToNow } from "date-fns";
 
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { fetchRenewals, hasRenewals, monthRange, monthFromToday, monthLabel } from "@/lib/renewals";
+import { fetchRenewals, hasRenewals, monthRange, monthFromToday, monthLabel, peopleIn } from "@/lib/renewals";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — ZEMGO" }] }),
@@ -102,7 +102,7 @@ function Dashboard() {
     enabled: on,
   });
 
-  // Renovaciones del próximo mes (solo programas anuales: FutCare y Manos con Valor).
+  // Renovaciones del próximo mes (FutCare y MCV anuales; ABC mensual, incluye asegurados de empresas).
   const nextMonth = monthFromToday(1);
   const showRenewals = hasRenewals(activeProgram?.code);
   const renewalsQ = useQuery({
@@ -110,7 +110,7 @@ function Dashboard() {
     queryFn: async () => {
       const { from, to } = monthRange(nextMonth);
       const rows = await fetchRenewals(scope!, from, to);
-      return rows.filter((r) => r.renewal_status !== "cancelado").length;
+      return rows.filter((r) => r.renewal_status !== "cancelado").reduce((s, r) => s + peopleIn(r), 0);
     },
     enabled: on && showRenewals,
     staleTime: 0,

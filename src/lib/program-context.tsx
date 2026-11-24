@@ -12,6 +12,7 @@ export type Program = {
   color_secondary: string;
   color_accent: string;
   billing_note: string | null;
+  billing_frequency?: string | null;
 };
 
 type ProgramContextValue = {
@@ -32,7 +33,7 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("programs")
-        .select("id,code,name,insurance_branch,color_primary,color_secondary,color_accent,billing_note")
+        .select("id,code,name,insurance_branch,color_primary,color_secondary,color_accent,billing_note,billing_frequency")
         .eq("is_active", true)
         .order("code");
       if (error) throw error;

@@ -48,7 +48,7 @@ const NAV: NavItem[] = [
   { to: "/incidents", label: "Siniestros", icon: AlertTriangle, module: "incidents" },
   { to: "/hospitals", label: "Hospitales", icon: Hospital, module: "hospitals" },
   { to: "/alerts", label: "Alertas y renovaciones", icon: Bell, module: "alerts" },
-  { to: "/renewals", label: "Renovaciones", icon: RefreshCw, module: "alerts", programs: ["FUTCARE", "MCV"] },
+  { to: "/renewals", label: "Renovaciones", icon: RefreshCw, module: "alerts", programs: ["FUTCARE", "MCV", "ABC"] },
   { to: "/messages", label: "Mensajes", icon: MessageCircle, module: "messages" },
   { to: "/sales-reps", label: "Vendedores", icon: Briefcase, module: "sales_reps" },
   { to: "/reports", label: "Reportes", icon: BarChart3, module: "reports" },
