@@ -11,8 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useProgram } from "@/lib/program-context";
 import { newWorkbook, styleHeader, downloadWorkbook } from "@/lib/client-excel";
 import {
-  fetchRenewals, hasRenewals, monthRange, monthFromToday, monthLabel,
-  RENEWAL_STATUS_LABEL, RENEWAL_STATUS_CLASS, type RenewalRow, type RenewalStatus,
+  fetchRenewals, hasRenewals, monthRange, monthFromToday, monthLabel, isMonthlyProgram, peopleIn,
+  RENEWAL_STATUS_LABEL, MONTHLY_STATUS_LABEL, RENEWAL_STATUS_CLASS, type RenewalRow, type RenewalStatus,
 } from "@/lib/renewals";
 import { cn } from "@/lib/utils";
 
@@ -51,16 +51,24 @@ function RenewalsPage() {
     refetchOnMount: "always",
   });
   const rows = query.data ?? [];
+  const monthly = isMonthlyProgram(activeProgram);
+  const LABEL = monthly ? MONTHLY_STATUS_LABEL : RENEWAL_STATUS_LABEL;
 
   const stats = useMemo(() => {
+    // Se cuentan personas: en mensualidades de empresa (ABC) cuenta cada asegurado.
+    const count = (xs: RenewalRow[]) => xs.reduce((s, r) => s + peopleIn(r), 0);
     const by = (s: RenewalStatus) => rows.filter((r) => r.renewal_status === s);
     const notCancelled = rows.filter((r) => r.renewal_status !== "cancelado");
+    const empresas = notCancelled.filter((r) => r.kind === "empresa");
     return {
-      total: notCancelled.length,
-      pendiente: by("pendiente").length,
-      renovado: by("renovado").length,
-      vencido: by("vencido").length,
-      cancelado: by("cancelado").length,
+      total: count(notCancelled),
+      totalSub: empresas.length
+        ? `${notCancelled.length - empresas.length} individuales + ${count(empresas)} de empresas`
+        : "Sin contar cancelados",
+      pendiente: count(by("pendiente")),
+      renovado: count(by("renovado")),
+      vencido: count(by("vencido")),
+      cancelado: count(by("cancelado")),
       esperado: notCancelled.reduce((s, r) => s + r.expected_amount, 0),
       recibido: rows.reduce((s, r) => s + r.paid_amount, 0),
     };
@@ -79,27 +87,27 @@ function RenewalsPage() {
     try {
       const wb = await newWorkbook();
       const ws = wb.addWorksheet("Renovaciones");
-      ws.columns = ["Cliente", "CURP", "Teléfono", "Correo", "Folio", "N° certificado", "Inicio de vigencia", "Fin de vigencia", "Estado de renovación", "Monto esperado", "Monto recibido", "Fecha de pago"]
+      ws.columns = ["Cliente", "Tipo", "Asegurados", "CURP", "Teléfono", "Correo", "Folio", "N° certificado", "Inicio de vigencia", monthly ? "Fecha de pago / baja" : "Fin de vigencia", "Estado", "Monto esperado", "Monto recibido", "Fecha de pago"]
         .map((h) => ({ header: h, key: h }));
       for (const r of visible) {
         ws.addRow([
-          r.client_name, r.curp ?? "", r.phone ?? "", r.email ?? "", r.folio ?? "", r.certificate_number ?? "",
-          r.start_date ?? "", r.end_date, RENEWAL_STATUS_LABEL[r.renewal_status],
+          r.client_name, KIND_LABEL[r.kind], peopleIn(r), r.curp ?? "", r.phone ?? "", r.email ?? "", r.folio ?? "", r.certificate_number ?? "",
+          r.start_date ?? "", r.end_date, LABEL[r.renewal_status],
           r.renewal_status === "cancelado" ? 0 : r.expected_amount, r.paid_amount,
           r.paid_at ? new Date(r.paid_at).toLocaleDateString("es-MX") : "",
         ]);
       }
       styleHeader(ws);
       ws.getColumn(1).width = 36;
-      ws.getColumn(10).numFmt = '"$"#,##0.00';
-      ws.getColumn(11).numFmt = '"$"#,##0.00';
+      ws.getColumn(12).numFmt = '"$"#,##0.00';
+      ws.getColumn(13).numFmt = '"$"#,##0.00';
       await downloadWorkbook(wb, `renovaciones-${activeProgram?.code}-${month}.xlsx`);
     } finally { setExporting(false); }
   }
 
   if (!activeProgram) return <Card className="p-8 text-center text-muted-foreground">Selecciona un programa.</Card>;
   if (!hasRenewals(activeProgram.code)) {
-    return <Card className="p-8 text-center text-muted-foreground">Renovaciones está disponible solo para FutCare y Manos con Valor.</Card>;
+    return <Card className="p-8 text-center text-muted-foreground">Renovaciones está disponible para ABC, FutCare y Manos con Valor.</Card>;
   }
 
   const quick = [
@@ -116,7 +124,11 @@ function RenewalsPage() {
           <h1 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight flex items-center gap-2">
             <RefreshCw className="h-6 w-6" style={{ color: "var(--program-primary)" }} /> Renovaciones
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Clientes cuya vigencia termina en el mes elegido y cómo va su renovación.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {monthly
+              ? "ABC se cobra cada mes: aquí está quién debe pagar su mensualidad en el mes elegido (clientes y empresas) y las bajas del mes."
+              : "Clientes cuya vigencia termina en el mes elegido y cómo va su renovación."}
+          </p>
         </div>
         <div className="flex flex-wrap items-end gap-2">
           {quick.map((x) => (
@@ -127,12 +139,12 @@ function RenewalsPage() {
       </div>
 
       <section className="grid gap-3 grid-cols-2 lg:grid-cols-6">
-        <Kpi icon={CalendarClock} label={`Por renovar · ${monthLabel(month)}`} value={String(stats.total)} sub="Sin contar cancelados" loading={query.isLoading} />
+        <Kpi icon={CalendarClock} label={`${monthly ? "Por pagar" : "Por renovar"} · ${monthLabel(month)}`} value={String(stats.total)} sub={stats.totalSub} loading={query.isLoading} />
         <Kpi icon={Wallet} label="Se espera recibir" value={fmtMoney(stats.esperado)} loading={query.isLoading} />
-        <Kpi icon={CheckCircle2} label="Recibido" value={fmtMoney(stats.recibido)} sub={`${stats.renovado} renovados`} tone="ok" loading={query.isLoading} />
+        <Kpi icon={CheckCircle2} label="Recibido" value={fmtMoney(stats.recibido)} sub={`${stats.renovado} ${monthly ? "pagados" : "renovados"}`} tone="ok" loading={query.isLoading} />
         <Kpi icon={RefreshCw} label="Pendientes" value={String(stats.pendiente)} sub="Aún no vencen" loading={query.isLoading} />
-        <Kpi icon={AlertTriangle} label="Vencidos sin renovar" value={String(stats.vencido)} tone="danger" loading={query.isLoading} />
-        <Kpi icon={XCircle} label="Cancelados" value={String(stats.cancelado)} loading={query.isLoading} />
+        <Kpi icon={AlertTriangle} label={LABEL.vencido} value={String(stats.vencido)} tone="danger" loading={query.isLoading} />
+        <Kpi icon={XCircle} label={monthly ? "Bajas / cancelados" : "Cancelados"} value={String(stats.cancelado)} loading={query.isLoading} />
       </section>
 
       <Card className="p-4 space-y-4">
@@ -140,7 +152,7 @@ function RenewalsPage() {
           <div className="flex flex-wrap gap-2">
             {(["todos", "pendiente", "vencido", "renovado", "cancelado"] as Filter[]).map((f) => (
               <Button key={f} size="sm" variant={filter === f ? "default" : "outline"} onClick={() => setFilter(f)}>
-                {f === "todos" ? `Todos (${rows.length})` : `${RENEWAL_STATUS_LABEL[f]} (${rows.filter((r) => r.renewal_status === f).length})`}
+                {f === "todos" ? `Todos (${rows.length})` : `${LABEL[f]} (${rows.filter((r) => r.renewal_status === f).length})`}
               </Button>
             ))}
           </div>
@@ -164,10 +176,10 @@ function RenewalsPage() {
             <Table>
               <TableHeader><TableRow>
                 <TableHead>Cliente</TableHead><TableHead>Folio</TableHead><TableHead>Teléfono</TableHead>
-                <TableHead>Fin de vigencia</TableHead><TableHead className="text-right">Monto</TableHead><TableHead>Estado</TableHead><TableHead>Pagado el</TableHead>
+                <TableHead>{monthly ? "Fecha" : "Fin de vigencia"}</TableHead><TableHead className="text-right">Monto</TableHead><TableHead>Estado</TableHead><TableHead>Pagado el</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {visible.map((r) => <Row key={r.policy_id} r={r} />)}
+                {visible.map((r) => <Row key={`${r.kind}-${r.policy_id ?? r.renewal_payment_id}`} r={r} label={LABEL} />)}
               </TableBody>
             </Table>
           </div>
@@ -177,12 +189,31 @@ function RenewalsPage() {
   );
 }
 
-function Row({ r }: { r: RenewalRow }) {
+const KIND_LABEL: Record<RenewalRow["kind"], string> = { cliente: "Cliente", empresa: "Empresa", baja: "Baja" };
+
+function Row({ r, label }: { r: RenewalRow; label: Record<RenewalStatus, string> }) {
+  if (r.kind === "empresa") {
+    return (
+      <TableRow>
+        <TableCell>
+          <Link to="/companies/$companyId" params={{ companyId: r.company_id! }} className="font-medium hover:underline">{r.client_name}</Link>
+          <div className="text-[11px] text-muted-foreground">Empresa · mensualidad</div>
+        </TableCell>
+        <TableCell className="text-sm">{r.insured_count ?? 0} asegurados</TableCell>
+        <TableCell className="text-muted-foreground">—</TableCell>
+        <TableCell className="text-sm whitespace-nowrap">{fmtDate(r.end_date)}</TableCell>
+        <TableCell className="text-right font-mono">{fmtMoney(r.renewal_status === "renovado" ? r.paid_amount || r.expected_amount : r.expected_amount)}</TableCell>
+        <TableCell><Badge variant="outline" className={cn("font-medium", RENEWAL_STATUS_CLASS[r.renewal_status])}>{label[r.renewal_status]}</Badge></TableCell>
+        <TableCell className="text-xs whitespace-nowrap">{r.paid_at ? new Date(r.paid_at).toLocaleDateString("es-MX") : "—"}</TableCell>
+      </TableRow>
+    );
+  }
   return (
     <TableRow>
       <TableCell>
         <Link to="/clients/$clientId" params={{ clientId: r.client_id }} className="font-medium hover:underline">{r.client_name}</Link>
-        {r.email && <div className="text-[11px] text-muted-foreground truncate max-w-[240px]">{r.email}</div>}
+        {r.kind === "baja" && <div className="text-[11px] text-muted-foreground">Baja del mes</div>}
+        {r.kind !== "baja" && r.email && <div className="text-[11px] text-muted-foreground truncate max-w-[240px]">{r.email}</div>}
       </TableCell>
       <TableCell>
         <Link to="/policies/$policyId" params={{ policyId: r.policy_id }} className="font-mono text-xs text-primary underline">{r.folio}</Link>
@@ -193,7 +224,7 @@ function Row({ r }: { r: RenewalRow }) {
       <TableCell className="text-right font-mono">
         {r.renewal_status === "cancelado" ? "—" : fmtMoney(r.renewal_status === "renovado" ? r.paid_amount || r.expected_amount : r.expected_amount)}
       </TableCell>
-      <TableCell><Badge variant="outline" className={cn("font-medium", RENEWAL_STATUS_CLASS[r.renewal_status])}>{RENEWAL_STATUS_LABEL[r.renewal_status]}</Badge></TableCell>
+      <TableCell><Badge variant="outline" className={cn("font-medium", RENEWAL_STATUS_CLASS[r.renewal_status])}>{label[r.renewal_status]}</Badge></TableCell>
       <TableCell className="text-xs whitespace-nowrap">
         {r.renewal_payment_id
           ? <Link to="/payments/$paymentId" params={{ paymentId: r.renewal_payment_id }} className="underline text-muted-foreground">{r.paid_at ? new Date(r.paid_at).toLocaleDateString("es-MX") : "Ver cobro"}</Link>

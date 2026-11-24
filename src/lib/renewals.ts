@@ -21,10 +21,19 @@ export type RenewalRow = {
   paid_at: string | null;
   renewal_payment_id: string | null;
   renewed_policy_id: string | null;
+  /** cliente | empresa (mensualidad de empresa, ABC) | baja (dado de baja en el mes, ABC) */
+  kind: "cliente" | "empresa" | "baja";
+  company_id: string | null;
+  insured_count: number | null;
 };
 
-/** Programas que tienen módulo de Renovaciones (cobro anual). */
-export const RENEWAL_PROGRAMS = ["FUTCARE", "MCV"];
+/** Programas con módulo de Renovaciones. FutCare y MCV son anuales; ABC es mensual (renovar = pagar el mes). */
+export const RENEWAL_PROGRAMS = ["FUTCARE", "MCV", "ABC"];
+export const isMonthlyProgram = (p?: { code?: string | null; billing_frequency?: string | null } | null) =>
+  p?.billing_frequency ? p.billing_frequency === "monthly" : String(p?.code ?? "").toUpperCase() === "ABC";
+
+/** Personas que representa el renglón: una por cliente; en mensualidades de empresa, sus asegurados. */
+export const peopleIn = (r: RenewalRow) => (r.kind === "empresa" ? Number(r.insured_count ?? 0) || 1 : 1);
 export const hasRenewals = (code?: string | null) => RENEWAL_PROGRAMS.includes(String(code ?? "").toUpperCase());
 
 /** "2026-12" → primer y último día del mes. */
@@ -53,6 +62,7 @@ export async function fetchRenewals(programId: string, from: string, to: string)
   if (error) throw error;
   return ((data ?? []) as any[]).map((r) => ({
     ...r,
+    kind: r.kind ?? "cliente",
     expected_amount: Number(r.expected_amount ?? 0),
     paid_amount: Number(r.paid_amount ?? 0),
   }));
@@ -63,6 +73,14 @@ export const RENEWAL_STATUS_LABEL: Record<RenewalStatus, string> = {
   renovado: "Renovado",
   vencido: "Vencido sin renovar",
   cancelado: "Cancelado",
+};
+
+/** Etiquetas para programas mensuales (ABC). */
+export const MONTHLY_STATUS_LABEL: Record<RenewalStatus, string> = {
+  pendiente: "Por pagar",
+  renovado: "Pagado",
+  vencido: "Vencido sin pagar",
+  cancelado: "Baja / cancelado",
 };
 
 export const RENEWAL_STATUS_CLASS: Record<RenewalStatus, string> = {
