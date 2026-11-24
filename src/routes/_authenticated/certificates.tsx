@@ -17,7 +17,7 @@ import { useMyAccess, useAuthLevel } from "@/lib/use-my-access";
 import { CertificateBadge } from "@/components/certificates/CertificateBadge";
 import { parseInsurerFile, type InsurerFile, type InsurerRow } from "@/lib/insurer-file-parser";
 import { newWorkbook, styleHeader, downloadWorkbook, fullName, ageFrom, genderFromCurp, GENDER_LABEL, slugDate } from "@/lib/client-excel";
-import { matchAll, matchRow } from "@/lib/insurer-match";
+import { matchAll, matchRow, matchDependent } from "@/lib/insurer-match";
 import { buildHirMovementsFile, downloadBlob, movementFromPolicy, activeRowFromPolicy, HIR_DEFAULT_POLICY, HIR_VIDA_POLICY, HIR_VIDA_SUBGRUPO, HIR_VIDA_CATEGORIA } from "@/lib/hir-movements";
 
 export const Route = createFileRoute("/_authenticated/certificates")({
@@ -50,7 +50,7 @@ async function fetchProgramPolicies(programId: string) {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from("policies")
-      .select("id, folio, policy_number, certificate_number, status, created_at, issue_date, start_date, end_date, program_id, company_id, metadata, companies(legal_name, group_type, coverage_start, coverage_end), clients(id, first_name, last_name, curp, rfc, date_of_birth, gender, metadata), payments(status, paid_at), dependents(full_name, relationship, date_of_birth, metadata)")
+      .select("id, folio, policy_number, certificate_number, status, created_at, issue_date, start_date, end_date, program_id, company_id, metadata, companies(legal_name, group_type, coverage_start, coverage_end), clients(id, first_name, last_name, curp, rfc, date_of_birth, gender, metadata), payments(status, paid_at), dependents(id, full_name, relationship, date_of_birth, metadata)")
       .eq("program_id", programId)
       .range(from, from + 999);
     if (error) throw error;
@@ -106,7 +106,14 @@ function CertificatesPage() {
           </TabsList>
           <TabsContent value="altas" className="mt-4"><AltasTab program={activeProgram} /></TabsContent>
           <TabsContent value="bajas" className="mt-4"><BajasTab program={activeProgram} /></TabsContent>
-          <TabsContent value="upload" className="mt-4"><UploadTab program={activeProgram} /></TabsContent>
+          <TabsContent value="upload" className="mt-4">
+            {String(activeProgram.code).toUpperCase() === "ABC" ? (
+              <div className="space-y-6">
+                <UploadTab program={activeProgram} mode="ap" />
+                <VidaUploadTab program={activeProgram} />
+              </div>
+            ) : <UploadTab program={activeProgram} />}
+          </TabsContent>
           <TabsContent value="activos" className="mt-4"><ActivosTab program={activeProgram} /></TabsContent>
         </Tabs>
       )}
@@ -400,7 +407,7 @@ function BajasTab({ program }: { program: any }) {
 type Match = { row: InsurerRow; policy: any; include: boolean; how: string };
 type Ambig = { row: InsurerRow; options: any[]; chosen: string };
 
-function UploadTab({ program }: { program: any }) {
+function UploadTab({ program, mode = "general" }: { program: any; mode?: "general" | "ap" }) {
   const qc = useQueryClient();
   const canWrite = useCanWrite(program.id);
   const [file, setFile] = useState<File | null>(null);
@@ -414,6 +421,8 @@ function UploadTab({ program }: { program: any }) {
   // Dados de baja en Zemgo antes de recibir certificado, sin baja enviada a HIR: se les guarda el
   // certificado (siguen de baja) para que aparezcan en "Bajas para HIR".
   const [pendingBaja, setPendingBaja] = useState<{ row: InsurerRow; policy: any }[]>([]);
+  // Cónyuge e hijos (en AP vienen como renglones propios, grupo 6-1): su certificado va en el dependiente.
+  const [depMatched, setDepMatched] = useState<{ row: InsurerRow; policy: any; dependent: any }[]>([]);
   const [overwrite, setOverwrite] = useState(false);
   const [busy, setBusy] = useState(false);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
@@ -460,10 +469,12 @@ function UploadTab({ program }: { program: any }) {
     try {
       const res = await parseInsurerFile(f);
       if (res.rows.length === 0) throw new Error("No se encontraron renglones de asegurados en el archivo.");
+      if (mode === "ap" && res.policy_number === HIR_VIDA_POLICY)
+        throw new Error(`Este archivo es de la póliza de Vida (${HIR_VIDA_POLICY}). Súbelo en el campo de Vida.`);
       const all = await fetchProgramPolicies(program.id);
       const active = all.filter((p) => p.status !== "cancelled"); // las bajas no reciben certificado
       const cancelled = all.filter((p) => p.status === "cancelled");
-      const m: Match[] = [], u: InsurerRow[] = [], a: Ambig[] = [], hc: { row: InsurerRow; policy: any }[] = [], pb: { row: InsurerRow; policy: any }[] = [];
+      const m: Match[] = [], u: InsurerRow[] = [], a: Ambig[] = [], hc: { row: InsurerRow; policy: any }[] = [], pb: { row: InsurerRow; policy: any }[] = [], dm: { row: InsurerRow; policy: any; dependent: any }[] = [];
       const results = matchAll(res.rows, active);
       for (const row of res.rows) {
         const r = results.get(row) ?? {};
@@ -476,6 +487,8 @@ function UploadTab({ program }: { program: any }) {
           else if (!meta.baja_confirmed) hc.push({ row, policy: c.policy });
           continue;
         }
+        const dep = matchDependent(row, active);
+        if (dep) { dm.push({ row, ...dep }); continue; }
         u.push(row);
       }
       // Certificados vigentes en Zemgo (de esta póliza) que HIR ya no lista.
@@ -484,7 +497,7 @@ function UploadTab({ program }: { program: any }) {
       const missing = active.filter((p) => String(p.certificate_number ?? "").trim() && !listed.has(String(p.certificate_number))
         && (!pol || String(p.policy_number ?? "") === pol));
       setParsed(res); setPolicyNumber(res.policy_number ?? ""); setMatched(m); setUnmatched(u); setAmbig(a);
-      setHirButCancelled(hc); setNotInHir(missing); setPendingBaja(pb);
+      setHirButCancelled(hc); setNotInHir(missing); setPendingBaja(pb); setDepMatched(dm);
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo leer el archivo");
       setParsed(null);
@@ -512,22 +525,37 @@ function UploadTab({ program }: { program: any }) {
       ...ambig.filter((x) => x.chosen).map((x) => item(x.row, x.chosen)),
       ...pendingBaja.map((x) => item(x.row, x.policy.id)),
     ];
-    if (items.length === 0) return toast.error("No hay renglones seleccionados.");
+    const depItems = depMatched.map((x) => ({ dependent_id: x.dependent.id, certificate_number: x.row.certificate_number, rfc: x.row.rfc, alta_date: x.row.alta_date }));
+    if (items.length === 0 && depItems.length === 0) return toast.error("No hay renglones seleccionados.");
     if (conflicts > 0 && overwrite && !window.confirm(`Se sobrescribirán ${conflicts} números de certificado existentes. ¿Continuar?`)) return;
     setBusy(true);
-    const { data, error } = await supabase.rpc("apply_certificate_assignments" as any, {
-      _program_id: program.id, _policy_number: policyNumber.trim(), _items: items, _file_name: file?.name ?? null, _overwrite: overwrite,
-    });
+    if (depItems.length) {
+      const { error: depErr } = await supabase.rpc("apply_dependent_certificates" as any, {
+        _program_id: program.id, _items: depItems, _file_name: file?.name ?? null,
+      });
+      if (depErr) { setBusy(false); return toast.error(depErr.message === "forbidden" ? "Solo administradores o gerentes del programa pueden asignar certificados." : depErr.message); }
+    }
+    const { data, error } = items.length
+      ? await supabase.rpc("apply_certificate_assignments" as any, {
+          _program_id: program.id, _policy_number: policyNumber.trim(), _items: items, _file_name: file?.name ?? null, _overwrite: overwrite,
+        })
+      : { data: { applied: 0, skipped: 0, rfc_updated: 0 }, error: null };
     setBusy(false);
     if (error) return toast.error(error.message === "forbidden" ? "Solo administradores o gerentes del programa pueden asignar certificados." : error.message);
     const r = data as any;
-    toast.success(`${nuevos.length} certificados nuevos asignados (${r.applied} renglones confirmados)${r.skipped ? `, ${r.skipped} omitidos` : ""}${r.rfc_updated ? ` · ${r.rfc_updated} RFC completados` : ""}${pendingBaja.length ? ` · ${pendingBaja.length} pasan a Bajas para HIR` : ""}.`);
-    setParsed(null); setFile(null); setMatched([]); setAmbig([]); setUnmatched([]); setHirButCancelled([]); setNotInHir([]); setPendingBaja([]);
+    toast.success(`${nuevos.length} certificados nuevos asignados (${r.applied} renglones confirmados)${r.skipped ? `, ${r.skipped} omitidos` : ""}${r.rfc_updated ? ` · ${r.rfc_updated} RFC completados` : ""}${pendingBaja.length ? ` · ${pendingBaja.length} pasan a Bajas para HIR` : ""}${depItems.length ? ` · ${depItems.length} dependientes con certificado` : ""}.`);
+    setParsed(null); setFile(null); setMatched([]); setAmbig([]); setUnmatched([]); setHirButCancelled([]); setNotInHir([]); setPendingBaja([]); setDepMatched([]);
     qc.invalidateQueries();
   }
 
   return (
     <Card className="p-4 space-y-4">
+      {mode === "ap" && (
+        <div>
+          <h3 className="font-medium">Póliza de AP {HIR_DEFAULT_POLICY} — titulares, cónyuge e hijos</h3>
+          <p className="text-xs text-muted-foreground">Asigna el certificado de AP a cada titular y a sus dependientes (cónyuge e hijos, que HIR lista en otro grupo).</p>
+        </div>
+      )}
       {!canWrite && <p className="text-sm text-amber-700">Solo administradores o gerentes del programa pueden guardar asignaciones.</p>}
       <div className="flex flex-wrap items-center gap-3">
         <Input type="file" accept=".pdf,.xlsx,.xls,.csv" className="max-w-sm" disabled={busy}
@@ -610,6 +638,29 @@ function UploadTab({ program }: { program: any }) {
             </section>
           )}
 
+          {depMatched.length > 0 && (
+            <section className="space-y-2">
+              <h3 className="font-medium">Dependientes: cónyuge e hijos ({depMatched.length})</h3>
+              <p className="text-xs text-muted-foreground">HIR los lista en otro grupo. Al confirmar se guarda el certificado en el dependiente de cada titular.</p>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>N° Cert.</TableHead><TableHead>Nombre (HIR)</TableHead><TableHead>Dependiente en Zemgo</TableHead><TableHead>Titular</TableHead><TableHead>Actual</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {depMatched.map((x) => (
+                    <TableRow key={x.dependent.id}>
+                      <TableCell className="font-mono">{x.row.certificate_number}</TableCell>
+                      <TableCell className="text-xs">{x.row.name}</TableCell>
+                      <TableCell>{x.dependent.full_name}<div className="text-[11px] text-muted-foreground">{x.dependent.relationship ?? "Dependiente"}</div></TableCell>
+                      <TableCell className="text-sm">{fullName(x.policy.clients)}</TableCell>
+                      <TableCell><CertificateBadge number={x.dependent.metadata?.certificate_number} /></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </section>
+          )}
+
           {pendingBaja.length > 0 && (
             <section className="space-y-2 rounded-md border border-sky-300 bg-sky-50/60 p-3">
               <h3 className="font-medium text-sky-900">Se dieron de baja antes de tener certificado ({pendingBaja.length})</h3>
@@ -677,6 +728,171 @@ function UploadTab({ program }: { program: any }) {
               </label>
             ) : <span />}
             <Button onClick={confirm} disabled={busy || !canWrite}><Upload className="h-4 w-4 mr-2" />Confirmar y asignar certificados</Button>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ------------------------------------------------------------------ RELACIÓN DE VIDA (ABC)
+
+/** Certificado de la póliza de Vida (distinto al de AP). */
+const vidaCertOf = (p: any): string | null => String(p.metadata?.vida_certificate_number ?? "").trim() || null;
+
+/**
+ * Relación de la póliza de Vida (27001000124): solo titulares, con su propio número de certificado.
+ * No se declaran cónyuge ni hijos, así que no se marcan como diferencia.
+ */
+function VidaUploadTab({ program }: { program: any }) {
+  const qc = useQueryClient();
+  const canWrite = useCanWrite(program.id);
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [rows, setRows] = useState<{ row: InsurerRow; policy: any; how: string }[] | null>(null);
+  const [ambig, setAmbig] = useState<Ambig[]>([]);
+  const [unmatched, setUnmatched] = useState<InsurerRow[]>([]);
+  const [cancelled, setCancelled] = useState<{ row: InsurerRow; policy: any }[]>([]);
+  const [missing, setMissing] = useState<any[]>([]);
+
+  async function analyze(f: File) {
+    setBusy(true); setFile(f);
+    try {
+      const res = await parseInsurerFile(f);
+      if (res.rows.length === 0) throw new Error("No se encontraron renglones de asegurados en el archivo.");
+      if (res.policy_number && res.policy_number !== HIR_VIDA_POLICY)
+        throw new Error(`Este archivo es de la póliza ${res.policy_number}, no de Vida (${HIR_VIDA_POLICY}). Súbelo en el campo de AP.`);
+      const all = await fetchProgramPolicies(program.id);
+      // Para emparejar se usa el certificado de Vida en lugar del de AP.
+      const asVida = (p: any) => ({ ...p, certificate_number: vidaCertOf(p), ap_certificate: p.certificate_number ?? null });
+      const active = all.filter((p) => p.status !== "cancelled").map(asVida);
+      const canc = all.filter((p) => p.status === "cancelled").map(asVida);
+      const results = matchAll(res.rows, active);
+      const m: { row: InsurerRow; policy: any; how: string }[] = [], a: Ambig[] = [], u: InsurerRow[] = [], c: { row: InsurerRow; policy: any }[] = [];
+      for (const row of res.rows) {
+        const r = results.get(row) ?? {};
+        if (r.policy) { m.push({ row, policy: r.policy, how: r.how! }); continue; }
+        if (r.options?.length) { a.push({ row, options: r.options, chosen: "" }); continue; }
+        const cc = matchRow(row, canc);
+        if (cc.policy) { c.push({ row, policy: cc.policy }); continue; }
+        u.push(row);
+      }
+      const used = new Set(m.map((x) => x.policy.id));
+      // Titulares activos que ya tienen certificado de AP pero no vienen en Vida.
+      const miss = active.filter((p) => !used.has(p.id) && String(p.ap_certificate ?? "").trim());
+      setRows(m); setAmbig(a); setUnmatched(u); setCancelled(c); setMissing(miss);
+    } catch (e: any) {
+      toast.error(e.message ?? "No se pudo leer el archivo");
+      setRows(null);
+    } finally { setBusy(false); }
+  }
+
+  const nuevos = (rows ?? []).filter((x) => String(x.policy.certificate_number ?? "") !== x.row.certificate_number);
+
+  async function confirm() {
+    const items = [
+      ...nuevos.map((x) => ({ policy_id: x.policy.id, certificate_number: x.row.certificate_number, alta_date: x.row.alta_date })),
+      ...ambig.filter((x) => x.chosen).map((x) => ({ policy_id: x.chosen, certificate_number: x.row.certificate_number, alta_date: x.row.alta_date })),
+    ];
+    if (items.length === 0) return toast.error("No hay certificados de Vida nuevos por guardar.");
+    setBusy(true);
+    const { data, error } = await supabase.rpc("apply_vida_certificates" as any, { _program_id: program.id, _items: items, _file_name: file?.name ?? null });
+    setBusy(false);
+    if (error) return toast.error(error.message === "forbidden" ? "Solo administradores o gerentes del programa pueden asignar certificados." : error.message);
+    toast.success(`${(data as any)?.applied ?? items.length} certificados de Vida guardados.`);
+    setRows(null); setFile(null); setAmbig([]); setUnmatched([]); setCancelled([]); setMissing([]);
+    qc.invalidateQueries();
+  }
+
+  return (
+    <Card className="p-4 space-y-4">
+      <div>
+        <h3 className="font-medium">Póliza de Vida {HIR_VIDA_POLICY} — solo titulares</h3>
+        <p className="text-xs text-muted-foreground">
+          Guarda el certificado de Vida de cada titular (es un número distinto al de AP). En Vida no se declaran cónyuge ni hijos.
+        </p>
+      </div>
+      {!canWrite && <p className="text-sm text-amber-700">Solo administradores o gerentes del programa pueden guardar asignaciones.</p>}
+      <div className="flex flex-wrap items-center gap-3">
+        <Input type="file" accept=".pdf,.xlsx,.xls,.csv" className="max-w-sm" disabled={busy}
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) analyze(f); e.target.value = ""; }} />
+        {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+        {file && <span className="text-sm text-muted-foreground">{file.name}</span>}
+      </div>
+
+      {rows && (
+        <div className="space-y-5">
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="secondary">{rows.length + ambig.length + unmatched.length + cancelled.length} titulares en el archivo</Badge>
+            <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-800">{nuevos.length} certificados de Vida por guardar</Badge>
+            <Badge variant="outline">{rows.length - nuevos.length} ya coinciden</Badge>
+          </div>
+
+          {nuevos.length > 0 && (
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>N° Vida</TableHead><TableHead>Nombre (HIR)</TableHead><TableHead>RFC (HIR)</TableHead><TableHead>Titular en Zemgo</TableHead><TableHead>Cert. AP</TableHead><TableHead>Coincidió por</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {nuevos.map((x) => (
+                  <TableRow key={x.policy.id}>
+                    <TableCell className="font-mono">{x.row.certificate_number}</TableCell>
+                    <TableCell className="text-xs">{x.row.name}</TableCell>
+                    <TableCell className="font-mono text-xs">{x.row.rfc}</TableCell>
+                    <TableCell>{fullName(x.policy.clients)}<div className="text-[11px] text-muted-foreground">{x.policy.companies?.legal_name ?? "Individual"}</div></TableCell>
+                    <TableCell className="font-mono text-xs">{x.policy.ap_certificate ?? "—"}</TableCell>
+                    <TableCell className="text-xs">{x.how}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+
+          {ambig.length > 0 && (
+            <section className="space-y-2">
+              <h3 className="font-medium">Por confirmar — elige el titular ({ambig.length})</h3>
+              {ambig.map((x, i) => (
+                <div key={i} className="flex flex-wrap items-center gap-3 text-sm border rounded-md p-2">
+                  <span className="font-mono">N° {x.row.certificate_number}</span>
+                  <span>{x.row.name}</span><span className="font-mono text-xs">{x.row.rfc}</span>
+                  <Select value={x.chosen || "none"} onValueChange={(v) => setAmbig((p) => p.map((y, j) => j === i ? { ...y, chosen: v === "none" ? "" : v } : y))}>
+                    <SelectTrigger className="w-full sm:w-[360px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No asignar</SelectItem>
+                      {x.options.map((o: any) => <SelectItem key={o.id} value={o.id}>{fullName(o.clients)} · {o.folio}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
+            </section>
+          )}
+
+          {(unmatched.length > 0 || cancelled.length > 0 || missing.length > 0) && (
+            <section className="space-y-3 rounded-md border border-amber-300 bg-amber-50/60 p-3">
+              <h3 className="font-medium flex items-center gap-2 text-amber-900"><AlertTriangle className="h-4 w-4" /> Diferencias entre Vida y Zemgo</h3>
+              {missing.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Titulares activos con certificado de AP que no vienen en Vida ({missing.length})</p>
+                  <ul className="text-sm list-disc pl-5">{missing.map((p) => <li key={p.id}>{fullName(p.clients)} · {p.companies?.legal_name ?? "Individual"}</li>)}</ul>
+                </div>
+              )}
+              {cancelled.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Vienen en Vida, pero en Zemgo están dados de baja ({cancelled.length})</p>
+                  <ul className="text-sm list-disc pl-5">{cancelled.map(({ row }, i) => <li key={i}>N° {row.certificate_number} — {row.name}</li>)}</ul>
+                </div>
+              )}
+              {unmatched.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Vienen en Vida, pero no se encontraron en Zemgo ({unmatched.length})</p>
+                  <ul className="text-sm list-disc pl-5">{unmatched.map((r, i) => <li key={i}>N° {r.certificate_number} — {r.name} — <span className="font-mono">{r.rfc}</span></li>)}</ul>
+                </div>
+              )}
+            </section>
+          )}
+
+          <div className="flex justify-end border-t pt-4">
+            <Button onClick={confirm} disabled={busy || !canWrite}><Upload className="h-4 w-4 mr-2" />Guardar certificados de Vida</Button>
           </div>
         </div>
       )}
@@ -752,12 +968,15 @@ function ActivosTab({ program }: { program: any }) {
   const VIDA_SUMA_ASEGURADA = 200000;
   const inScope = (p: any) => empresa === "todas" || (p.company_id ?? "individual") === empresa;
   const certNum = (p: any) => Number(String(p.certificate_number).replace(/\D/g, "")) || 0;
+  const conVida = inEmpresa.filter((p: any) => !!vidaCertOf(p)).length;
 
   async function downloadVida() {
     setVidaBusy(true);
     try {
-      const con = inEmpresa.filter(hasCert).sort((a: any, b: any) => certNum(a) - certNum(b));
-      const sin = inEmpresa.filter((p: any) => !hasCert(p)).sort((a: any, b: any) => fullName(a.clients).localeCompare(fullName(b.clients)));
+      // Vida usa su propio número de certificado (metadata.vida_certificate_number), distinto al de AP.
+      const vidaPols = inEmpresa.map((p: any) => ({ ...p, certificate_number: vidaCertOf(p) }));
+      const con = vidaPols.filter((p: any) => !!p.certificate_number).sort((a: any, b: any) => certNum(a) - certNum(b));
+      const sin = vidaPols.filter((p: any) => !p.certificate_number).sort((a: any, b: any) => fullName(a.clients).localeCompare(fullName(b.clients)));
       const movs = [
         ...con.map((p: any) => activeRowFromPolicy(p, vidaDate)),
         ...sin.map((p: any) => movementFromPolicy(p, "ALTA", vidaDate)),
@@ -786,7 +1005,7 @@ function ActivosTab({ program }: { program: any }) {
             <Input type="month" value={vidaMonth} onChange={(e) => e.target.value && setVidaMonth(e.target.value)} className="w-full sm:w-[170px]" />
           </div>
           <p className="text-xs text-muted-foreground pb-2">
-            {conCert} activos con certificado · {inEmpresa.length - conCert} altas
+            {conVida} activos con certificado de Vida · {inEmpresa.length - conVida} altas
           </p>
           <Button onClick={downloadVida} disabled={vidaBusy || isLoading || inEmpresa.length === 0}>
             {vidaBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}

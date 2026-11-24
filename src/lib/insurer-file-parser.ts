@@ -2,6 +2,8 @@
 export type Coverage = { code: string; sum_insured: number | null; prima: number };
 export type InsurerRow = {
   certificate_number: string; name: string; rfc: string; alta_date: string | null;
+  /** Columna Grupo de HIR ("5-1" titulares AP, "6-1" dependientes AP, "1-1" Vida). */
+  group?: string | null;
   /** Suma de la Prima Neta de HIR (costo aseguradora). Nunca es el precio al cliente. */
   insurer_premium?: number | null;
   insurer_premium_detail?: Coverage[];
@@ -72,7 +74,7 @@ export function parseLines(lines: string[]): InsurerFile {
     const line = raw.toUpperCase();
     const rfc = line.match(RFC_RE);
     // HIR antepone la columna Grupo ("5-1") al número de certificado: se omite.
-    const cert = line.match(/^\s*(?:\d{1,3}-\d{1,3}\s+)?(\d{1,6})\b/);
+    const cert = line.match(/^\s*(?:(\d{1,3}-\d{1,3})\s+)?(\d{1,6})\b/);
     if (!rfc || !cert) {
       // Renglón de cobertura (MA / PMB / RGM…) del último asegurado.
       const last = rows[rows.length - 1];
@@ -81,7 +83,7 @@ export function parseLines(lines: string[]): InsurerFile {
     }
     const before = line.slice(cert[0].length, rfc.index).replace(TIPO_RE, " ").replace(/[^A-ZÑÁÉÍÓÚÜ .]/g, " ").replace(/\s+/g, " ").trim();
     const date = line.slice((rfc.index ?? 0) + rfc[0].length).match(DATE_RE);
-    const row: InsurerRow = { certificate_number: String(parseInt(cert[1], 10)), name: before, rfc: rfc[1], alta_date: toIso(date?.[0]) };
+    const row: InsurerRow = { certificate_number: String(parseInt(cert[2], 10)), name: before, rfc: rfc[1], alta_date: toIso(date?.[0]), group: cert[1] ?? null };
     const inline = coveragesIn(line.slice((rfc.index ?? 0) + rfc[0].length));
     if (inline.length) { row.insurer_premium_detail = inline; finish(row); }
     rows.push(row);
